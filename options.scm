@@ -18,7 +18,7 @@
     (if (and (pair? lis) (argument-string? (car lis)))
         (values (list (car lis)) (cdr lis))
         (parser-exception
-         (string-append "option " (string->symbol name)
+         (string-append "option " (symbol->string name)
                         ": missing argument")))))
 
 ;; Parses k arguments and returns them as a list.
