@@ -22,19 +22,16 @@
                         ": missing argument")))))
 
 ;; Parses k arguments and returns them as a list.
-;; This is a little inefficient.
+;; This is something like a partition/split-at hybrid.
 (define (arguments name k)
-  (lambda (lis)
-    (let*-values (((args rest) (span argument-string? k lis))
-                  ((len) (length args)))
-      (cond ((= len k) (values args rest))
-            ((> len k)   ; we took too many; append the overflow to rest.
-             (values (take args k) (append (drop args (- len k)) rest)))
-            (else (parser-exception
-                   (string-append "option " (string->symbol name)
-                                  " requires " (number->string k)
-                                  " arguments.")
-                   lis))))))
+  (let ((parser (argument name)))
+    (lambda (lis)
+      (let recur ((k k) (lis lis))
+        (if (zero? k)
+            (values '() lis)
+            (let*-values (((arg lis*) (parser lis))
+                          ((args rest) (recur (- k 1) lis*)))
+              (values (cons arg args) rest)))))))
 
 ;; Should be continuable.
 (define parser-exception error)
