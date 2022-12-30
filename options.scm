@@ -51,15 +51,17 @@
   (help option-help))           ; option description (string) or #f
 
 ;; Exported constructor.
-(define (option name . opt-args)
-  (let-optionals opt-args ((args '())
-                           (proc id-processor)
-                           (help #f))
-    (let ((arg-parser (case (length args)
-                        ((0) flag)
-                        ((1) (argument name))
-                        (else => (lambda (k) (arguments name k))))))
-      (raw-option name args arg-parser proc help))))
+(define option
+  (case-lambda
+    ((name) (option name '() id-processor #f))
+    ((name args) (option name args id-processor #f))
+    ((name args proc) (option name args proc #f))
+    ((name args proc help)
+     (let ((arg-parser (case (length args)
+                         ((0) flag)
+                         ((1) (argument name))
+                         (else => (lambda (k) (arguments name k))))))
+       (raw-option name args arg-parser proc help)))))
 
 ;; Uses SRFI 69, but could be a perfect hash table.
 (define (make-option-table opts)
