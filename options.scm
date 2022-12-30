@@ -29,7 +29,7 @@
                   ((len) (length args)))
       (cond ((= len k) (values args rest))
             ((> len k)   ; we took too many; append the overflow to rest.
-             (values (take args k) (append (drop args (- len k)) rest)))
+             (values (take args k) (append (drop args k) rest)))
             (else (parser-exception
                    (string-append "option " (string->symbol name)
                                   " requires " (number->string k)
