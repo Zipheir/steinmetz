@@ -159,5 +159,5 @@
   (string->symbol (string-drop-while s (lambda (c) (eqv? c #\-)))))
 
 (define (process-option name opt-table in)
-  (let* ((opt (lookup-option-by-name opt-table name)))
+  (let ((opt (lookup-option-by-name opt-table name)))
     ((option-parser opt) in)))
