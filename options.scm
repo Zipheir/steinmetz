@@ -1,6 +1,24 @@
 (import (srfi 1)
         (srfi 69)
-        (only (srfi 152) string-trim))
+        (only (srfi 152) string-trim)
+        (srfi 189)
+        )
+
+;;;; Utility
+
+(define (either-ap ef ex)
+  (either-bind ef
+               (lambda (f) (either-map f ex))))
+
+;; (list Either) -> Either list.
+;; SRFI 189's sequence is a bit odd. This is simpler.
+(define (either-seq es)
+  (if (null? es)
+      (right '())
+      (either-ap (either-map consc (car es))
+                 (either-seq (cdr es)))))
+
+(define (consc a) (lambda (d) (cons a d)))
 
 (define (option-string? s)
   (and (not (equal? s ""))
@@ -10,28 +28,53 @@
 (define (argument-string? s)
   (not (option-string? s)))
 
-;;;; CLI parsers
+;;;; Parsers
 
-;; Parses a single argument and returns it wrapped in a list.
-(define (argument name)
+(define (parser-map f p)
+  (lambda (lis)
+    (either-map (lambda (x rest) (values (f x) rest))
+                (p lis))))
+
+(define (parser-pure x)
+  (lambda (in)
+    (right x in)))
+
+(define (parser-ap pf px)
+  (lambda (in)
+    (either-bind (pf in)
+                 (lambda (f in*)
+                   (either-bind (px in*)
+                                (lambda (x in**)
+                                  (right (f x) in**)))))))
+
+(define (parser-seq ps)
+  (fold-right (lambda (px pacc)
+                (parser-ap (parser-map consc px) pacc))
+              (parser-pure '())
+              ps))
+
+;;; Argument parsers
+
+;;; An argument parser is a function that takes a list of strings
+;;; and returns either a Right[vals, rest] or a Left[msg].
+;;; vals is a list of argument values, rest is the remaining input,
+;;; and msg is string giving an error message.
+
+(define (raw-argument name)
   (lambda (lis)
     (if (and (pair? lis) (argument-string? (car lis)))
-        (values (list (car lis)) (cdr lis))
-        (parser-exception
+        (right (car lis) (cdr lis))
+        (left
          (string-append "option " (symbol->string name)
                         ": missing argument")))))
 
+;; Like raw-argument, but wraps its value in a list.
+(define (argument name)
+  (parser-map list (raw-argument name)))
+
 ;; Parses k arguments and returns them as a list.
-;; This is something like a partition/split-at hybrid.
 (define (arguments name k)
-  (let ((parser (argument name)))
-    (lambda (lis)
-      (let recur ((k k) (lis lis))
-        (if (zero? k)
-            (values '() lis)
-            (let*-values (((arg lis*) (parser lis))
-                          ((args rest) (recur (- k 1) lis*)))
-              (values (cons arg args) rest)))))))
+  (parser-seq (make-list k (raw-argument name))))
 
 ;; Should be continuable.
 (define parser-exception error)
@@ -39,26 +82,35 @@
 ;;;; Options
 
 (define-record-type <option>
-  (raw-option name args parser processor help)
+  (raw-option name args parser help)
   option?
   (name option-name)            ; a symbol
   (args option-args)            ; a list of argument names (symbols)
   (parser option-parser)        ; argument parser
-  (processor option-processor)  ; processor procedure
   (help option-help))           ; option description (string) or #f
 
 ;; Exported constructor.
 (define option
   (case-lambda
-    ((name) (option name '() id-processor #f))
-    ((name args) (option name args id-processor #f))
-    ((name args proc) (option name args proc #f))
-    ((name args proc help)
+    ((name) (option name '() #f))
+    ((name args) (option name args #f))
+    ((name args help)
      (let ((arg-parser (case (length args)
                          ((0) flag)
                          ((1) (argument name))
                          (else => (lambda (k) (arguments name k))))))
-       (raw-option name args arg-parser proc help)))))
+       (raw-option name args arg-parser help)))))
+
+(define (option-map f opt)
+  (raw-option (option-name opt)
+              (option-args opt)
+              (parser-map f (option-parser opt))
+              (option-help opt)))
+
+;; Transform the arguments of 'opt' with 'proc', which should
+;; take a list to a list.
+(define (option-add-arg-processor proc opt)
+  (option-map proc opt))
 
 ;; Uses SRFI 69, but could be a perfect hash table.
 (define (make-option-table opts)
@@ -73,10 +125,6 @@
                   name
                   (lambda ()
                     (parser-exception "invalid option" name))))
-
-;; An identity option processor that returns the argument list.
-(define (id-processor opt name args)
-  args)
 
 ;; No arguments; returns #t.
 (define (flag ts)
@@ -99,16 +147,16 @@
     (let loop ((vals '()) (ts ts))
       (cond ((null? ts) (values vals '()))  ; no operands
             ((option-string? (car ts))
-             (let*-values (((name) (option-string->name (car ts)))
-                           ((vs ts*)
-                            (process-option name opt-tab (cdr ts))))
-               (loop (cons (cons name vs) vals) ts*)))
+             (let ((name (option-string->name (car ts))))
+               (either-ref (process-option name opt-tab (cdr ts))
+                           parser-exception
+                           (lambda (v ts*)
+                             (loop (cons (cons name v) vals) ts*)))))
             (else (values vals ts))))))      ; rest are operands
 
 (define (option-string->name s)
   (string->symbol (string-trim s (lambda (c) (eqv? c #\-)))))
 
 (define (process-option name opt-table in)
-  (let*-values (((opt) (lookup-option-by-name opt-table name))
-                ((args in*) ((option-parser opt) in)))
-    (values ((option-processor opt) opt name args) in*)))
+  (let* ((opt (lookup-option-by-name opt-table name)))
+    ((option-parser opt) in)))
