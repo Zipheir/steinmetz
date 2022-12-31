@@ -2,20 +2,6 @@
         (srfi 69)
         (only (srfi 152) string-trim))
 
-;;;; Utility
-
-;; Add (key . value) to 'alist'. If 'key' already exists in 'alist',
-;; then add (key . (proc key value old-value)) instead. This assumes
-;; that 'alist' contains no duplicated keys.
-(define (alist-adjoin/combinator alist proc key value)
-  (cond ((assv key alist) =>
-         (lambda (p)
-           (cons (cons (car p) (proc key value (cdr p)))
-                 (filter (lambda (q) (eqv? key (car q))) alist))))
-        (else (cons (cons key value) alist))))
-
-;;;; CLI parsers
-
 (define (option-string? s)
   (and (not (equal? s ""))
        (eqv? #\- (string-ref s 0))))
@@ -23,6 +9,8 @@
 ;; An argument is anything that doesn't look like an option.
 (define (argument-string? s)
   (not (option-string? s)))
+
+;;;; CLI parsers
 
 ;; Parses a single argument and returns it wrapped in a list.
 (define (argument name)
@@ -102,9 +90,9 @@
 ;; long options with =-delimiter syntax. We might be able to handle the
 ;; latter by pre-splitting the input list.
 ;;
-;; Arguments of duplicated options are pooled. That is, the
-;; command line "-a foo -a bar" produces the alist
-;; ((a . ("foo" "bar"))), not ((a . ("foo")) (a . ("bar"))).
+;; Arguments of duplicated options should be pooled. That is, the
+;; command line "-a foo -a bar" should produce the alist
+;; ((a . ("foo" "bar"))) and not ((a . ("foo")) (a . ("bar"))).
 
 (define (parse-cli options ts)
   (let ((opt-tab (make-option-table options)))
@@ -114,7 +102,7 @@
              (let*-values (((name) (option-string->name (car ts)))
                            ((vs ts*)
                             (process-option name opt-tab (cdr ts))))
-               (loop (append-args name vs vals) ts*)))
+               (loop (cons (cons name vs) vals) ts*)))
             (else (values vals ts))))))      ; rest are operands
 
 (define (option-string->name s)
@@ -124,12 +112,3 @@
   (let*-values (((opt) (lookup-option-by-name opt-table name))
                 ((args in*) ((option-parser opt) in)))
     (values ((option-processor opt) opt name args) in*)))
-
-;; If 'name' already appears as a key in 'alist', then append 'args'
-;; to name's list value. Otherwise, add the pair (name . args) to
-;; alist.
-(define (append-args name args alist)
-  (alist-adjoin/combinator alist
-                           (lambda (_key news olds) (append news olds))
-                           name
-                           args))
