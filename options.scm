@@ -1,8 +1,9 @@
 (import (srfi 1)
         (srfi 69)
-        (only (srfi 152) string-trim)
         (srfi 189)
         )
+
+(include "string-util.scm")
 
 ;;;; Utility
 
@@ -155,7 +156,7 @@
             (else (values vals ts))))))      ; rest are operands
 
 (define (option-string->name s)
-  (string->symbol (string-trim s (lambda (c) (eqv? c #\-)))))
+  (string->symbol (string-drop-while s (lambda (c) (eqv? c #\-)))))
 
 (define (process-option name opt-table in)
   (let* ((opt (lookup-option-by-name opt-table name)))
