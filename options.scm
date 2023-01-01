@@ -96,11 +96,12 @@
     ((name) (option name '() #f))
     ((name args) (option name args #f))
     ((name args help)
-     (let ((arg-parser (case (length args)
-                         ((0) flag)
-                         ((1) (argument name))
-                         (else => (lambda (k) (arguments name k))))))
-       (raw-option name args arg-parser help)))))
+     (let* ((p (case (length args)
+                 ((0) flag)
+                 ((1) (argument name))
+                 (else => (lambda (k) (arguments name k)))))
+            (arg-p (parser-map (lambda (v) (cons name v)) p)))
+       (raw-option name args arg-p help)))))
 
 (define (option-map f opt)
   (raw-option (option-name opt)
@@ -152,7 +153,7 @@
                (either-ref (process-option name opt-tab (cdr ts))
                            parser-exception
                            (lambda (v ts*)
-                             (loop (cons (cons name v) vals) ts*)))))
+                             (loop (cons v vals) ts*)))))
             (else (values vals ts))))))      ; rest are operands
 
 (define (option-string->name s)
