@@ -1,0 +1,54 @@
+Figure out how the applicative libraries collect options in a record
+structure regardless of their order on the line.
+
+We should be able to collect results "idiomatically" without first
+building a list and then folding it.
+
+The fold interface is quite flexible, however. I don't yet see
+a reason to change it.
+
+I want a parser combinator that takes a conversion function
+f : String → Maybe β (which could be translated to CPS rather than
+using the Maybe type) and constructs a parser of type [β] + String.
+This parser succeeds with a [β] if the parsed strings were all
+successfully converted, and fails with an error message otherwise.
+
+If f is generalized to String → β + String (result or error message),
+then this might be a use for either-join (after either-sequence).
+
+    (arguments k) : Parser [String]
+
+    (parser-map (λ (args) (map conv args)) (arguments k)) :
+        Parser [β + String]
+
+    (parser-map (λ (args)
+                  (either-traverse conv args))
+                (arguments k))
+
+      : Parser ([β] + String)
+
+Let the last value be called p. Then:
+
+    (p in) : ([β] + String) + String
+
+    (either-join (p in)) : [β] + String
+
+How do we interpret this? Here are the cases:
+
+    (p in) =          joined:
+
+      (left s (left t))    (left s)
+      (left s (right t))   (left s)
+
+      (right s (left t))   (left t)
+
+      (right s (right t))  (right t)
+
+If p is part of a sequence of parsers, then we'll say that earlier
+parsing errors are propagated. If p's application caused the first
+error, then conv's error message is propagated.
+
+That's a reasonable approach. Another one is to accumulate error
+messages by merging nested Lefts.
+
+This needs some more thought.
