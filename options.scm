@@ -160,7 +160,8 @@
 
 ;;; Convenience
 (define (parse-cli->alist options ts)
-  (fold-cli options (lambda (name args res)
-                      (cons (cons name args) res))
-                    '()
-                     ts))
+  (fold-cli options
+            (lambda (name args res)
+              (cons (cons name args) res))
+            '()
+            ts))
