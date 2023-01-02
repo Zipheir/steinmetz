@@ -7,13 +7,16 @@ building a list and then folding it.
 The fold interface is quite flexible, however. I don't yet see
 a reason to change it.
 
-I want a parser combinator that takes a conversion function
-f : String → Maybe β (which could be translated to CPS rather than
-using the Maybe type) and constructs a parser of type [β] + String.
-This parser succeeds with a [β] if the parsed strings were all
-successfully converted, and fails with an error message otherwise.
+It should be possible to give an option several names, but this
+raises some challenges. When an option has multiple names, which
+do we pass to the collector--the one parsed, or a canonical name?
+It seems clear that error messages should refer to the parsed
+name, but this complicates error-message generation. Now an argument
+parser needs to know the last token parsed; this is a significant
+complication.
 
-Generalizing f to String → β + String (result or error message),
-you might think of using either-join. But that's a mistake: parsers
-aren't Eithers, they're functions [String] → Either .... So any
-use of either-join would be after the parser is applied.
+A possible solution: Instead of passing the collection procedure
+an option name, we pass it the option structure. This makes the
+user's life more complex. We also have to pick a canonical name
+for the simple 'parse-cli->alist' interface; there's no way around
+it. I don't see a simple way to solve the error message issue.
