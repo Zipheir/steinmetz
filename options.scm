@@ -21,6 +21,11 @@
 
 (define (consc a) (lambda (d) (cons a d)))
 
+(define (first . vals)
+  (if (null? vals)
+      (error 'first "no values")
+      (car vals)))
+
 (define (option-string? s)
   (and (not (equal? s ""))
        (eqv? #\- (string-ref s 0))))
@@ -61,21 +66,31 @@
 ;;; vals is a list of argument values, rest is the remaining input,
 ;;; and msg is string giving an error message.
 
-(define (raw-argument name)
-  (lambda (lis)
-    (if (and (pair? lis) (argument-string? (car lis)))
-        (right (car lis) (cdr lis))
-        (left
-         (string-append "option " (symbol->string name)
-                        ": missing argument")))))
+;; Parse an argument for option 'name'.
+;; The 'conv' procedure takes the argument string and an error
+;; continuationd 'fail'. It either returns a value or calls 'fail'
+;; on a message.
+(define (raw-argument name conv)
+  (let ((make-msg     ; error message template
+         (lambda (msg-body)
+           (string-append "option " (symbol->string name) ": "
+                          msg-body))))
+    (lambda (lis)
+      (if (and (pair? lis) (argument-string? (car lis)))
+          (call-with-current-continuation
+           (lambda (k)
+             (let ((val (conv (car lis)
+                              (lambda (s)
+                                (k (left (make-msg s)))))))
+               (right val (cdr lis)))))
+          (left
+           (string-append "option " (symbol->string name)
+                          ": missing argument"))))))
 
-;; Like raw-argument, but wraps its value in a list.
-(define (argument name)
-  (parser-map list (raw-argument name)))
-
-;; Parses k arguments and returns them as a list.
-(define (arguments name k)
-  (parser-seq (make-list k (raw-argument name))))
+;; Parses k arguments, converts them, and returns them as
+;; a list.
+(define (arguments name k conv)
+  (parser-seq (make-list k (raw-argument name conv))))
 
 ;; Should be continuable.
 (define parser-exception error)
@@ -93,13 +108,13 @@
 ;; Exported constructor.
 (define option
   (case-lambda
-    ((name) (option name '() #f))
-    ((name args) (option name args #f))
-    ((name args help)
+    ((name) (option name '() first #f))
+    ((name args) (option name args first #f))
+    ((name args conv) (option name args conv #f))
+    ((name args conv help)
      (let* ((arg-p (case (length args)
                      ((0) flag)
-                     ((1) (argument name))
-                     (else => (lambda (k) (arguments name k))))))
+                     (else => (lambda (n) (arguments name n conv))))))
        (raw-option name args arg-p help)))))
 
 (define (option-map f opt)
