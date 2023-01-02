@@ -96,11 +96,10 @@
     ((name) (option name '() #f))
     ((name args) (option name args #f))
     ((name args help)
-     (let* ((p (case (length args)
-                 ((0) flag)
-                 ((1) (argument name))
-                 (else => (lambda (k) (arguments name k)))))
-            (arg-p (parser-map (lambda (v) (cons name v)) p)))
+     (let* ((arg-p (case (length args)
+                     ((0) flag)
+                     ((1) (argument name))
+                     (else => (lambda (k) (arguments name k))))))
        (raw-option name args arg-p help)))))
 
 (define (option-map f opt)
@@ -139,22 +138,18 @@
 ;; At the moment, this only handles short options. We should support
 ;; long options with =-delimiter syntax. We might be able to handle the
 ;; latter by pre-splitting the input list.
-;;
-;; Arguments of duplicated options should be pooled. That is, the
-;; command line "-a foo -a bar" should produce the alist
-;; ((a . ("foo" "bar"))) and not ((a . ("foo")) (a . ("bar"))).
 
-(define (parse-cli options ts)
+(define (fold-cli options proc knil ts)
   (let ((opt-tab (make-option-table options)))
-    (let loop ((vals '()) (ts ts))
-      (cond ((null? ts) (values vals '()))  ; no operands
+    (let loop ((res knil) (ts ts))
+      (cond ((null? ts) (values res '()))  ; no operands
             ((option-string? (car ts))
              (let ((name (option-string->name (car ts))))
                (either-ref (process-option name opt-tab (cdr ts))
                            parser-exception
                            (lambda (v ts*)
-                             (loop (cons v vals) ts*)))))
-            (else (values vals ts))))))      ; rest are operands
+                             (loop (proc name v res) ts*)))))
+            (else (values res ts))))))      ; rest are operands
 
 (define (option-string->name s)
   (string->symbol (string-drop-while s (lambda (c) (eqv? c #\-)))))
@@ -162,3 +157,10 @@
 (define (process-option name opt-table in)
   (let ((opt (lookup-option-by-name opt-table name)))
     ((option-parser opt) in)))
+
+;;; Convenience
+(define (parse-cli->alist options ts)
+  (fold-cli options (lambda (name args res)
+                      (cons (cons name args) res))
+                    '()
+                     ts))
