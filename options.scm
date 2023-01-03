@@ -112,8 +112,9 @@
 ;;;; Options
 
 (define-record-type <option>
-  (raw-option parser properties)
+  (raw-option arity parser properties)
   option?
+  (arity option-arity)             ; maximum number of arguments
   (parser option-parser)           ; an argument parser
   (properties option-properties))  ; a key/value map of option properties
 
@@ -147,7 +148,7 @@
      (let ((arg-p (if (zero? n)
                       flag
                       (arguments name n conv))))
-       (raw-option arg-p (singleton-properties 'names names))))))
+       (raw-option n arg-p (singleton-properties 'names names))))))
 
 (define (option-map f opt)
   (raw-option (parser-map f (option-parser opt))
