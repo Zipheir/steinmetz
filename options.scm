@@ -26,6 +26,20 @@
       (error 'first "no values")
       (car vals)))
 
+;; Combine bindings from two alists whose values are lists.
+;; Inefficient.
+(define (alist-merge ps qs)
+  (fold (lambda (q res)
+          (let ((x (car q)))
+            (cond ((assv x res) =>
+                   (lambda (p)
+                     (cons (cons x (append (cdr p) (cdr q)))
+                           (remove (lambda (r) (eqv? (car r) x))
+                                   res))))
+                  (else (cons q res)))))
+        ps
+        qs))
+
 (define (option-string? s)
   (and (not (equal? s ""))
        (eqv? #\- (string-ref s 0))))
@@ -98,41 +112,80 @@
 ;;;; Options
 
 (define-record-type <option>
-  (raw-option name args parser help)
+  (raw-option parser properties)
   option?
-  (name option-name)            ; a symbol
-  (args option-args)            ; a list of argument names (symbols)
-  (parser option-parser)        ; argument parser
-  (help option-help))           ; option description (string) or #f
+  (parser option-parser)           ; an argument parser
+  (properties option-properties))  ; a key/value map of option properties
 
-;; Exported constructor.
+;;; (Symbol . list) alist implementation of properties.
+
+(define (option-get-property opt key)
+  (cond ((assv key (option-properties opt)) => cdr)
+        (else #f)))
+
+(define (option-add-property opt key val)
+  (raw-option (option-parser opt)
+              (prop-+ (list (cons key (list val)))
+                      (option-properties opt))))
+
+;; Monoidal unit.
+(define prop-zero '())
+
+;; Monoidal sum.
+(define prop-+ alist-merge)
+
+(define (singleton-properties key val)
+  (list (cons key val)))
+
+;; Exported constructor. Defaults to an option that takes a single
+;; string argument.
 (define option
   (case-lambda
-    ((name) (option name '() first #f))
-    ((name args) (option name args first #f))
-    ((name args conv) (option name args conv #f))
-    ((name args conv help)
-     (let* ((arg-p (case (length args)
-                     ((0) flag)
-                     (else => (lambda (n) (arguments name n conv))))))
-       (raw-option name args arg-p help)))))
+    ((names) (option names 1 first))
+    ((names n) (option names n first))
+    ((names n conv)
+     (let ((arg-p (if (zero? n)
+                      flag
+                      (arguments name n conv))))
+       (raw-option arg-p (singleton-properties 'names names))))))
 
 (define (option-map f opt)
-  (raw-option (option-name opt)
-              (option-args opt)
-              (parser-map f (option-parser opt))
-              (option-help opt)))
+  (raw-option (parser-map f (option-parser opt))
+              (option-properties opt)))
+
+;;; Option combinators
 
 ;; Transform the arguments of 'opt' with 'proc', which should
 ;; take a list to a list.
 (define (option-add-arg-processor proc opt)
   (option-map proc opt))
 
+;; Add an option name (long or short) to opt.
+(define (opt-name name opt)
+  (option-add-property opt 'names name))
+
+;; Add a help string to opt.
+(define (opt-help s opt)
+  (option-add-property opt 'help s))
+
+;; Add a default value to opt.
+;; TODO: What if opt takes no arguments?
+(define (opt-default x opt)
+  (option-add-property opt 'default x))
+
+;; Add an argument name (symbol) to opt.
+(define (opt-arg-name name opt)
+  (option-add-property opt 'argument-name name))
+
+;;;; Driver
+
 ;; Uses SRFI 69, but could be a perfect hash table.
 (define (make-option-table opts)
   (let ((table (make-hash-table eq? symbol-hash)))
     (for-each (lambda (opt)
-                (hash-table-set! table (option-name opt) opt))
+                (for-each (lambda (name)
+                            (hash-table-set! table name opt))
+                          (option-get-property opt 'names)))
               opts)
     table))
 
@@ -145,8 +198,6 @@
 ;; No arguments; returns #t.
 (define (flag ts)
   (values #t ts))
-
-;;;; Driver
 
 ;; Issues:
 ;;
