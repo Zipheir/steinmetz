@@ -20,3 +20,11 @@ an option name, we pass it the option structure. This makes the
 user's life more complex. We also have to pick a canonical name
 for the simple 'parse-cli->alist' interface; there's no way around
 it. I don't see a simple way to solve the error message issue.
+
+dpk's suggestion: Print all of an option's names in error messages.
+
+Done.
+
+The monoid-like structure of option properties is not really so
+simple. Most properties should only be added once, while others
+(like default values and help strings) are order-dependent.
