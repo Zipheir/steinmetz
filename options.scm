@@ -80,15 +80,16 @@
 ;;; vals is a list of argument values, rest is the remaining input,
 ;;; and msg is string giving an error message.
 
-;; Parse an argument for option 'name'.
+;; Parse an argument.
 ;; The 'conv' procedure takes the argument string and an error
 ;; continuationd 'fail'. It either returns a value or calls 'fail'
 ;; on a message.
-(define (raw-argument name conv)
-  (let ((make-msg     ; error message template
-         (lambda (msg-body)
-           (string-append "option " (symbol->string name) ": "
-                          msg-body))))
+(define (raw-argument opt-names conv)
+  (let* ((name-string (symbol->string (car opt-names)))  ; hack
+         (make-msg     ; error message template
+          (lambda (msg-body)
+            (string-append "option " name-string ": "
+                           msg-body))))
     (lambda (lis)
       (if (and (pair? lis) (argument-string? (car lis)))
           (call-with-current-continuation
@@ -97,14 +98,12 @@
                               (lambda (s)
                                 (k (left (make-msg s)))))))
                (right val (cdr lis)))))
-          (left
-           (string-append "option " (symbol->string name)
-                          ": missing argument"))))))
+          (left (make-msg "missing argument"))))))
 
 ;; Parses k arguments, converts them, and returns them as
 ;; a list.
-(define (arguments name k conv)
-  (parser-seq (make-list k (raw-argument name conv))))
+(define (arguments names k conv)
+  (parser-seq (make-list k (raw-argument names conv))))
 
 ;; Should be continuable.
 (define parser-exception error)
