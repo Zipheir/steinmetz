@@ -147,7 +147,7 @@
     ((names n conv)
      (let ((arg-p (if (zero? n)
                       flag
-                      (arguments name n conv))))
+                      (arguments names n conv))))
        (raw-option n arg-p (singleton-properties 'names names))))))
 
 (define (option-map f opt)
