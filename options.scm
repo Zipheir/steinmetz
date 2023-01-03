@@ -125,7 +125,8 @@
         (else #f)))
 
 (define (option-add-property opt key val)
-  (raw-option (option-parser opt)
+  (raw-option (option-arity opt)
+              (option-parser opt)
               (prop-+ (list (cons key (list val)))
                       (option-properties opt))))
 
@@ -151,7 +152,8 @@
        (raw-option n arg-p (singleton-properties 'names names))))))
 
 (define (option-map f opt)
-  (raw-option (parser-map f (option-parser opt))
+  (raw-option (option-arity opt)
+              (parser-map f (option-parser opt))
               (option-properties opt)))
 
 ;;; Option combinators
