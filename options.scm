@@ -26,19 +26,11 @@
       (error 'first "no values")
       (car vals)))
 
-;; Combine bindings from two alists whose values are lists.
-;; Inefficient.
-(define (alist-merge ps qs)
-  (fold (lambda (q res)
-          (let ((x (car q)))
-            (cond ((assv x res) =>
-                   (lambda (p)
-                     (cons (cons x (append (cdr p) (cdr q)))
-                           (remove (lambda (r) (eqv? (car r) x))
-                                   res))))
-                  (else (cons q res)))))
-        ps
-        qs))
+;; Add (key . val) to alist, replacing any existing pair with
+;; car key. May derange alist.
+(define (alist-update key val alist)
+  (cons (cons key val)
+        (remove (lambda (p) (eqv? key (car p))) alist)))
 
 (define (option-string? s)
   (and (not (equal? s ""))
@@ -126,14 +118,7 @@
 (define (option-add-property opt key val)
   (raw-option (option-arity opt)
               (option-parser opt)
-              (prop-+ (list (cons key (list val)))
-                      (option-properties opt))))
-
-;; Monoidal unit.
-(define prop-zero '())
-
-;; Monoidal sum.
-(define prop-+ alist-merge)
+              (alist-update key val (option-properties opt))))
 
 (define (singleton-properties key val)
   (list (cons key val)))
@@ -162,22 +147,17 @@
 (define (option-add-arg-processor proc opt)
   (option-map proc opt))
 
-;; Add an option name (long or short) to opt.
-(define (opt-name name opt)
-  (option-add-property opt 'names name))
-
 ;; Add a help string to opt.
 (define (opt-help s opt)
   (option-add-property opt 'help s))
 
 ;; Add a default value to opt.
-;; TODO: What if opt takes no arguments?
 (define (opt-default x opt)
   (option-add-property opt 'default x))
 
-;; Add an argument name (symbol) to opt.
-(define (opt-arg-name name opt)
-  (option-add-property opt 'argument-name name))
+;; Add a list of argument names (symbols) to opt.
+(define (opt-arg-names names opt)
+  (option-add-property opt 'argument-names names))
 
 ;;;; Driver
 
