@@ -151,10 +151,6 @@
 (define (opt-help s opt)
   (option-add-property opt 'help s))
 
-;; Add a default value to opt.
-(define (opt-default x opt)
-  (option-add-property opt 'default x))
-
 ;; Add a list of argument names (symbols) to opt.
 (define (opt-arg-names names opt)
   (option-add-property opt 'argument-names names))
