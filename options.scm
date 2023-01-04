@@ -179,7 +179,7 @@
 
 ;; No arguments; returns #t.
 (define (flag ts)
-  (values #t ts))
+  (right #t ts))
 
 ;; Issues:
 ;;
