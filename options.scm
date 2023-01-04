@@ -1,10 +1,3 @@
-(import (srfi 1)
-        (srfi 69)
-        (srfi 189)
-        )
-
-(include "string-util.scm")
-
 ;;;; Utility
 
 (define (either-ap ef ex)
