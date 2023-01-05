@@ -25,6 +25,8 @@
   (cons (cons key val)
         (remove (lambda (p) (eqv? key (car p))) alist)))
 
+;;;; Matching options and arguments
+
 (define (option-string? s)
   (and (not (equal? s ""))
        (eqv? #\- (string-ref s 0))))
@@ -167,7 +169,7 @@
 
 ;; Issues:
 ;;
-;; At the moment, this only handles short options. We should support
+;; We should support
 ;; long options with =-delimiter syntax. We might be able to handle the
 ;; latter by pre-splitting the input list.
 
