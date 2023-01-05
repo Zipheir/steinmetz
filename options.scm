@@ -180,16 +180,28 @@
   (let ((opt-tab (make-option-table options)))
     (let loop ((res knil) (ts ts))
       (cond ((null? ts) (values res '()))  ; no operands
-            ((option-string? (car ts))
-             (let ((name (option-string->name (car ts))))
+            ((option-string->name (car ts)) =>
+             (lambda (name)
                (either-ref (process-option name opt-tab (cdr ts))
                            parser-exception
                            (lambda (v ts*)
                              (loop (proc name v res) ts*)))))
             (else (values res ts))))))      ; rest are operands
 
+(define opt-irx
+  (irregex '(or (: #\- (submatch alphanumeric))
+                (: "--" (submatch (+ alphanumeric))))))
+
 (define (option-string->name s)
-  (string->symbol (string-drop-while s (lambda (c) (eqv? c #\-)))))
+  (let ((get-name
+         (lambda (t)
+           (string->symbol
+            (string-drop-while t (lambda (c) (eqv? c #\-)))))))
+    (cond ((irregex-match opt-irx s) =>
+           (lambda (m)
+             (get-name (or (irregex-match-substring m 1)
+                           (irregex-match-substring m 2)))))
+          (else #f))))
 
 (define (process-option name opt-table in)
   (let ((opt (lookup-option-by-name opt-table name)))
