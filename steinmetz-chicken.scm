@@ -1,5 +1,5 @@
 (module steinmetz
-  (option option-map option-add-arg-processor opt-help
+  (option option-map opt-help
    opt-arg-names fold-cli parse-cli->alist)
 
 (import scheme

@@ -135,11 +135,6 @@
 
 ;;; Option combinators
 
-;; Transform the arguments of 'opt' with 'proc', which should
-;; take a list to a list.
-(define (option-add-arg-processor proc opt)
-  (option-map proc opt))
-
 ;; Add a help string to opt.
 (define (opt-help s opt)
   (option-add-property opt 'help s))
