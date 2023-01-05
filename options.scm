@@ -188,20 +188,12 @@
                              (loop (proc name v res) ts*)))))
             (else (values res ts))))))      ; rest are operands
 
-(define opt-irx
-  (irregex '(or (: #\- (submatch alphanumeric))
-                (: "--" (submatch (+ alphanumeric))))))
-
+;; If s is a string describing a long or short option, returns its
+;; name as a symbol. Otherwise, returns #f.
 (define (option-string->name s)
-  (let ((get-name
-         (lambda (t)
-           (string->symbol
-            (string-drop-while t (lambda (c) (eqv? c #\-)))))))
-    (cond ((irregex-match opt-irx s) =>
-           (lambda (m)
-             (get-name (or (irregex-match-substring m 1)
-                           (irregex-match-substring m 2)))))
-          (else #f))))
+  (and (option-string? s)
+       (string->symbol
+        (string-drop-while s (lambda (c) (eqv? c #\-))))))
 
 (define (process-option name opt-table in)
   (let ((opt (lookup-option-by-name opt-table name)))
