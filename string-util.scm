@@ -14,3 +14,17 @@
   (cond ((string-skip s pred) =>
          (lambda (k) (substring s k (string-length s))))
         (else s)))
+
+(define (string-concatenate ss)
+  (fold-right string-append "" ss))
+
+;; From SRFI 130/152. Infix grammar only.
+(define (string-join ss sep)
+  (letrec ((isperse
+            (lambda (ss)
+              (if (null? (cdr ss))
+                  ss
+                  (cons (car ss) (cons sep (isperse (cdr ss))))))))
+    (if (null? ss)
+        ""
+        (string-concatenate (isperse ss)))))

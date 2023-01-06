@@ -1,6 +1,7 @@
 (module steinmetz
   (option option-map opt-help
-   opt-arg-names fold-cli parse-cli->alist)
+   opt-arg-names fold-cli parse-cli->alist
+   make-usage)
 
 (import scheme
         (chicken base)
