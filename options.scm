@@ -167,14 +167,9 @@
 (define (flag ts)
   (right #t ts))
 
-;; Issues:
-;;
-;; We should support
-;; long options with =-delimiter syntax. We might be able to handle the
-;; latter by pre-splitting the input list.
-
-(define (fold-cli options proc knil ts)
-  (let ((opt-tab (make-option-table options)))
+(define (fold-cli options proc knil cli-lis)
+  (let ((opt-tab (make-option-table options))
+        (ts (clean-command-line cli-lis)))
     (let loop ((res knil) (ts ts))
       (cond ((null? ts) (values res '()))  ; no operands
             ((option-string->name (car ts)) =>
