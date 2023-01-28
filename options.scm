@@ -171,14 +171,15 @@
   (let ((opt-tab (make-option-table options))
         (ts (clean-command-line cli-lis)))
     (let loop ((res knil) (ts ts))
-      (cond ((null? ts) (values res '()))  ; no operands
+      (cond ((null? ts) res)
             ((option-string->name (car ts)) =>
              (lambda (name)
                (either-ref (process-option name opt-tab (cdr ts))
                            parser-exception
                            (lambda (v ts*)
                              (loop (proc name v res) ts*)))))
-            (else (values res ts))))))      ; rest are operands
+            (else
+             (loop (proc #f (car ts) res) (cdr ts)))))))
 
 ;; If s is a string describing a long or short option, returns its
 ;; name as a symbol. Otherwise, returns #f.
