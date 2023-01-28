@@ -167,19 +167,26 @@
 (define (flag ts)
   (right #t ts))
 
-(define (fold-cli options proc knil cli-lis)
+(define (fold-cli options proc cli-lis . seeds)
   (let ((opt-tab (make-option-table options))
         (ts (clean-command-line cli-lis)))
-    (let loop ((res knil) (ts ts))
-      (cond ((null? ts) res)
-            ((option-string->name (car ts)) =>
-             (lambda (name)
-               (either-ref (process-option name opt-tab (cdr ts))
-                           parser-exception
-                           (lambda (v ts*)
-                             (loop (proc name v res) ts*)))))
-            (else
-             (loop (proc #f (car ts) res) (cdr ts)))))))
+
+    (define (accum-option name ts seeds cont)
+      (either-ref (process-option name opt-tab (cdr ts))
+                  parser-exception
+                  (lambda (v ts*)
+                    (let-values ((seeds* (apply proc name v seeds)))
+                      (cont seeds* ts*)))))
+
+    (let loop ((seeds seeds) (ts ts))
+      (if (null? ts)
+          (apply values seeds)
+          (let ((t (car ts)) (ts* (cdr ts)))
+            (cond ((option-string->name t) =>
+                   (lambda (name) (accum-option name ts* seeds loop)))
+                  (else
+                   (let-values ((seeds* (apply proc #f t seeds)))
+                     (loop seeds* ts*)))))))))
 
 ;; If s is a string describing a long or short option, returns its
 ;; name as a symbol. Otherwise, returns #f.
@@ -197,5 +204,5 @@
   (fold-cli options
             (lambda (name args res)
               (cons (cons name args) res))
-            '()
-            ts))
+            ts
+            '()))
