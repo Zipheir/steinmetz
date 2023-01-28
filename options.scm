@@ -200,9 +200,19 @@
     ((option-parser opt) in)))
 
 ;;; Convenience
-(define (parse-cli->alist options ts)
+
+;; Parses ts and returns two values: an alist associating each option with
+;; its arguments, and a list of "operands"--tokens without a preceding
+;; option.
+;;
+;; This is a trivial implementation. Options and operands are returned
+;; in reverse order, and option arguments are not pooled.
+(define (process-cli options ts)
   (fold-cli options
-            (lambda (name args res)
-              (cons (cons name args) res))
+            (lambda (name val opts opers)
+              (if name
+                  (values (cons (cons name val) opts) opers)
+                  (values opts (cons val opers))))
             ts
+            '()
             '()))
