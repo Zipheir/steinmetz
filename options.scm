@@ -69,7 +69,7 @@
 
 ;; Parse an argument.
 ;; The 'conv' procedure takes the argument string and an error
-;; continuationd 'fail'. It either returns a value or calls 'fail'
+;; continuation 'fail'. It either returns a value or calls 'fail'
 ;; on a message.
 (define (raw-argument opt-names conv)
   (let* ((name-string (symbol->string (car opt-names)))  ; hack
