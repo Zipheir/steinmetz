@@ -172,7 +172,7 @@
         (ts (clean-command-line cli-lis)))
 
     (define (accum-option name ts seeds cont)
-      (either-ref (process-option name opt-tab (cdr ts))
+      (either-ref (process-option name opt-tab ts)
                   parser-exception
                   (lambda (v ts*)
                     (let-values ((seeds* (apply proc name v seeds)))
