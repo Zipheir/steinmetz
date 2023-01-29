@@ -30,4 +30,8 @@ Thanks to tomhg for suggesting the name.
 Thanks to Paolo Capriotti for his complicated but inspiring
 post on [applicative CLI parsing][0].
 
+## Interface
+
+TODO.
+
 [0]: https://www.paolocapriotti.com/blog/2012/04/27/applicative-option-parser/
