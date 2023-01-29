@@ -36,6 +36,14 @@ post on [applicative CLI parsing][0].
 
 Command-line options are described by Option structures.
 
+The public elements of an Option include:
+
+* Names (a list of symbols)
+* Arity (number of arguments; a non-negative integer)
+* Help text (a string; optional)
+* Argument names (names of arguments, in order; a list of symbols;
+  optional)
+
 #### Procedures
 
 `(option names [narg [conv]])`
