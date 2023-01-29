@@ -74,7 +74,7 @@ True if *x* is an Option and false otherwise.
 `(option-names opt)`
 
 Returns the names of *opt* as a list of symbols. Names do not include
-leading dashes. Thus, the `widget` is the name of the option spelled
+leading dashes. Thus, `widget` is the name of the option spelled
 `--widget` on the command-line.
 
 `(option-arity opt)`
