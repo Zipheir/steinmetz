@@ -25,3 +25,15 @@ This file may be out of date. Don’t take it seriously.
 
   Adopted dpk's suggestion: Print all of an option's names in error
   messages.
+
+* Design the syntactic layer. This should include at least a
+  declarative form that quickly generates a list of options.
+  e.g.
+
+    (options ((n num) 1 (NUM string->number) "Number of frobs.")
+             ((v) 0 () "Verbose output."))
+
+  This is a little clumsy.
+
+* Support optional and default arguments? Or can we push these to
+  a higher layer?
