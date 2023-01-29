@@ -53,7 +53,7 @@ a short or long name (without leading dashes) for this option. *narg* is
 a non-negative integer giving the number of arguments (non-option tokens
 which should follow the option). It defaults to 1.
 
-*conv* is an argument conversion procedure of type `String Procedure → *.
+*conv* is an argument conversion procedure of type `String Procedure → *`.
 When the option is parsed, each argument string will be passed to *conv*
 along with a *failure* continuation. If *conv* returns normally, the
 result will be the value of the argument. If instead *failure* is invoked
