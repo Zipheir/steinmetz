@@ -1,9 +1,5 @@
 ;;;; Utility
 
-(define (either-ap ef ex)
-  (either-bind ef
-               (lambda (f) (either-map f ex))))
-
 (define (consc a) (lambda (d) (cons a d)))
 
 (define (first . vals)
