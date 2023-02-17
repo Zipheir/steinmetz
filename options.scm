@@ -71,7 +71,7 @@
 ;; The 'conv' procedure takes the argument string and an error
 ;; continuation 'fail'. It either returns a value or calls 'fail'
 ;; on a message.
-(define (raw-argument opt-names conv)
+(define (argument opt-names conv)
   (let* ((name-string (symbol->string (car opt-names)))  ; hack
          (make-msg     ; error message template
           (lambda (msg-body)
@@ -87,20 +87,14 @@
                (right val (cdr lis)))))
           (left (make-msg "missing argument"))))))
 
-;; Parses k arguments, converts them, and returns them as
-;; a list.
-(define (arguments names k conv)
-  (parser-seq (make-list k (raw-argument names conv))))
-
 ;; Should be continuable.
 (define parser-exception error)
 
 ;;;; Options
 
 (define-record-type <option>
-  (raw-option arity parser properties)
+  (raw-option parser properties)
   option?
-  (arity option-arity)             ; maximum number of arguments
   (parser option-parser)           ; an argument parser
   (properties option-properties))  ; a key/value map of option properties
 
@@ -111,8 +105,7 @@
         (else #f)))
 
 (define (option-add-property opt key val)
-  (raw-option (option-arity opt)
-              (option-parser opt)
+  (raw-option (option-parser opt)
               (alist-update key val (option-properties opt))))
 
 (define (singleton-properties key val)
@@ -122,17 +115,14 @@
 ;; string argument.
 (define option
   (case-lambda
-    ((names) (option names 1 first))
-    ((names n) (option names n first))
-    ((names n conv)
-     (let ((arg-p (if (zero? n)
-                      flag
-                      (arguments names n conv))))
-       (raw-option n arg-p (singleton-properties 'names names))))))
+    ((names) (option names 'ARG first))
+    ((names arg-name) (option names arg-name first))
+    ((names arg-name conv)
+     (let ((arg-p (if arg-name (argument names conv) flag)))
+       (raw-option arg-p (singleton-properties 'names names))))))
 
 (define (option-map f opt)
-  (raw-option (option-arity opt)
-              (parser-map f (option-parser opt))
+  (raw-option (parser-map f (option-parser opt))
               (option-properties opt)))
 
 ;;; Option combinators
@@ -141,9 +131,9 @@
 (define (opt-help s opt)
   (option-add-property opt 'help s))
 
-;; Add a list of argument names (symbols) to opt.
-(define (opt-arg-names names opt)
-  (option-add-property opt 'argument-names names))
+;; Add an argument name (symbol) to opt.
+(define (opt-arg-name name opt)
+  (option-add-property opt 'argument-name name))
 
 ;;;; Driver
 
