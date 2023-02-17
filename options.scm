@@ -4,14 +4,6 @@
   (either-bind ef
                (lambda (f) (either-map f ex))))
 
-;; (list Either) -> Either list.
-;; SRFI 189's sequence is a bit odd. This is simpler.
-(define (either-seq es)
-  (if (null? es)
-      (right '())
-      (either-ap (either-map consc (car es))
-                 (either-seq (cdr es)))))
-
 (define (consc a) (lambda (d) (cons a d)))
 
 (define (first . vals)
@@ -53,12 +45,6 @@
                    (either-bind (px in*)
                                 (lambda (x in**)
                                   (right (f x) in**)))))))
-
-(define (parser-seq ps)
-  (fold-right (lambda (px pacc)
-                (parser-ap (parser-map consc px) pacc))
-              (parser-pure '())
-              ps))
 
 ;;; Argument parsers
 
