@@ -188,3 +188,26 @@
             ts
             '()
             '()))
+
+;;;; Syntax
+
+(define-syntax options
+  (syntax-rules ()
+    ((options c0 ...)
+     (list (%opt-clause c0) ...))))
+
+(define-syntax %opt-clause
+  (syntax-rules ()
+    ((%opt-clause names)   ; flag
+     (option (%normalize-names names) #f))
+    ((%opt-clause names arg)
+     (option (%normalize-names names) 'arg))
+    ((%opt-clause names arg conv)
+     (option (%normalize-names names) 'arg))
+    ((%opt-clause names arg conv help)
+     (opt-help help (%opt-clause names arg conv)))))
+
+(define-syntax %normalize-names
+  (syntax-rules ()
+    ((%normalize-names (name0 . names)) '(name0 . names))
+    ((%normalize-names name) '(name))))
