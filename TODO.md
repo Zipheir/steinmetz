@@ -38,7 +38,7 @@ This file may be out of date. Don’t take it seriously.
 * Support optional and default arguments? Or can we push these to
   a higher layer?
 
-* Decide how which argument schemes to support, and figure out how
+* ✓ Decide how which argument schemes to support, and figure out how
   they interact with argument names. Should we support multiple
   arguments? The getopt fans say no, except via the `--opt=a,b,c`
   syntax. If we do, should we support variadic options?
@@ -46,3 +46,6 @@ This file may be out of date. Don’t take it seriously.
   How are multiple arguments named? An option that takes two arguments
   might call them `ARG1` and `ARG2`, or it might call them
   `ARG ...`.
+
+  For now, I’m adopting the simplest solution: Each option takes one
+  or zero arguments.
