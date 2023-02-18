@@ -203,8 +203,8 @@
 
 (define-syntax options
   (syntax-rules ()
-    ((options c0 ...)
-     (list (%opt-clause c0) ...))))
+    ((options (e ...) ...)
+     (list (%opt-clause e ...) ...))))
 
 (define-syntax %opt-clause
   (syntax-rules ()
