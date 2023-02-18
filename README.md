@@ -107,8 +107,10 @@ The `options` form is the main interface to the library. It’s used to
 declare a set of CLI options with the usual properties. Each clause
 describes a single option and is of one of the following forms:
 
-`(flag   <name-or-names> [<help-text>])`
-`(option <name-or-names> [<arg-name> [<conv> [<help-text>]]])`
+```
+    (flag   <name-or-names> [<help-text>])
+    (option <name-or-names> [<arg-name> [<conv> [<help-text>]]])
+```
 
 The `(flag …)` form describes a boolean flag which takes no arguments;
 `(option …)` describes an option taking a single argument.
