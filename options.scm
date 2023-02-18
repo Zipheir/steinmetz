@@ -137,8 +137,8 @@
                     (parser-exception "invalid option" name))))
 
 ;; No arguments; returns #t.
-(define (flag ts)
-  (right #t ts))
+(define (flag ts succeed _fail)
+  (succeed #t ts))
 
 (define (fold-cli options proc cli-lis . seeds)
   (let ((opt-tab (make-option-table options))
