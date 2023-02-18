@@ -46,12 +46,12 @@ The public elements of an Option include:
 
 #### Procedures
 
-`(option names [narg [conv]])`
+`(option names [arg-name [conv]])`
 
 Constructs a new Option. *names* is a list of symbols; each element is
-a short or long name (without leading dashes) for this option. *narg* is
-a non-negative integer giving the number of arguments (non-option tokens
-which should follow the option). It defaults to 1.
+a short or long name (without leading dashes) for this option. *arg-name*
+is a symbol giving the name of the option’s argument. It defaults to
+`ARG`. If *arg-name* is `#f`, then the option takes no arguments.
 
 *conv* is an argument conversion procedure of type `String Procedure → *`.
 When the option is parsed, each argument string will be passed to *conv*
@@ -64,7 +64,7 @@ Example:
     (let ((conv (lambda (s failure)
                   (let ((res-or-false (string->number s)))
                     (or res-or-false (failure "not a number"))))))
-      (option '(n num) 1 conv))
+      (option '(n num) NUM conv))
 ```
 
 `(option? x)`
