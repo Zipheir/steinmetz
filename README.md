@@ -46,7 +46,7 @@ The public elements of an Option include:
 
 #### Procedures
 
-`(option names [arg-name [conv]])`
+`(make-option names [arg-name [conv]])`
 
 Constructs a new Option. *names* is a list of symbols; each element is
 a short or long name (without leading dashes) for this option. *arg-name*
@@ -64,7 +64,7 @@ Example:
     (let ((conv (lambda (s failure)
                   (let ((res-or-false (string->number s)))
                     (or res-or-false (failure "not a number"))))))
-      (option '(n num) 'NUM conv))
+      (make-option '(n num) 'NUM conv))
 ```
 
 `(option? x)`
@@ -111,7 +111,7 @@ describes a single option and is of the following form:
 
 `name-or-names` is either a symbol or a list of symbols (both unquoted)
 and gives the acceptable forms of an option. `arg-name` and `conv` have
-the same meaning as they do in `option`. `help-text` is a string
+the same meaning as they do in `make-option`. `help-text` is a string
 describing the option.
 
 The value of an `options` form is a list of option structures
