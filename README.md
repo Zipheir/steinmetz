@@ -64,7 +64,7 @@ Example:
     (let ((conv (lambda (s failure)
                   (let ((res-or-false (string->number s)))
                     (or res-or-false (failure "not a number"))))))
-      (option '(n num) NUM conv))
+      (option '(n num) 'NUM conv))
 ```
 
 `(option? x)`
@@ -98,5 +98,35 @@ Returns the help text of *opt* or `#f`.
 
 Updates *opt* with the list of metavariable names *names*. It is an
 error if the length of *names* doesn’t match *opt*’s arity.
+
+#### Syntax
+
+`(options <clause> ...)`
+
+The `options` form is the main interface to the library. It’s used to
+declare a set of CLI options with the usual properties. Each clause
+describes a single option and is of the following form:
+
+`(name-or-names [arg-name [conv [help-text]]])`
+
+`name-or-names` is either a symbol or a list of symbols (both unquoted)
+and gives the acceptable forms of an option. `arg-name` and `conv` have
+the same meaning as they do in `option`. `help-text` is a string
+describing the option.
+
+The value of an `options` form is a list of option structures
+representing the CLI options described by its clauses.
+
+Example:
+```
+    (define my-opts
+      (options
+        ((f file)  FILE values         "input file")
+        ((k chunk) NUM  string->number "chunk to operate on")
+        ((v))))                        ; verbose output
+```
+
+ISSUE: The syntax for flags (see `v` above) is weak. We may need two
+clause forms: one for options and one for flags.
 
 [0]: https://www.paolocapriotti.com/blog/2012/04/27/applicative-option-parser/
