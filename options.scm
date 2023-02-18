@@ -176,18 +176,28 @@
 ;; Parses ts and returns two values: an alist associating each option with
 ;; its arguments, and a list of "operands"--tokens without a preceding
 ;; option.
-;;
-;; This is a trivial implementation. Options and operands are returned
-;; in reverse order, and option arguments are not pooled.
 (define (process-cli options ts)
-  (fold-cli options
-            (lambda (name val opts opers)
-              (if name
-                  (values (cons (cons name val) opts) opers)
-                  (values opts (cons val opers))))
-            ts
-            '()
-            '()))
+  ;; If name has an association in alis, then append val to the cdr
+  ;; of name's pair. Otherwise, just add (name . val) to alis.
+  (define (adjoin/pool name val alis)
+    (cond ((assv name alis) =>
+           (lambda (p)
+             (cons (cons (car p) (append (cdr p) (list val)))
+                   (remove (lambda (p) (eqv? name (car p))) alis))))
+          (else (cons (list name val) alis))))
+
+  (call-with-values
+   (lambda ()
+     (fold-cli options
+               (lambda (name val opts opers)
+                 (if name
+                     (values (adjoin/pool name val opts) opers)
+                     (values opts (cons val opers))))
+               ts
+               '()
+               '()))
+   (lambda (opts opers)
+     (values (reverse opts) (reverse opers)))))
 
 ;;;; Syntax
 
