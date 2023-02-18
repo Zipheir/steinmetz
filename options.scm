@@ -1,7 +1,5 @@
 ;;;; Utility
 
-(define (consc a) (lambda (d) (cons a d)))
-
 (define (first . vals)
   (if (null? vals)
       (error 'first "no values")
