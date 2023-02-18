@@ -73,6 +73,10 @@
 ;; Should be continuable.
 (define parser-exception error)
 
+;; No arguments; returns #t.
+(define (flag-parser ts succeed _fail)
+  (succeed #t ts))
+
 ;;;; Options
 
 (define-record-type <option>
@@ -96,12 +100,12 @@
 
 ;; Exported constructor. Defaults to an option that takes a single
 ;; string argument.
-(define option
+(define make-option
   (case-lambda
-    ((names) (option names 'ARG first))
-    ((names arg-name) (option names arg-name first))
+    ((names) (make-option names 'ARG first))
+    ((names arg-name) (make-option names arg-name first))
     ((names arg-name conv)
-     (let ((arg-p (if arg-name (argument names conv) flag)))
+     (let ((arg-p (if arg-name (argument names conv) flag-parser)))
        (raw-option arg-p (singleton-properties 'names names))))))
 
 (define (option-map f opt)
@@ -135,10 +139,6 @@
                   name
                   (lambda ()
                     (parser-exception "invalid option" name))))
-
-;; No arguments; returns #t.
-(define (flag ts succeed _fail)
-  (succeed #t ts))
 
 (define (fold-cli options proc cli-lis . seeds)
   (let ((opt-tab (make-option-table options))
@@ -212,11 +212,11 @@
 (define-syntax %opt-clause
   (syntax-rules ()
     ((%opt-clause names)   ; flag
-     (option (%normalize-names names) #f))
+     (make-option (%normalize-names names) #f))
     ((%opt-clause names arg)
-     (option (%normalize-names names) 'arg))
+     (make-option (%normalize-names names) 'arg))
     ((%opt-clause names arg conv)
-     (option (%normalize-names names) 'arg))
+     (make-option (%normalize-names names) 'arg))
     ((%opt-clause names arg conv help)
      (opt-help help (%opt-clause names arg conv)))))
 
