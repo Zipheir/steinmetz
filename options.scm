@@ -23,7 +23,7 @@
 (define (argument-string? s)
   (not (option-string? s)))
 
-;;;; Parsers
+;;;; Parser utilities
 
 (define (parser-map f p)
   (lambda (in succeed fail)
@@ -210,15 +210,15 @@
      (list (%opt-clause e ...) ...))))
 
 (define-syntax %opt-clause
-  (syntax-rules ()
-    ((%opt-clause names)   ; flag
+  (syntax-rules (option flag)
+    ((%opt-clause flag names)
      (make-option (%normalize-names names) #f))
-    ((%opt-clause names arg)
+    ((%opt-clause option names arg)
      (make-option (%normalize-names names) 'arg))
-    ((%opt-clause names arg conv)
-     (make-option (%normalize-names names) 'arg))
-    ((%opt-clause names arg conv help)
-     (opt-help help (%opt-clause names arg conv)))))
+    ((%opt-clause option names arg conv)
+     (make-option (%normalize-names names) 'arg conv))
+    ((%opt-clause option names arg conv help)
+     (opt-help help (%opt-clause option names arg conv)))))
 
 (define-syntax %normalize-names
   (syntax-rules ()

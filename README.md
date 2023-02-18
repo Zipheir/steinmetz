@@ -105,10 +105,13 @@ error if the length of *names* doesn’t match *opt*’s arity.
 
 The `options` form is the main interface to the library. It’s used to
 declare a set of CLI options with the usual properties. Each clause
-describes a single option and is of the following form:
+describes a single option and is of one of the following forms:
 
-`(name-or-names [arg-name [conv [help-text]]])`
+`(flag   <name-or-names> [<help-text>])`
+`(option <name-or-names> [<arg-name> [<conv> [<help-text>]]])`
 
+The `(flag …)` form describes a boolean flag which takes no arguments;
+`(option …)` describes an option taking a single argument.
 `name-or-names` is either a symbol or a list of symbols (both unquoted)
 and gives the acceptable forms of an option. `arg-name` and `conv` have
 the same meaning as they do in `make-option`. `help-text` is a string
@@ -121,12 +124,9 @@ Example:
 ```
     (define my-opts
       (options
-        ((f file)  FILE values         "input file")
-        ((k chunk) NUM  string->number "chunk to operate on")
-        ((v))))                        ; verbose output
+        (option (f file)    FILE values         "input file")
+        (option (k chunk)   NUM  string->number "chunk to operate on")
+        (flag   (v verbose)                     "verbose output")))
 ```
-
-ISSUE: The syntax for flags (see `v` above) is weak. We may need two
-clause forms: one for options and one for flags.
 
 [0]: https://www.paolocapriotti.com/blog/2012/04/27/applicative-option-parser/
