@@ -26,48 +26,49 @@
 ;;;; Parsers
 
 (define (parser-map f p)
-  (lambda (lis)
-    (either-map (lambda (x rest) (values (f x) rest))
-                (p lis))))
+  (lambda (in succeed fail)
+    (p in
+       fail
+       (lambda (x rest) (succeed (f x) rest)))))
 
 (define (parser-pure x)
-  (lambda (in)
-    (right x in)))
+  (lambda (in succeed _fail)
+    (succeed x in)))
 
 (define (parser-ap pf px)
-  (lambda (in)
-    (either-bind (pf in)
-                 (lambda (f in*)
-                   (either-bind (px in*)
-                                (lambda (x in**)
-                                  (right (f x) in**)))))))
+  (lambda (in succeed fail)
+    (pf in
+        (lambda (f in*)
+          (px in*
+              (lambda (x in**)
+                (succeed (f x) in**))
+              fail)
+          fail)
+        fail)))
 
 ;;; Argument parsers
 
 ;;; An argument parser is a function that takes a list of strings
-;;; and returns either a Right[vals, rest] or a Left[msg].
-;;; vals is a list of argument values, rest is the remaining input,
-;;; and msg is string giving an error message.
+;;; and two continuations, 'succeed' and 'fail'. It is expected to
+;;; either invoke 'succeed' on a result and the rest of the input, or
+;;; invoke 'fail' on an error message (string).
 
 ;; Parse an argument.
 ;; The 'conv' procedure takes the argument string and an error
-;; continuation 'fail'. It either returns a value or calls 'fail'
-;; on a message.
+;; continuation. It either returns a value or calls the error
+;; continuation on a message.
 (define (argument opt-names conv)
   (let* ((name-string (symbol->string (car opt-names)))  ; hack
          (make-msg     ; error message template
           (lambda (msg-body)
             (string-append "option " name-string ": "
                            msg-body))))
-    (lambda (lis)
+    (lambda (lis succeed fail)
       (if (and (pair? lis) (argument-string? (car lis)))
-          (call-with-current-continuation
-           (lambda (k)
-             (let ((val (conv (car lis)
-                              (lambda (s)
-                                (k (left (make-msg s)))))))
-               (right val (cdr lis)))))
-          (left (make-msg "missing argument"))))))
+          (let ((val (conv (car lis)
+                           (lambda (s) (fail (make-msg s))))))
+            (succeed val (cdr lis)))
+          (fail (make-msg "missing argument"))))))
 
 ;; Should be continuable.
 (define parser-exception error)
@@ -144,11 +145,13 @@
         (ts (clean-command-line cli-lis)))
 
     (define (accum-option name ts seeds cont)
-      (either-ref (process-option name opt-tab ts)
-                  parser-exception
-                  (lambda (v ts*)
-                    (let-values ((seeds* (apply proc name v seeds)))
-                      (cont seeds* ts*)))))
+      (process-option name
+                      opt-tab
+                      ts
+                      (lambda (v ts*)
+                        (let-values ((seeds* (apply proc name v seeds)))
+                          (cont seeds* ts*)))
+                      parser-exception))
 
     (let loop ((seeds seeds) (ts ts))
       (if (null? ts)
@@ -167,9 +170,9 @@
        (string->symbol
         (string-drop-while s (lambda (c) (eqv? c #\-))))))
 
-(define (process-option name opt-table in)
+(define (process-option name opt-table in succeed fail)
   (let ((opt (lookup-option-by-name opt-table name)))
-    ((option-parser opt) in)))
+    ((option-parser opt) in succeed fail)))
 
 ;;; Convenience
 
