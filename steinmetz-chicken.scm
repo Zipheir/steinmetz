@@ -1,14 +1,13 @@
 (module steinmetz
   (option option-map opt-help
-   opt-arg-names fold-cli process-cli
-   make-usage)
+   opt-arg-name fold-cli process-cli
+   make-usage options)
 
 (import scheme
         (chicken base)
         (chicken irregex)
         (srfi 1)
         (srfi 69)
-        (srfi 189)
         fmt
         )
 
