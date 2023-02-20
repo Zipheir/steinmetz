@@ -11,22 +11,22 @@
 (define (clean-command-line lis)
   (let ((maybe-split
          (lambda (s)
-           (cond ((irregex-match short-option-cluster s)
+           (cond ((regexp-match? short-option-cluster s)
                   (cluster->strings s))
-                 ((irregex-match long-option/equals s) =>
+                 ((regexp-matches long-option/equals s) =>
                   (lambda (m)
-                    (list (irregex-match-substring m 1)    ; option
-                          (irregex-match-substring m 2)))) ; argument
+                    (list (regexp-match-submatch m 1)    ; option
+                          (regexp-match-submatch m 2)))) ; argument
                  (else (list s))))))
     (append-map maybe-split lis)))
 
 (define short-option-cluster
-  (sre->irregex '(: #\- alphabetic (+ alphabetic))))
+  (sre->regexp '(: #\- alphabetic (+ alphabetic))))
 
 (define long-option/equals
-  (sre->irregex '(: (submatch (: "--" (+ (or alphabetic #\-))))
-                    #\=
-                    (submatch (+ graphic)))))
+  (sre->regexp '(: (submatch (: "--" (+ (or alphabetic #\-))))
+                   #\=
+                   (submatch (+ graphic)))))
 
 ;; String -> (list String)
 ;; Break up a cluster of short options.

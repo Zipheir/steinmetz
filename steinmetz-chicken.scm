@@ -21,6 +21,14 @@
  (define hashtable-ref hash-table-ref/default)
  )
 
+;; SRFI 115/irregex shim
+(begin
+ (define regexp-match? irregex-match?)
+ (define regexp-matches irregex-match)
+ (define regexp-match-submatch irregex-match-substring)
+ (define sre->regexp sre->irregex)
+ )
+
 (include "command-line.scm")
 (include "string-util.scm")
 (include "doc-fmt.scm")
