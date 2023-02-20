@@ -122,21 +122,19 @@
 
 ;;;; Driver
 
-;; Uses SRFI 69, but could be a perfect hash table.
+;; Could be a perfect hash table.
 (define (make-option-table opts)
-  (let ((table (make-hash-table eq? symbol-hash)))
+  (let ((table (make-hashtable symbol-hash eq?)))
     (for-each (lambda (opt)
                 (for-each (lambda (name)
-                            (hash-table-set! table name opt))
+                            (hashtable-set! table name opt))
                           (option-get-property opt 'names)))
               opts)
     table))
 
 (define (lookup-option-by-name opt-tab name)
-  (hash-table-ref opt-tab
-                  name
-                  (lambda ()
-                    (parser-exception "invalid option" name))))
+  (cond ((hashtable-ref opt-tab name #f))
+        (else (parser-exception "invalid option" name))))
 
 (define (fold-cli options proc cli-lis . seeds)
   (let ((opt-tab (make-option-table options))
