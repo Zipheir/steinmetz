@@ -11,7 +11,7 @@
 (define (clean-command-line lis)
   (let ((maybe-split
          (lambda (s)
-           (cond ((regexp-match? short-option-cluster s)
+           (cond ((regexp-matches? short-option-cluster s)
                   (cluster->strings s))
                  ((regexp-matches long-option/equals s) =>
                   (lambda (m)
