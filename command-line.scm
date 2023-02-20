@@ -21,12 +21,12 @@
     (append-map maybe-split lis)))
 
 (define short-option-cluster
-  (sre->regexp '(: #\- alphabetic (+ alphabetic))))
+  (regexp '(: #\- alphabetic (+ alphabetic))))
 
 (define long-option/equals
-  (sre->regexp '(: (submatch (: "--" (+ (or alphabetic #\-))))
-                   #\=
-                   (submatch (+ graphic)))))
+  (regexp '(: (submatch (: "--" (+ (or alphabetic #\-))))
+              #\=
+              (submatch (+ graphic)))))
 
 ;; String -> (list String)
 ;; Break up a cluster of short options.
