@@ -93,8 +93,7 @@
   (raw-option (option-parser opt)
               (alist-update key val (option-properties opt))))
 
-(define (singleton-properties key val)
-  (list (cons key val)))
+(define alist->properties values)
 
 ;; Exported constructor. Defaults to an option that takes a single
 ;; string argument.
@@ -104,7 +103,9 @@
     ((names arg-name) (make-option names arg-name first-arg))
     ((names arg-name conv)
      (let ((arg-p (if arg-name (argument names conv) flag-parser)))
-       (raw-option arg-p (singleton-properties 'names names))))))
+       (raw-option arg-p
+                   (alist->properties `((names . ,names)
+                                        (arg-name . ,arg-name))))))))
 
 (define (option-map f opt)
   (raw-option (parser-map f (option-parser opt))
