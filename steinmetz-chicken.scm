@@ -4,7 +4,7 @@
    make-usage options)
 
 (import scheme
-        (chicken base)
+        (except (chicken base) alist-update)
         (srfi 1)
         (srfi 69)
         (srfi 115)
