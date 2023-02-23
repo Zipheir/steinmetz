@@ -126,9 +126,12 @@ Example:
 ```
     (define my-opts
       (options
-        (option (f file)    FILE values         "input file")
-        (option (k chunk)   NUM  string->number "chunk to operate on")
-        (flag   (v verbose)                     "verbose output")))
+        (option (f file)    FILE accept      "input file")
+        (option (k chunk)   NUM  number-conv "chunk to operate on")
+        (flag   (v verbose)                  "verbose output")))
 ```
+
+Here, `accept` and `number-conv` are argument converters wrapping
+`values` and `string->number`, respectively.
 
 [0]: https://www.paolocapriotti.com/blog/2012/04/27/applicative-option-parser/
