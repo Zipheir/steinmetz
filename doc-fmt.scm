@@ -18,8 +18,7 @@
               (columnar (cat (fmt-names names)
                              (dsp " ")
                              (dsp (or arg "")))
-                        (dsp (or help ""))))))
-         (opt-fmts (map fmt-option options)))
+                        (dsp (or help "")))))))
     (fmt #f (dsp header) nl
-            (pad/left 2 (fmt-join dsp opt-fmts nl))
+            (pad/left 2 (fmt-join fmt-option options))
             (dsp footer) nl)))
