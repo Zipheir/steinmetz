@@ -1,8 +1,8 @@
 ;;;; Utility
 
-(define (first . vals)
+(define (first-arg . vals)
   (if (null? vals)
-      (error 'first "no values")
+      (error 'first-arg "no values")
       (car vals)))
 
 ;; Add (key . val) to alist, replacing any existing pair with
@@ -100,8 +100,8 @@
 ;; string argument.
 (define make-option
   (case-lambda
-    ((names) (make-option names 'ARG first))
-    ((names arg-name) (make-option names arg-name first))
+    ((names) (make-option names 'ARG first-arg))
+    ((names arg-name) (make-option names arg-name first-arg))
     ((names arg-name conv)
      (let ((arg-p (if arg-name (argument names conv) flag-parser)))
        (raw-option arg-p (singleton-properties 'names names))))))
