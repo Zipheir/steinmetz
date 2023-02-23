@@ -104,8 +104,8 @@
     ((names arg-name conv)
      (let ((arg-p (if arg-name (argument names conv) flag-parser)))
        (raw-option arg-p
-                   (alist->properties `((names . ,names)
-                                        (argument-name . ,arg-name))))))))
+                   (alist->properties
+                    `((names . ,names) (argument-name . ,arg-name))))))))
 
 (define (option-map f opt)
   (raw-option (parser-map f (option-parser opt))
