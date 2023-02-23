@@ -12,8 +12,6 @@
 (define (make-usage options header footer)
   (let* ((fmt-option
           (lambda (opt)
-            (display (option-properties opt))
-            (newline)
             (let ((names (option-get-property opt 'names))
                   (arg (option-get-property opt 'argument-name))
                   (help (option-get-property opt 'help)))
