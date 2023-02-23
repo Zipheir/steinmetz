@@ -49,3 +49,7 @@ This file may be out of date. Don’t take it seriously.
 
   For now, I’m adopting the simplest solution: Each option takes one
   or zero arguments.
+
+* `make-option` and `options` argument order: The docstring should
+  probably come before the conversion function, since most options
+  have documentation but not all need converters.
