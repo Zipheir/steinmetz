@@ -21,16 +21,13 @@
              (else
               (let ((os (map option-name->string nms)))
                 (string-append "(" (string-join os " ") ")"))))))
-        (fmt-args
-         (lambda (args)
-           (if args
-               (string-append " " (string-join args " "))
-               ""))))
+        (fmt-arg
+         (lambda (arg) (or arg ""))))
 
     (map (lambda (opt)
            (string-append
             (fmt-names (option-get-property opt 'names))
-            (fmt-args (option-get-property opt 'argument-names))
+            (fmt-arg (option-get-property opt 'argument-name))
             "  "
             (or (option-get-property opt 'help) "")))
          options)))
