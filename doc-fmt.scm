@@ -10,16 +10,16 @@
   (dsp (map option-name->string names)))
 
 (define (make-usage options header footer)
-  (let* ((fmt-option
-          (lambda (opt)
-            (let ((names (option-get-property opt 'names))
-                  (arg (option-get-property opt 'argument-name))
-                  (help (option-get-property opt 'help)))
-              (cat (space-to 2)
-                   (columnar (cat (fmt-names names)
-                                  (dsp " ")
-                                  (dsp (or arg "")))
-                             (dsp (or help ""))))))))
+  (let ((fmt-option
+         (lambda (opt)
+           (let ((names (option-get-property opt 'names))
+                 (arg (option-get-property opt 'argument-name))
+                 (help (option-get-property opt 'help)))
+             (cat (space-to 2)
+                  (columnar (cat (fmt-names names)
+                                 (dsp " ")
+                                 (dsp (or arg "")))
+                            (dsp (or help ""))))))))
     (fmt #f (dsp header) nl
             (fmt-join fmt-option options)
             (dsp footer) nl)))
