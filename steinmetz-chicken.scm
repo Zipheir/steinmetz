@@ -5,9 +5,9 @@
 
 (import scheme
         (chicken base)
-        (chicken irregex)
         (srfi 1)
         (srfi 69)
+        (srfi 115)
         fmt
         )
 
@@ -19,14 +19,6 @@
  (define hashtable-set! hash-table-set!)
 
  (define hashtable-ref hash-table-ref/default)
- )
-
-;; SRFI 115/irregex shim
-(begin
- (define regexp-match? irregex-match?)
- (define regexp-matches irregex-match)
- (define regexp-match-submatch irregex-match-substring)
- (define sre->regexp sre->irregex)
  )
 
 (include "command-line.scm")
