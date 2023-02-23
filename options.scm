@@ -107,6 +107,10 @@
                    (alist->properties
                     `((names . ,names) (argument-name . ,arg-name))))))))
 
+(define (make-flag names)
+  (raw-option flag-parser
+              (alist->properties `((names . ,names)))))
+
 (define (option-map f opt)
   (raw-option (parser-map f (option-parser opt))
               (option-properties opt)))
@@ -209,7 +213,9 @@
 (define-syntax %opt-clause
   (syntax-rules (option flag)
     ((%opt-clause flag names)
-     (make-option (%normalize-names names) #f))
+     (make-flag (%normalize-names names)))
+    ((%opt-clause flag names help)
+     (opt-help help (%opt-clause flag names)))
     ((%opt-clause option names arg)
      (make-option (%normalize-names names) 'arg))
     ((%opt-clause option names arg conv)
