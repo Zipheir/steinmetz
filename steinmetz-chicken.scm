@@ -1,5 +1,5 @@
 (module steinmetz
-  (make-option option-map opt-help
+  (make-option make-flag option-map opt-help
    opt-arg-name fold-cli process-cli
    make-usage options)
 
