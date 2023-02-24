@@ -219,10 +219,10 @@
     ((%opt-clause option names arg)
      (make-option (%normalize names) 'arg))
     ((%opt-clause option names arg help)
-     (opt-help help (make-option (%normalize names) arg)))
+     (opt-help help (make-option (%normalize names) 'arg)))
     ((%opt-clause option names arg help conv)
      (opt-help help
-               (make-option option (%normalize names) arg conv)))))
+               (make-option option (%normalize names) 'arg conv)))))
 
 (define-syntax %normalize
   (syntax-rules ()
