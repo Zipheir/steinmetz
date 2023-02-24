@@ -53,3 +53,6 @@ This file may be out of date. Don’t take it seriously.
 * ✓ `make-option` and `options` argument order: The docstring should
   probably come before the conversion function, since most options
   have documentation but not all need converters.
+
+* Eliminate failure continuations and allow conversion procedures
+  to raise parser exceptions directly. (Thanks sham1).
