@@ -56,3 +56,9 @@ This file may be out of date. Don’t take it seriously.
 
 * Eliminate failure continuations and allow conversion procedures
   to raise parser exceptions directly. (Thanks sham1).
+
+* More optional arguments to `make-option`. (Thanks gwatt)
+
+* Resolve the arity issue. Should options be allowed to take multiple
+  arguments (as separate command-line tokens), or must those arguments
+  be embedded in a single token, e.g. `arg1,arg2,arg3`?
