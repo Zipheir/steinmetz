@@ -7,7 +7,7 @@
         (string-append "--" s))))
 
 (define (fmt-names names)
-  (dsp (map option-name->string names)))
+  (fmt-join dsp (map option-name->string names) (dsp ", ")))
 
 (define (make-usage options header footer)
   (let ((fmt-option
