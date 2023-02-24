@@ -109,7 +109,7 @@ describes a single option and is of one of the following forms:
 
 ```
     (flag   <name-or-names> [<help-text>])
-    (option <name-or-names> [<arg-name> [<conv> [<help-text>]]])
+    (option <name-or-names> [<arg-name> [<help-text> [<conv>]]])
 ```
 
 The `(flag …)` form describes a boolean flag which takes no arguments;
@@ -126,12 +126,11 @@ Example:
 ```
     (define my-opts
       (options
-        (option (f file)    FILE accept      "input file")
-        (option (k chunk)   NUM  number-conv "chunk to operate on")
-        (flag   (v verbose)                  "verbose output")))
+        (option (f file)    FILE "input file")
+        (option (k chunk)   NUM  "chunk to operate on" number-conv)
+        (flag   (v verbose)      "verbose output")))
 ```
 
-Here, `accept` and `number-conv` are argument converters wrapping
-`values` and `string->number`, respectively.
+Here, `number-conv` is an argument converter wrapping `string->number`.
 
 [0]: https://www.paolocapriotti.com/blog/2012/04/27/applicative-option-parser/
