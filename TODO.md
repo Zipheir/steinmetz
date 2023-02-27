@@ -67,3 +67,6 @@ This file may be out of date. Don’t take it seriously.
   be embedded in a single token, e.g. `arg1,arg2,arg3`?
 
 * Accumulate arguments in option declaration order. (Thanks jcowan)
+
+* Support `--no-foo` when the flag `--foo` has been defined. Should
+  this be automatic, or optional? (Thanks jcowan)
