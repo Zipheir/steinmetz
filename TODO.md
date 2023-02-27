@@ -38,6 +38,9 @@ This file may be out of date. Don’t take it seriously.
 * Support optional and default arguments? Or can we push these to
   a higher layer?
 
+  We do want to support these directly in the specification of
+  options, since option documentation should describe them.
+
 * ✓ Decide how which argument schemes to support, and figure out how
   they interact with argument names. Should we support multiple
   arguments? The getopt fans say no, except via the `--opt=a,b,c`
@@ -62,3 +65,5 @@ This file may be out of date. Don’t take it seriously.
 * Resolve the arity issue. Should options be allowed to take multiple
   arguments (as separate command-line tokens), or must those arguments
   be embedded in a single token, e.g. `arg1,arg2,arg3`?
+
+* Accumulate arguments in option declaration order. (Thanks jcowan)
