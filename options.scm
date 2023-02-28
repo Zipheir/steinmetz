@@ -56,10 +56,10 @@
 ;;; invoke 'fail' on an error message (string).
 
 ;; Parse an argument.
-(define (argument opt-names conv)
+(define (argument opt-names)
   (let* ((names (fmt-names opt-names))
          (err-msg (string-append "missing arguments for " names)))
-    (parser-map conv (parser-satisfies argument-string? err-msg))))
+    (parser-satisfies argument-string? err-msg)))
 
 ;; Should be continuable.
 (define parser-exception error)
@@ -104,10 +104,11 @@
     ((names) (make-option names 'ARG values))
     ((names arg-name) (make-option names arg-name values))
     ((names arg-name conv)
-     (let ((arg-p (if arg-name (argument names conv) flag-parser)))
+     (let ((arg-p (if arg-name (argument names) flag-parser)))
+       (parser-map conv
        (raw-option arg-p
                    (alist->properties
-                    `((names . ,names) (argument-name . ,arg-name))))))))
+                    `((names . ,names) (argument-name . ,arg-name)))))))))
 
 (define (make-flag names)
   (raw-option flag-parser
