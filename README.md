@@ -53,17 +53,17 @@ a short or long name (without leading dashes) for this option. *arg-name*
 is a symbol giving the name of the option’s argument. It defaults to
 `ARG`. If *arg-name* is `#f`, then the option takes no arguments.
 
-*conv* is an argument conversion procedure of type `String Procedure → *`.
-When the option is parsed, each argument string will be passed to *conv*
-along with a *failure* continuation. If *conv* returns normally, the
-result will be the value of the argument. If instead *failure* is invoked
-on a string (message), then a parser exception is raised.
+*conv* is an argument conversion procedure of type `String → *`.
+When the option is parsed, the argument string will be passed to *conv*.
+The value of the argument will be whatever *conv* returns. Converters
+can use `parser-exception` to signal invalid arguments.
 
 Example:
 ```
-    (let ((conv (lambda (s failure)
+    (let ((conv (lambda (s)
                   (let ((res-or-false (string->number s)))
-                    (or res-or-false (failure "not a number"))))))
+                    (or res-or-false
+                        (parser-exception "not a number" s))))))
       (make-option '(n num) 'NUM conv))
 ```
 
@@ -98,6 +98,11 @@ Returns the help text of *opt* or `#f`.
 
 Updates *opt* with the list of metavariable names *names*. It is an
 error if the length of *names* doesn’t match *opt*’s arity.
+
+`(parser-exception msg irritant ...)`
+
+Raises an exception indicating that something went wrong during
+command-line parsing. *Details to be worked out soon.*
 
 #### Syntax
 
