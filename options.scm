@@ -88,6 +88,15 @@
 
 (define alist->properties values)
 
+;;; Convenient property accessors
+
+(define (option-names opt)
+  (or (option-get-property opt 'names)
+      (error 'option-names "option has no defined names")))
+
+(define (option-help opt)
+  (option-get-property opt 'help))
+
 ;; Exported constructor. Defaults to an option that takes a single
 ;; string argument.
 (define make-option
@@ -111,11 +120,11 @@
 ;;; Option combinators
 
 ;; Add a help string to opt.
-(define (opt-help s opt)
+(define (option-add-help s opt)
   (option-add-property opt 'help s))
 
 ;; Add an argument name (symbol) to opt.
-(define (opt-arg-name name opt)
+(define (option-add-argument-name name opt)
   (option-add-property opt 'argument-name name))
 
 ;;;; Driver
@@ -208,13 +217,13 @@
     ((%opt-clause flag names)
      (make-flag (%normalize names)))
     ((%opt-clause flag names help)
-     (opt-help help (%opt-clause flag names)))
+     (option-add-help help (%opt-clause flag names)))
     ((%opt-clause option names arg)
      (make-option (%normalize names) 'arg))
     ((%opt-clause option names arg help)
-     (opt-help help (make-option (%normalize names) 'arg)))
+     (option-add-help help (make-option (%normalize names) 'arg)))
     ((%opt-clause option names arg help conv)
-     (opt-help help
+     (option-add-help help
                (make-option option (%normalize names) 'arg conv)))))
 
 (define-syntax %normalize

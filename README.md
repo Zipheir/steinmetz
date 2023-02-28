@@ -80,11 +80,15 @@ leading dashes. Thus, `widget` is the name of the option spelled
 *proc* should be a procedure taking a list. Returns a new Option which
 applies *proc* to the option’s argument value after parsing.
 
-`(opt-help msg opt)`
+`(option-add-help msg opt)`
 
 Updates *opt* with the help text *msg* (a string).
 
-`(opt-arg-name name opt)`
+`(option-help opt)`
+
+Returns *opt*’s help text or `#f` if none exists.
+
+`(option-add-argument-name name opt)`
 
 Updates *opt* with the metavariable name *name*.
 
