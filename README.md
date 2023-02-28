@@ -39,10 +39,8 @@ Command-line options are described by Option structures.
 The public elements of an Option include:
 
 * Names (a list of symbols)
-* Arity (number of arguments; a non-negative integer)
 * Help text (a string; optional)
-* Argument names (names of arguments, in order; a list of symbols;
-  optional)
+* Argument name (a symbol; meta-name of the option’s argument)
 
 #### Procedures
 
@@ -51,12 +49,12 @@ The public elements of an Option include:
 Constructs a new Option. *names* is a list of symbols; each element is
 a short or long name (without leading dashes) for this option. *arg-name*
 is a symbol giving the name of the option’s argument. It defaults to
-`ARG`. If *arg-name* is `#f`, then the option takes no arguments.
+`ARG`. If *arg-name* is `#f`, then the option does not take an argument.
 
 *conv* is an argument conversion procedure of type `String → *`.
 When the option is parsed, the argument string will be passed to *conv*.
 The value of the argument will be whatever *conv* returns. Converters
-can use `parser-exception` to signal invalid arguments.
+can use `parser-exception` to signal an invalid argument.
 
 Example:
 ```
@@ -77,27 +75,18 @@ Returns the names of *opt* as a list of symbols. Names do not include
 leading dashes. Thus, `widget` is the name of the option spelled
 `--widget` on the command-line.
 
-`(option-arity opt)`
-
-Returns the number of arguments expected by *opt*.
-
 `(option-map proc opt)`
 
 *proc* should be a procedure taking a list. Returns a new Option which
-applies *proc* to the option’s arguments after parsing.
+applies *proc* to the option’s argument value after parsing.
 
-`(option-add-help msg opt)`
+`(opt-help msg opt)`
 
 Updates *opt* with the help text *msg* (a string).
 
-`(option-help opt)`
+`(opt-arg-name name opt)`
 
-Returns the help text of *opt* or `#f`.
-
-`(option-add-arg-names names opt)`
-
-Updates *opt* with the list of metavariable names *names*. It is an
-error if the length of *names* doesn’t match *opt*’s arity.
+Updates *opt* with the metavariable name *name*.
 
 `(parser-exception msg irritant ...)`
 
@@ -118,7 +107,7 @@ describes a single option and is of one of the following forms:
 ```
 
 The `(flag …)` form describes a boolean flag which takes no arguments;
-`(option …)` describes an option taking a single argument.
+`(option …)` describes an option taking an argument.
 `name-or-names` is either a symbol or a list of symbols (both unquoted)
 and gives the acceptable forms of an option. `arg-name` and `conv` have
 the same meaning as they do in `make-option`. `help-text` is a string
