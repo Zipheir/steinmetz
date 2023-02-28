@@ -1,10 +1,5 @@
 ;;;; Utility
 
-(define (first-arg . vals)
-  (if (null? vals)
-      (error 'first-arg "no values")
-      (car vals)))
-
 ;; Add (key . val) to alist, replacing any existing pair with
 ;; car key. May derange alist.
 (define (alist-update key val alist)
@@ -22,6 +17,15 @@
   (not (option-string? s)))
 
 ;;;; Parser utilities
+
+(define parser-satisfies
+  (case-lambda
+    ((pred p) (parser-satisfies pred p "parse failed"))
+    ((pred p fail-msg)
+     (lambda (in succeed fail)
+       (if (and (pair? in) (pred (car in)))
+           (succeed (car in) (cdr in))
+           (fail fail-msg))))))
 
 (define (parser-map f p)
   (lambda (in succeed fail)
@@ -52,21 +56,10 @@
 ;;; invoke 'fail' on an error message (string).
 
 ;; Parse an argument.
-;; The 'conv' procedure takes the argument string and an error
-;; continuation. It either returns a value or calls the error
-;; continuation on a message.
 (define (argument opt-names conv)
-  (let* ((name-string (symbol->string (car opt-names)))  ; hack
-         (make-msg     ; error message template
-          (lambda (msg-body)
-            (string-append "option " name-string ": "
-                           msg-body))))
-    (lambda (lis succeed fail)
-      (if (and (pair? lis) (argument-string? (car lis)))
-          (let ((val (conv (car lis)
-                           (lambda (s) (fail (make-msg s))))))
-            (succeed val (cdr lis)))
-          (fail (make-msg "missing argument"))))))
+  (let* ((names (fmt-names opt-names))
+         (err-msg (string-append "missing arguments for " names)))
+    (parser-map conv (parser-satisfies argument-string? err-msg))))
 
 ;; Should be continuable.
 (define parser-exception error)
@@ -99,8 +92,8 @@
 ;; string argument.
 (define make-option
   (case-lambda
-    ((names) (make-option names 'ARG first-arg))
-    ((names arg-name) (make-option names arg-name first-arg))
+    ((names) (make-option names 'ARG values))
+    ((names arg-name) (make-option names arg-name values))
     ((names arg-name conv)
      (let ((arg-p (if arg-name (argument names conv) flag-parser)))
        (raw-option arg-p
