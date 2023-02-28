@@ -104,11 +104,10 @@
     ((names) (make-option names 'ARG values))
     ((names arg-name) (make-option names arg-name values))
     ((names arg-name conv)
-     (let ((arg-p (if arg-name (argument names) flag-parser)))
-       (parser-map conv
-       (raw-option arg-p
-                   (alist->properties
-                    `((names . ,names) (argument-name . ,arg-name)))))))))
+     (let ((arg-p (if arg-name (argument names) flag-parser))
+           (props (alist->properties `((names . ,names)
+                                       (argument-name . ,arg-name)))))
+       (option-map conv (raw-option arg-p props))))))
 
 (define (make-flag names)
   (raw-option flag-parser
