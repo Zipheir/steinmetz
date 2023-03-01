@@ -70,3 +70,5 @@ This file may be out of date. Don’t take it seriously.
 
 * Support `--no-foo` when the flag `--foo` has been defined. Should
   this be automatic, or optional? (Thanks jcowan)
+
+* Support `--`.
