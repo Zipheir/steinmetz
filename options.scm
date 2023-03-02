@@ -58,7 +58,8 @@
 ;; Parse an argument.
 (define (argument opt-names)
   (let* ((names (fmt-names opt-names))
-         (err-msg (string-append "missing arguments for " names)))
+         (err-msg (string-append "missing arguments for "
+                                 (fmt-names names))))
     (parser-satisfies argument-string? err-msg)))
 
 ;; Should be continuable.
