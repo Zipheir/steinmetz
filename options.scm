@@ -192,16 +192,19 @@
                    (remove (lambda (p) (eqv? name (car p))) alis))))
           (else (cons (list name val) alis))))
 
+  (define (accum name val opts opers more-opts?)
+    (if (and name more-opts?)
+        (accum-option name val opts opers)
+        (values opts (cons val opers) more-opts?)))
+
+  (define (accum-option name val opts opers more-opts?)
+    (if (equal? name "--")  ; special "end of options" token
+        (values opts opers #f)  ; discard it and set flag
+        (values (adjoin/pool name val opts) opers more-opts?)))
+
   (call-with-values
    (lambda ()
-     (fold-cli options
-               (lambda (name val opts opers)
-                 (if name
-                     (values (adjoin/pool name val opts) opers)
-                     (values opts (cons val opers))))
-               ts
-               '()
-               '()))
+     (fold-cli options accum ts '() '() #f))
    (lambda (opts opers)
      (values (reverse opts) (reverse opers)))))
 
