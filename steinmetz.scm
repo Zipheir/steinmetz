@@ -2,7 +2,8 @@
 ;;;; need some adjustments).
 
 (library (steinmetz)
-  (export make-option option-map opt-help opt-arg-name fold-cli
+  (export make-option option-map option-help option-argument-name
+          option-add-help option-add-argument-name option-names fold-cli
           process-cli make-usage options make-flag)
   (import (rnrs base)
           (rnrs control (6))
