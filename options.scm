@@ -94,6 +94,11 @@
   (or (option-get-property opt 'names)
       (error 'option-names "option has no defined names")))
 
+(define (option-argument-name opt)
+  (or (option-get-property opt 'argument-name)
+      (error 'option-argument-name
+             "option has no defined argument name")))
+
 (define (option-help opt)
   (option-get-property opt 'help))
 
