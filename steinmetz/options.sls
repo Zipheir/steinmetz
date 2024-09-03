@@ -1,7 +1,7 @@
 ;;;; R6RS library file (for Chez Scheme; other R6 Schemes will
 ;;;; need some adjustments).
 
-(library (steinmetz)
+(library (steinmetz options)
   (export make-option option-map option-help option-argument-name
           option-add-help option-add-argument-name option-names fold-cli
           process-cli make-usage options make-flag)
