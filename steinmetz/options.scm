@@ -200,7 +200,7 @@
 
   (define (accum name val opts opers more-opts?)
     (if (and name more-opts?)
-        (accum-option name val opts opers)
+        (accum-option name val opts opers more-opts?)
         (values opts (cons val opers) more-opts?)))
 
   (define (accum-option name val opts opers more-opts?)
