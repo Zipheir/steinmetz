@@ -221,6 +221,9 @@
     ((options (e ...) ...)
      (list (%opt-clause e ...) ...))))
 
+(define-syntax flag (syntax-rules ()))
+(define-syntax option (syntax-rules ()))
+
 (define-syntax %opt-clause
   (syntax-rules (option flag)
     ((%opt-clause flag names)

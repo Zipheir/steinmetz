@@ -4,7 +4,7 @@
 (library (steinmetz options)
   (export make-option option-map option-help option-argument-name
           option-add-help option-add-argument-name option-names fold-cli
-          process-cli make-usage options make-flag)
+          process-cli make-usage options make-flag option flag)
   (import (rnrs base)
           (rnrs control (6))
           (rnrs lists (6))
