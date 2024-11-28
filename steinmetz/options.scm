@@ -210,7 +210,7 @@
   (call-with-values
    (lambda ()
      (fold-cli options accum ts '() '() #f))
-   (lambda (opts opers)
+   (lambda (opts opers junk)
      (values (reverse opts) (reverse opers)))))
 
 ;;;; Syntax
@@ -220,8 +220,8 @@
     ((options (e ...) ...)
      (list (%opt-clause e ...) ...))))
 
-(define-syntax flag (syntax-rules ()))
-(define-syntax option (syntax-rules ()))
+;(define-syntax flag (syntax-rules ()))
+;(define-syntax option (syntax-rules ()))
 
 (define-syntax %opt-clause
   (syntax-rules (option flag)
