@@ -1,7 +1,9 @@
 (module steinmetz
   (make-option make-flag option-map option-help option-add-help
    option-argument-name option-add-argument-name fold-cli process-cli
-   make-usage options option-names)
+   make-usage
+   (syntax: options %opt-clause %normalize flag option)
+   option-names)
 
 (import scheme
         (except (chicken base) alist-update)
