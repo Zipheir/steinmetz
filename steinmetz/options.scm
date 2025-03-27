@@ -30,8 +30,8 @@
 (define (parser-map f p)
   (lambda (in succeed fail)
     (p in
-       fail
-       (lambda (x rest) (succeed (f x) rest)))))
+       (lambda (x rest) (succeed (f x) rest))
+       fail)))
 
 (define (parser-pure x)
   (lambda (in succeed _fail)
