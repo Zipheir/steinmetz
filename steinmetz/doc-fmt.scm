@@ -9,6 +9,9 @@
 (define (fmt-names names)
   (fmt-join dsp (map option-name->string names) (dsp ", ")))
 
+(define (fmt-names->string names)
+  (fmt #f (fmt-names names)))
+
 (define (make-usage options header footer)
   (let ((fmt-option
          (lambda (opt)

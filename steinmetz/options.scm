@@ -57,7 +57,7 @@
 
 ;; Parse an argument.
 (define (argument opt-names)
-  (let* ((nm (fmt-names opt-names))
+  (let* ((nm (fmt-names->string opt-names))
          (err-msg (string-append "missing arguments for " nm)))
     (parser-satisfies argument-string? err-msg)))
 
