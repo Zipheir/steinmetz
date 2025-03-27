@@ -20,8 +20,8 @@
 
 (define parser-satisfies
   (case-lambda
-    ((pred p) (parser-satisfies pred p "parse failed"))
-    ((pred p fail-msg)
+    ((pred) (parser-satisfies pred "parse failed"))
+    ((pred fail-msg)
      (lambda (in succeed fail)
        (if (and (pair? in) (pred (car in)))
            (succeed (car in) (cdr in))
