@@ -209,7 +209,7 @@
 
   (call-with-values
    (lambda ()
-     (fold-cli options accum ts '() '() #f))
+     (fold-cli options accum ts '() '() #t))
    (lambda (opts opers junk)
      (values (reverse opts) (reverse opers)))))
 
