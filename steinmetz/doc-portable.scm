@@ -10,7 +10,7 @@
         (string-append "-" s)
         (string-append "--" s))))
 
-(define (fmt-names names)
+(define (fmt-names->string names)
   (string-join (map option-name->string names) ", "))
 
 ;; Returns a list of strings, each one giving the forms and
