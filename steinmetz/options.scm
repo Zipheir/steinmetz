@@ -149,17 +149,18 @@
         (else (parser-exception "invalid option" name))))
 
 (define (fold-cli options proc cli-lis . seeds)
-  (let ((opt-tab (make-option-table options))
-        (ts (clean-command-line cli-lis)))
-
-    (define (accum-option name ts seeds cont)
-      (process-option name
-                      opt-tab
-                      ts
-                      (lambda (v ts*)
-                        (let-values ((seeds* (apply proc name v seeds)))
-                          (cont seeds* ts*)))
-                      parser-exception))
+  (let* ((opt-tab (make-option-table options))
+         (ts (clean-command-line cli-lis))
+         (accum-option
+          (lambda (name ts seeds cont)
+            (process-option name
+                            opt-tab
+                            ts
+                            (lambda (v ts*)
+                              (let-values
+                               ((seeds* (apply proc name v seeds)))
+                                (cont seeds* ts*)))
+                            parser-exception))))
 
     (let loop ((seeds seeds) (ts ts))
       (if (null? ts)
@@ -182,36 +183,32 @@
   (let ((opt (lookup-option-by-name opt-table name)))
     ((option-parser opt) in succeed fail)))
 
-;;; Convenience
-
 ;; Parses ts and returns two values: an alist associating each option with
 ;; its arguments, and a list of "operands"--tokens without a preceding
 ;; option.
 (define (process-cli options ts)
-  ;; If name has an association in alis, then append val to the cdr
-  ;; of name's pair. Otherwise, just add (name . val) to alis.
-  (define (adjoin/pool name val alis)
-    (cond ((assv name alis) =>
-           (lambda (p)
-             (cons (cons (car p) (append (cdr p) (list val)))
-                   (remove (lambda (p) (eqv? name (car p))) alis))))
-          (else (cons (list name val) alis))))
+  (let-values (((opts opers junk)
+                (fold-cli options accum ts '() '() #t)))
+    (values (reverse opts) (reverse opers))))
 
-  (define (accum name val opts opers more-opts?)
-    (if (and name more-opts?)
-        (accum-option name val opts opers more-opts?)
-        (values opts (cons val opers) more-opts?)))
+;; If name has an association in alis, then append val to the cdr
+;; of name's pair. Otherwise, just add (name . val) to alis.
+(define (adjoin/pool name val alis)
+  (cond ((assv name alis) =>
+         (lambda (p)
+           (cons (cons (car p) (append (cdr p) (list val)))
+                 (remove (lambda (p) (eqv? name (car p))) alis))))
+        (else (cons (list name val) alis))))
 
-  (define (accum-option name val opts opers more-opts?)
-    (if (equal? name "--")  ; special "end of options" token
-        (values opts opers #f)  ; discard it and set flag
-        (values (adjoin/pool name val opts) opers more-opts?)))
+(define (accum name val opts opers more-opts?)
+  (if (and name more-opts?)
+      (accum-option name val opts opers more-opts?)
+      (values opts (cons val opers) more-opts?)))
 
-  (call-with-values
-   (lambda ()
-     (fold-cli options accum ts '() '() #t))
-   (lambda (opts opers junk)
-     (values (reverse opts) (reverse opers)))))
+(define (accum-option name val opts opers more-opts?)
+  (if (equal? name "--")  ; special "end of options" token
+      (values opts opers #f)  ; discard it and set flag
+      (values (adjoin/pool name val opts) opers more-opts?)))
 
 ;;;; Syntax
 
