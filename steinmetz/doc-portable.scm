@@ -36,6 +36,7 @@
     (map (lambda (opt)
            (string-append
             (fmt-names (option-get-property opt 'names))
+            " "
             (fmt-arg (option-get-property opt 'argument-name))
             "  "
             (or (option-get-property opt 'help) "")))
