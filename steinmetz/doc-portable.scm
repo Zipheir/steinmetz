@@ -28,7 +28,10 @@
               (let ((os (map option-name->string nms)))
                 (string-append "(" (string-join os " ") ")"))))))
         (fmt-arg
-         (lambda (arg) (or arg ""))))
+         (lambda (arg)
+           (if arg
+               (symbol->string arg)
+               ""))))
 
     (map (lambda (opt)
            (string-append
