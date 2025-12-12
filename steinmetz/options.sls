@@ -156,7 +156,7 @@
 
   ;; Could be a perfect hash table.
   (define (make-option-table opts)
-    (let ((table (make-hashtable symbol-hash eq?)))
+    (let ((table (make-eqv-hashtable)))
       (for-each (lambda (opt)
                   (for-each (lambda (name)
                               (hashtable-set! table name opt))
