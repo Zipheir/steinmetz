@@ -27,7 +27,6 @@
                             string-concatenate string-join)
           (only (chezscheme) include)
           )
-  (include "command-line.scm")
   (include "doc-portable.scm")
 
   ;;;; Utility
