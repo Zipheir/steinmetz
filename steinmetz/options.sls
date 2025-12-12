@@ -233,7 +233,7 @@
            (lambda (p)
              (cons (cons (car p) (append (cdr p) (list val)))
                    (remove (lambda (p) (eqv? name (car p))) alis))))
-          (else (cons (list name val) alis))))
+          (else (cons (cons name val) alis))))
 
   (define (accum name val opts opers more-opts?)
     (if (and name more-opts?)
