@@ -1,3 +1,6 @@
+;;; SPDX-FileCopyrightText: 2025 Wolfgang Corcoran-Mathe
+;;; SPDX-License-Identifier: MIT
+
 ;;;; Option documentation using foof's fmt library
 
 (define (option-name->string sym)

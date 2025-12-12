@@ -1,3 +1,6 @@
+;;; SPDX-FileCopyrightText: 2025 Wolfgang Corcoran-Mathe
+;;; SPDX-License-Identifier: MIT
+
 (library (steinmetz)
   (export make-option
           option-map

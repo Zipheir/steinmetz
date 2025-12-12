@@ -1,3 +1,6 @@
+;;; SPDX-FileCopyrightText: 2025 Wolfgang Corcoran-Mathe
+;;; SPDX-License-Identifier: MIT
+
 ;;;; Portable option documentation procedures
 
 ;;; This formats and prints option documentation using standard

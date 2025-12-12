@@ -1,3 +1,6 @@
+;;; SPDX-FileCopyrightText: 2025 Wolfgang Corcoran-Mathe
+;;; SPDX-License-Identifier: MIT
+
 ;;;; R6RS library file (for Chez Scheme; other R6 Schemes will
 ;;;; need some adjustments).
 
