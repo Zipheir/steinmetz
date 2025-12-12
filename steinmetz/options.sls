@@ -169,28 +169,30 @@
           (else (parser-exception "invalid option" name))))
 
   (define (fold-cli options proc cli-lis . seeds)
-    (let* ((opt-tab (make-option-table options))
-           (ts (clean-command-line cli-lis))
-           (accum-option
-            (lambda (name ts seeds cont)
-              (process-option name
-                              opt-tab
-                              ts
-                              (lambda (v ts*)
-                                (let-values
-                                 ((seeds* (apply proc name v seeds)))
-                                  (cont seeds* ts*)))
-                              parser-exception))))
+    (define opt-tab (make-option-table options))
+    (define tokens (clean-command-line cli-lis))
 
-      (let loop ((seeds seeds) (ts ts))
-        (if (null? ts)
-            (apply values seeds)
-            (let ((t (car ts)) (ts* (cdr ts)))
-              (cond ((option-string->name t) =>
-                     (lambda (name) (accum-option name ts* seeds loop)))
-                    (else
-                     (let-values ((seeds* (apply proc #f t seeds)))
-                       (loop seeds* ts*)))))))))
+    (define (accum-option name ts seeds cont)
+      (process-option name
+                      opt-tab
+                      tokens
+                      (lambda (v ts*)
+                        (let-values ((seeds* (apply proc name v seeds)))
+                          (cont seeds* ts*)))
+                      parser-exception))
+
+    (define (fold-loop seeds ts)
+      (if (null? ts)
+          (apply values seeds)
+          (let ((t (car ts)) (ts* (cdr ts)))
+            (cond ((option-string->name t) =>
+                   (lambda (name)
+                     (accum-option name ts* seeds loop)))
+                  (else
+                   (let-values ((seeds* (apply proc #f t seeds)))
+                     (fold-loop seeds* ts*)))))))
+
+    (fold-loop seeds tokens))
 
   ;; If s is a string describing a long or short option, returns its
   ;; name as a symbol. Otherwise, returns #f.
