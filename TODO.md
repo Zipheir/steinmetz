@@ -72,3 +72,15 @@ This file may be out of date. Don’t take it seriously.
   this be automatic, or optional? (Thanks jcowan)
 
 * Support `--`.
+
+* Rework usage formatting and library organization.  Currently it's
+  necessary is `include` either `doc-portable.scm` or `doc-fmt.scm`,
+  since there is a cyclic dependency between the usage-generating
+  form `make-usage` and the option-type accessors.  It would be
+  nice to get rid of this cycle.
+
+  The two `make-usage` implementations also have problems.  `fmt`
+  (or its SRFI 166 update, `show`) is the best tool here, but it has
+  a lot of dependencies & is quite a pain to get running on R6RS
+  implementations (especially Chez).  On the other hand, the portable
+  `make-usage` implementation is long and produces ugly output.
