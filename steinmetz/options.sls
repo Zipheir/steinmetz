@@ -68,21 +68,6 @@
          (lambda (x rest) (succeed (f x) rest))
          fail)))
 
-  (define (parser-pure x)
-    (lambda (in succeed _fail)
-      (succeed x in)))
-
-  (define (parser-ap pf px)
-    (lambda (in succeed fail)
-      (pf in
-          (lambda (f in*)
-            (px in*
-                (lambda (x in**)
-                  (succeed (f x) in**))
-                fail)
-            fail)
-          fail)))
-
   ;;; Argument parsers
 
   ;;; An argument parser is a function that takes a list of strings
