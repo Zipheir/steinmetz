@@ -26,7 +26,7 @@ This file may be out of date. Don’t take it seriously.
   Adopted dpk's suggestion: Print all of an option's names in error
   messages.
 
-* Design the syntactic layer. This should include at least a
+* ✓ Design the syntactic layer. This should include at least a
   declarative form that quickly generates a list of options.
   e.g.
   ```
@@ -60,18 +60,12 @@ This file may be out of date. Don’t take it seriously.
 * ✓ Eliminate failure continuations and allow conversion procedures
   to raise parser exceptions directly. (Thanks sham1).
 
-* More optional arguments to `make-option`. (Thanks gwatt)
+* Accumulate arguments in option declaration order? (Thanks jcowan)
 
-* Resolve the arity issue. Should options be allowed to take multiple
-  arguments (as separate command-line tokens), or must those arguments
-  be embedded in a single token, e.g. `arg1,arg2,arg3`?
-
-* Accumulate arguments in option declaration order. (Thanks jcowan)
-
-* Support `--no-foo` when the flag `--foo` has been defined. Should
+* Support `--no-foo` when the flag `--foo` has been defined? Should
   this be automatic, or optional? (Thanks jcowan)
 
-* Support `--`.
+* ✓ Support `--`.
 
 * Rework usage formatting and library organization.  Currently it's
   necessary is `include` either `doc-portable.scm` or `doc-fmt.scm`,
@@ -84,3 +78,13 @@ This file may be out of date. Don’t take it seriously.
   a lot of dependencies & is quite a pain to get running on R6RS
   implementations (especially Chez).  On the other hand, the portable
   `make-usage` implementation is long and produces ugly output.
+
+  It should be possible to provide a miniature pretty-printing library
+  to handle this specific problem.  What features should it provide?
+
+  + Stateful indentation
+  + Columnated output (for option-argument-description lines)
+  + Output-width parameter (for columnated output, at least; preferably
+    for paragraphs as well)
+
+  Those seem to comprise the minimum set.
