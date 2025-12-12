@@ -187,7 +187,7 @@
           (let ((t (car ts)) (ts* (cdr ts)))
             (cond ((option-string->name t) =>
                    (lambda (name)
-                     (accum-option name ts* seeds loop)))
+                     (accum-option name ts* seeds fold-loop)))
                   (else
                    (let-values ((seeds* (apply proc #f t seeds)))
                      (fold-loop seeds* ts*)))))))
