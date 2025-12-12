@@ -26,6 +26,7 @@
           (only (srfi :152) string-index string-skip string-drop-while
                             string-concatenate string-join)
           (only (chezscheme) include)
+          (steinmetz command-line)
           )
   (include "doc-portable.scm")
 
