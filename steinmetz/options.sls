@@ -1,9 +1,6 @@
 ;;; SPDX-FileCopyrightText: 2025 Wolfgang Corcoran-Mathe
 ;;; SPDX-License-Identifier: MIT
 
-;;;; R6RS library file (for Chez Scheme; other R6 Schemes will
-;;;; need some adjustments).
-
 (library (steinmetz options)
   (export make-option
           option-map
@@ -28,10 +25,9 @@
           (srfi :115)
           (only (srfi :152) string-index string-skip string-drop-while
                             string-concatenate string-join)
-          (only (chezscheme) include)
           (steinmetz command-line)
+          (steinmetz format)
           )
-  (include "doc-portable.scm")
 
   ;;;; Utility
 
