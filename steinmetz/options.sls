@@ -25,11 +25,7 @@
           (srfi :115)
           (only (srfi :152) string-index string-skip string-drop-while
                             string-concatenate string-join)
-          ;; Change this to the library that provides 'format' on
-          ;; your implementation.
-          (only (chezscheme) format)
           (steinmetz command-line)
-          (steinmetz format)
           )
 
   ;;;; Utility
@@ -76,7 +72,7 @@
 
   ;; Parse an argument.
   (define (argument opt-names)
-    (let* ((nm (fmt-names->string opt-names))
+    (let* ((nm (format-option-names opt-names))
            (err-msg (string-append "missing arguments for " nm)))
       (parser-satisfies argument-string? err-msg)))
 
@@ -151,7 +147,11 @@
   (define (option-add-argument-name name opt)
     (option-add-property opt 'argument-name name))
 
-  ;;; Documentation
+  ;;;; Option & usage documentation
+
+  ;;; Sadly, there is next to nothing portable in the formatted-output
+  ;;; area.  The following could be improved significantly if SRFI 166
+  ;;; or a full 'printf' or FORMAT-style procedure were available.
 
   (define (option-name->string sym)
     (let ((s (symbol->string sym)))
@@ -160,7 +160,7 @@
           (string-append "--" s))))
 
   (define (format-option-names names)
-    (format #f "~{~a~^, ~}" names))
+    (string-join (map option-name->string names) ", "))
 
   ;; Returns a list of strings, each one giving the forms and
   ;; help text for an option.
