@@ -25,6 +25,9 @@
           (srfi :115)
           (only (srfi :152) string-index string-skip string-drop-while
                             string-concatenate string-join)
+          ;; Change this to the library that provides 'format' on
+          ;; your implementation.
+          (only (chezscheme) format)
           (steinmetz command-line)
           (steinmetz format)
           )
@@ -147,6 +150,56 @@
   ;; Add an argument name (symbol) to opt.
   (define (option-add-argument-name name opt)
     (option-add-property opt 'argument-name name))
+
+  ;;; Documentation
+
+  (define (option-name->string sym)
+    (let ((s (symbol->string sym)))
+      (if (= (string-length s) 1)  ; short option?
+          (string-append "-" s)
+          (string-append "--" s))))
+
+  (define (format-option-names names)
+    (format #f "~{~a~^, ~}" names))
+
+  ;; Returns a list of strings, each one giving the forms and
+  ;; help text for an option.
+  (define (make-option-descriptions options)
+    (let ((fmt-names
+           (lambda (nms)
+             (case (length nms)
+               ((0) "")
+               ((1) (option-name->string (car nms)))
+               (else
+                (let ((os (map option-name->string nms)))
+                  (string-append "(" (string-join os " ") ")"))))))
+          (fmt-arg
+           (lambda (arg)
+             (if arg
+                 (symbol->string arg)
+                 ""))))
+
+      (map (lambda (opt)
+             (string-append
+              (fmt-names (option-get-property opt 'names))
+              " "
+              (fmt-arg (option-get-property opt 'argument-name))
+              "  "
+              (or (option-get-property opt 'help) "")))
+           options)))
+
+  ;; Portable (and hence low-budget) pretty-printing.
+  (define (make-usage options header footer)
+    (string-append header
+                   "\n"
+                   (string-join
+                    (map (lambda (s)
+                           (string-append "  " s))
+                         (make-option-descriptions options))
+                    "\n")
+                   "\n"
+                   footer
+                   "\n"))
 
   ;;;; Driver
 
