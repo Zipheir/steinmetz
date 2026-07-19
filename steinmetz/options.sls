@@ -169,30 +169,32 @@
           (else (parser-exception "invalid option" name))))
 
   (define (fold-cli options proc cli-lis . seeds)
-    (define opt-tab (make-option-table options))
-    (define tokens (clean-command-line cli-lis))
+    (letrec*
+     ((opt-tab (make-option-table options))
+      (tokens (clean-command-line cli-lis))
+      (accum-option
+       (lambda (name ts seeds cont)
+         (process-option
+          name
+          opt-tab
+          tokens
+          (lambda (v ts*)
+            (let-values ((seeds* (apply proc name v seeds)))
+              (cont seeds* ts*)))
+          parser-exception)))
+      (fold-loop
+       (lambda (seeds ts)
+         (if (null? ts)
+             (apply values seeds)
+             (let ((t (car ts)) (ts* (cdr ts)))
+               (cond ((option-string->name t) =>
+                      (lambda (name)
+                        (accum-option name ts* seeds fold-loop)))
+                     (else
+                      (let-values ((seeds* (apply proc #f t seeds)))
+                        (fold-loop seeds* ts*)))))))))
 
-    (define (accum-option name ts seeds cont)
-      (process-option name
-                      opt-tab
-                      tokens
-                      (lambda (v ts*)
-                        (let-values ((seeds* (apply proc name v seeds)))
-                          (cont seeds* ts*)))
-                      parser-exception))
-
-    (define (fold-loop seeds ts)
-      (if (null? ts)
-          (apply values seeds)
-          (let ((t (car ts)) (ts* (cdr ts)))
-            (cond ((option-string->name t) =>
-                   (lambda (name)
-                     (accum-option name ts* seeds fold-loop)))
-                  (else
-                   (let-values ((seeds* (apply proc #f t seeds)))
-                     (fold-loop seeds* ts*)))))))
-
-    (fold-loop seeds tokens))
+      (fold-loop seeds tokens)))
 
   ;; If s is a string describing a long or short option, returns its
   ;; name as a symbol. Otherwise, returns #f.
