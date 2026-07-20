@@ -30,8 +30,8 @@
   (define (put-option-doc-line port option)
     (assert (output-port? port))
     (assert (option? option))
-    (let ((names (option-get-property option 'names))
-          (argname (option-get-property option 'argument-name))
+    (let ((names (option-names option))
+          (argname (option-argument-name option))
           (help (option-get-property option 'help)))
       (put-string port "  ") ; indent
       ;; Print option names.
