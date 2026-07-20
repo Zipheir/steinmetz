@@ -12,7 +12,9 @@
           option
           )
   (import (rnrs base)
+          (rnrs conditions)
           (rnrs control (6))
+          (rnrs exceptions)
           (rnrs lists (6))
           (rnrs hashtables (6))
           (rnrs io ports (6))
@@ -26,7 +28,7 @@
           (steinmetz command-line)
           )
 
-  ;;;; Utility
+  ;;;; Type predicates & utility
 
   ;; Add (key . val) to alist, replacing any existing pair with
   ;; car key. May derange alist.
@@ -34,8 +36,10 @@
     (cons (cons key val)
           (remove (lambda (p) (eqv? key (car p))) alist)))
 
-  ;;;; Matching options and arguments
+  (define (option-names? x)
+    (and (list? x) (s1:every symbol? x)))
 
+  ;; TODO: Tighten up (use a reg. ex.)
   (define (option-string? s)
     (and (not (equal? s ""))
          (eqv? #\- (string-ref s 0))))
@@ -46,43 +50,39 @@
 
   ;;;; Parser utilities
 
-  (define parser-satisfies
-    (case-lambda
-      ((pred) (parser-satisfies pred "parse failed"))
-      ((pred fail-msg)
-       (lambda (in succeed fail)
-         (if (and (pair? in) (pred (car in)))
-             (succeed (car in) (cdr in))
-             (fail fail-msg))))))
+  (define-condition-type &parser &condition
+    make-parser-condition
+    parser-condition?)
 
-  (define (parser-map f p)
-    (lambda (in succeed fail)
-      (p in
-         (lambda (x rest) (succeed (f x) rest))
-         fail)))
+  (define (parser-exception msg . irritants)
+    (raise-continuable
+     (condition (make-parser-condition)
+                (make-message-condition msg)
+                (make-irritants-condition irritants))))
 
-  ;;; Argument parsers
+  ;;;; Argument parsers
 
-  ;;; An argument parser is a function that takes a list of strings
-  ;;; and two continuations, 'succeed' and 'fail'. It is expected to
-  ;;; either invoke 'succeed' on a result and the rest of the input, or
-  ;;; invoke 'fail' on an error message (string).
-  ;;;
-  ;;; TODO: Do we really need a failure continuation?  Seems like
-  ;;; overkill.  Returning a value or raising an exception is easier.
+  (define (parser-map proc parser)
+    (lambda (in)
+      (let-values (((val rest) (parser in)))
+        (values (proc val) rest))))
 
   ;; Parse an argument.
+  ;; TODO: Additional predicate for excluding ill-typed arguments?
   (define (make-argument-parser opt-names)
-    (let* ((nm (format-option-names opt-names))
-           (err-msg (string-append "missing arguments for " nm)))
-      (parser-satisfies argument-string? err-msg)))
+    (assert (option-names? opt-names))
+    (lambda (tokens)
+      (let ((t (car tokens)) (rest (cdr tokens)))
+        (if (argument-string? t)
+            (values t rest)
+            (parser-exception "missing option argument" opt-names)))))
 
-  ;; Should be continuable.
-  (define parser-exception error)
+  ;; A flag takes no arguments, so this always succeeds and consumes
+  ;; no tokens.
+  (define (flag-parser tokens)
+    (values #t tokens))
 
-  ;; No arguments; returns #t.
-  (define (flag-parser ts succeed _fail)
-    (succeed #t ts))
+  ;;;; Exported constructors
 
   (define make-cli-option
     (case-lambda
@@ -114,13 +114,23 @@
 
   ;;;; Driver
 
+  ;;; TODO: Decide on a canonical form for options with multiple names.
+  ;;; If -o and --output are names for the same option, then the same
+  ;;; option name should be produced for both.
+  ;;;
+  ;;; This would mean restricting the number of names an option can
+  ;;; have (e.g. short, long, or short and long), or explicitly asking
+  ;;; the library user to select a canonical name.  I lean toward the
+  ;;; former, since having multiple names of the same format for a
+  ;;; single option seems confusing in general.
+
   ;; Could be a perfect hash table.
   (define (make-option-table opts)
     (let ((table (make-eqv-hashtable)))
       (for-each (lambda (opt)
                   (for-each (lambda (name)
                               (hashtable-set! table name opt))
-                            (option-get-property opt 'names)))
+                            (option-names opt)))
                 opts)
       table))
 
@@ -128,23 +138,28 @@
     (cond ((hashtable-ref opt-tab name #f))
           (else (parser-exception "invalid option" name))))
 
+  ;; Nuts-&-bolts general interface.
+  ;;
+  ;; TODO: Determine how to handle --.  Currently fold-cli does not
+  ;; treat it specially, since not every program will want that. 
+  ;; Handling it at a higher level, though, is awkward, and every
+  ;; program that *does* want special handling of -- will have to
+  ;; do additional work (as process-cli does below).  Maybe fold-cli
+  ;; could take an additional parameter indicating whether to support
+  ;; -- as "operand guard".
   (define (fold-cli options proc cli-lis . seeds)
     (assert (and (list? options) (s1:every option? options)))
     (assert (procedure? proc))
+    ;; TODO: Check listiness here & check strings bit by bit.
     (assert (and (list? cli-lis) (s1:every string? cli-lis)))
     (letrec*
      ((opt-tab (make-option-table options))
       (tokens (clean-command-line cli-lis))
       (accum-option
        (lambda (name ts seeds cont)
-         (process-option
-          name
-          opt-tab
-          tokens
-          (lambda (v ts*)
-            (let-values ((seeds* (apply proc name v seeds)))
-              (cont seeds* ts*)))
-          parser-exception)))
+         (let*-values (((arg rest) (process-option name opt-tab ts))
+                       (seeds* (apply proc name arg seeds)))
+           (cont seeds* rest))))
       (fold-loop
        (lambda (seeds ts)
          (if (null? ts)
@@ -166,36 +181,36 @@
          (string->symbol
           (string-drop-while s (lambda (c) (eqv? c #\-))))))
 
-  (define (process-option name opt-table in succeed fail)
+  ;; Match *name* to an option structure and apply the associated
+  ;; parser to *tokens*.
+  (define (process-option name opt-table tokens)
     (let ((opt (lookup-option-by-name opt-table name)))
-      ((option-parser opt) in succeed fail)))
+      ((option-parser opt) tokens)))
 
-  ;; Parses ts and returns two values: an alist associating each option with
-  ;; its arguments, and a list of "operands"--tokens without a preceding
-  ;; option.
-  (define (process-cli options ts)
-    (let-values (((opts opers junk)
-                  (fold-cli options accum ts '() '() #t)))
+  ;; Easy high-level interface.  Parses *cli-list* and returns two
+  ;; values: an alist associating each option with its arguments, and
+  ;; a list of operands (objects not associated with options).
+  ;;
+  ;; TODO: Support the -- operand guard.  Probably not here, though.
+  (define (process-cli options cli-list)
+    (let-values (((opts opers)
+                  (fold-cli options accum cli-list '() '())))
       (values (reverse opts) (reverse opers))))
 
-  ;; If name has an association in alis, then append val to the cdr
-  ;; of name's pair. Otherwise, just add (name . val) to alis.
-  (define (adjoin/pool name val alis)
-    (cond ((assv name alis) =>
+  (define (accum name arg opts opers)
+    (if name
+        (values (adjoin/pool name arg opts) opers)
+        (values opts (cons arg opers))))
+
+  ;; If *name* has an association in *alist*, then append *arg* to the
+  ;; cdr of *name*'s pair.  Otherwise, just add (name .  arg) to
+  ;; *alist*.
+  (define (adjoin/pool name arg alist)
+    (cond ((assv name alist) =>
            (lambda (p)
-             (cons (cons (car p) (append (cdr p) (list val)))
-                   (remove (lambda (p) (eqv? name (car p))) alis))))
-          (else (cons (cons name val) alis))))
-
-  (define (accum name val opts opers more-opts?)
-    (if (and name more-opts?)
-        (accum-option name val opts opers more-opts?)
-        (values opts (cons val opers) more-opts?)))
-
-  (define (accum-option name val opts opers more-opts?)
-    (if (equal? name "--")  ; special "end of options" token
-        (values opts opers #f)  ; discard it and set flag
-        (values (adjoin/pool name val opts) opers more-opts?)))
+             (cons (cons (car p) (append (cdr p) (list arg)))
+                   (remove (lambda (p) (eqv? name (car p))) alist))))
+          (else (cons (cons name arg) alist))))
 
   ;;;; Syntax
 
