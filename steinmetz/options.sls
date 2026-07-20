@@ -8,7 +8,6 @@
           option-properties
           option-names
           option-argument-name
-          option-help
           option-get-property
           option-add-property
           )
@@ -35,6 +34,7 @@
   (define-record-type (option make-option option?)
     (fields
       (immutable names option-names) ; a list of symbols
+      (immutable argument-name option-argument-name) ; a symbol or #f
       (immutable parser option-parser)  ; an argument parser
       ;; a key/value map of option properties
       (immutable properties option-properties)))
@@ -49,32 +49,8 @@
   (define (option-add-property opt key val)
     (assert (option? opt))
     (make-option (option-names opt)
+                 (option-argument-name opt)
                  (option-parser opt)
                  (alist-update key val (option-properties opt))))
-
-  (define alist->properties values)
-
-  ;;; "Virtual" accessors.  Not every option will have these fields,
-  ;;; so they are currently implemented as properties.
-
-  (define (option-argument-name opt)
-    (option-get-property opt 'argument-name))
-
-  (define (option-help opt)
-    (option-get-property opt 'help))
-
-  ;;; Option combinators
-
-  ;; Add a help string to opt.
-  (define (option-add-help help opt)
-    (assert (string? help))
-    (assert (option? opt))
-    (option-add-property opt 'help help))
-
-  ;; Add an argument name (symbol) to opt.
-  (define (option-add-argument-name name opt)
-    (assert (symbol? name))
-    (assert (option? opt))
-    (option-add-property opt 'argument-name name))
 
   )
