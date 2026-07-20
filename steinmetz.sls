@@ -11,6 +11,8 @@
           put-usage
           options
           make-cli-flag
+          flag
+          option
           )
   (import (steinmetz options)
           (steinmetz parse)

@@ -9,6 +9,8 @@
           options
           make-cli-option
           make-cli-flag
+          flag
+          option
           )
   (import (rnrs base)
           (rnrs control (6))
