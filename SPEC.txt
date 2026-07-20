@@ -1,71 +1,56 @@
 # steinmetz
 
+This document is currently in flux.  The interface could change at
+any time.  (I don't intend this to be a permanent state of affairs.
+Stability is good.)
+
+
+
 ## Options
 
-Command-line options are described by Option structures.
+Command-line options are described by the Option record type.
+Low-level procedures for manipulating this type are exported by
+(steinmetz options).
 
-The public elements of an Option include:
+An Option has the following public components:
 
-* Names (a list of symbols)
-* Help text (a string; optional)
-* Argument name (a symbol; meta-name of the option’s argument)
+Names::
 
-
-### Procedures
-
-(make-option names [arg-name [conv]])
-
-Constructs a new Option. *names* is a list of symbols; each element is
-a short or long name (without leading dashes) for this option. *arg-name*
-is a symbol giving the name of the option’s argument. It defaults to
-'ARG'. If *arg-name* is #f, then the option does not take an argument.
-
-*conv* is an argument conversion procedure of type (-> String *).
-When the option is parsed, the argument string will be passed to *conv*.
-The value of the argument will be whatever *conv* returns. Converters
-can use 'parser-exception' to signal an invalid argument.
-
-Example:
-
-    (let ((conv (lambda (s)
-                  (let ((res-or-false (string->number s)))
-                    (or res-or-false
-                        (parser-exception "not a number" s))))))
-      (make-option '(n num) 'NUM conv))
+A list of acceptable names (symbols) for the option.  Accessed by
+'option-names'.
 
 
-(option? obj)
+Argument name::
 
-True if *obj* is an Option and false otherwise.
-
-
-(option-names opt)
-
-Returns the names of *opt* as a list of symbols. Names do not include
-leading dashes. Thus, 'widget' is the name of the option spelled
-'--widget' on the command-line.
+The name (a symbol) of the option's argument, used in documentation
+and diagnostic messages.  '#f' if the option takes no argument.
+Accessed by 'option-argument-name'.
 
 
-(option-map proc opt)
+An Option also contains a key-value mapping for arbitrary properties.
+These can be manipulated with the following procedures.
 
-Returns a new Option which
-applies *proc* to the option’s argument value after parsing.
+(option-property-ref option key) → *
+
+Returns the value associated with *key* (a symbol) in *option*'s
+property mapping.  If no association exists, returns #f.  (FIXME:
+This should probably raise an exception on failure, to avoid the
+ambiguity associated with returning #f.)
+
+(option-set-property option key obj) → option
+
+Returns a copy of *option* with a new property association of
+*key* to *obj*.  Any existing association for *key* is replaced.
 
 
-(option-add-help msg opt)
+### Common properties
 
-Updates *opt* with the help text *msg* (a string).
-
-
-(option-help opt)
-
-Returns *opt*’s help text or #f if none exists.
+Most options include a 'help' property associated with a string
+describing the option.
 
 
-(option-add-argument-name name opt)
 
-Updates *opt* with the metavariable name *name*.
-
+## Parsing
 
 (parser-exception msg irritant ...)
 

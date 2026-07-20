@@ -8,8 +8,8 @@
           option-properties
           option-names
           option-argument-name
-          option-get-property
-          option-add-property
+          option-property-ref
+          option-set-property
           )
   (import (rnrs base)
           (rnrs records syntactic)
@@ -41,12 +41,12 @@
 
   ;;; (Symbol . list) alist implementation of properties.
 
-  (define (option-get-property opt key)
+  (define (option-property-ref opt key)
     (assert (option? opt))
     (cond ((assv key (option-properties opt)) => cdr)
           (else #f)))
 
-  (define (option-add-property opt key val)
+  (define (option-set-property opt key val)
     (assert (option? opt))
     (make-option (option-names opt)
                  (option-argument-name opt)
