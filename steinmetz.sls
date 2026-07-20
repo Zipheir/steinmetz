@@ -16,5 +16,8 @@
           make-flag
           option
           flag)
-  (import (steinmetz options))
+  (import (steinmetz options)
+          (steinmetz parse)
+          (steinmetz usage)
+          )
   )
