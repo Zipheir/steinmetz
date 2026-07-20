@@ -21,6 +21,11 @@
   ;;; procedures for manipulating it.  The parsers associated with
   ;;; the 'parser' slot are defined in (steinmetz parse).
 
+  ;;; Idea for solving the "canonical name" problem: Make it a field.
+  ;;; This way, the high-level constructors can pick one according to
+  ;;; some rule, but it'll still be possible to choose your own if you
+  ;;; use the core constructor.
+
   ;;;; Utility
 
   ;; Add (key . val) to alist, replacing any existing pair with
