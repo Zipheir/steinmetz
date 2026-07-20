@@ -11,7 +11,7 @@
           option-names
           fold-cli
           process-cli
-          make-usage
+          put-usage
           options
           make-flag
           option

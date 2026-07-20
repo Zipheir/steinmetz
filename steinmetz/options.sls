@@ -11,7 +11,7 @@
           option-names
           fold-cli
           process-cli
-          make-usage
+          put-usage
           options
           make-flag
           option
@@ -20,6 +20,7 @@
           (rnrs control (6))
           (rnrs lists (6))
           (rnrs hashtables (6))
+          (rnrs io ports (6))
           (only (srfi :1 lists) append-map)
           (srfi :9 records)
           (srfi :115)
@@ -162,44 +163,45 @@
   (define (format-option-names names)
     (string-join (map option-name->string names) ", "))
 
-  ;; Returns a list of strings, each one giving the forms and
-  ;; help text for an option.
-  (define (make-option-descriptions options)
-    (let ((fmt-names
-           (lambda (nms)
-             (case (length nms)
-               ((0) "")
-               ((1) (option-name->string (car nms)))
-               (else
-                (let ((os (map option-name->string nms)))
-                  (string-append "(" (string-join os " ") ")"))))))
-          (fmt-arg
-           (lambda (arg)
-             (if arg
-                 (symbol->string arg)
-                 ""))))
+  ;; Write a description of *option* to *port*.
+  (define (put-option-doc-line port option)
+    (assert (output-port? port))
+    (assert (option? option))
+    (let ((names (option-get-property option 'names))
+          (argname (option-get-property option 'argument-name))
+          (help (option-get-property option 'help)))
+      (put-string port "  ") ; indent
+      ;; Print option names.
+      (case (length names)
+        ((1)
+         (put-string port (option-name->string (car names))))
+        (else
+         (put-string port "(")
+         (put-string port (format-option-names names))
+         (put-string port ")")))
+      (when argname
+        (assert (symbol? argname))
+        (put-string port " ")
+        (put-string port (symbol->string argname)))
+      (when help
+        (assert (string? help))
+        (put-string port "  ")
+        (put-string port help))
+      (put-string port "\n")))
 
-      (map (lambda (opt)
-             (string-append
-              (fmt-names (option-get-property opt 'names))
-              " "
-              (fmt-arg (option-get-property opt 'argument-name))
-              "  "
-              (or (option-get-property opt 'help) "")))
-           options)))
-
-  ;; Portable (and hence low-budget) pretty-printing.
-  (define (make-usage options header footer)
-    (string-append header
-                   "\n"
-                   (string-join
-                    (map (lambda (s)
-                           (string-append "  " s))
-                         (make-option-descriptions options))
-                    "\n")
-                   "\n"
-                   footer
-                   "\n"))
+  ;; Writes a usage message to *port*.
+  (define (put-usage port options header footer)
+    (assert (output-port? port))
+    (assert (list? options))
+    (assert (string? header))
+    (assert (string? footer))
+    (put-string port header)
+    (put-char port #\newline)
+    (for-each (lambda (opt)
+                (put-option-doc-line port opt))
+              options)
+    (put-string port footer)
+    (put-char port #\newline))
 
   ;;;; Driver
 
