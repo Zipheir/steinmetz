@@ -6,6 +6,7 @@
           put-usage)
   (import (rnrs base)
           (rnrs control)
+          (rnrs io ports)
           (prefix (srfi :152) s152:)
           (steinmetz options)
           )
@@ -23,7 +24,7 @@
           (string-append "--" s))))
 
   (define (format-option-names names)
-    (string-join (map option-name->string names) ", "))
+    (s152:string-join (map option-name->string names) ", "))
 
   ;; Write a description of *option* to *port*.
   (define (put-option-doc-line port option)
