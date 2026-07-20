@@ -2,7 +2,8 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz usage)
-  (export put-usage)
+  (export format-option-names
+          put-usage)
   (import (rnrs base)
           (rnrs control)
           (prefix (srfi :152) s152:)

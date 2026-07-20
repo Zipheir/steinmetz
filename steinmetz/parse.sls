@@ -14,7 +14,7 @@
           (rnrs lists (6))
           (rnrs hashtables (6))
           (rnrs io ports (6))
-          (only (srfi :1 lists) append-map)
+          (prefix (srfi :1) s1:)
           (srfi :9 records)
           (srfi :115)
           (only (srfi :152) string-index string-skip string-drop-while
@@ -67,7 +67,7 @@
   ;;; invoke 'fail' on an error message (string).
 
   ;; Parse an argument.
-  (define (argument opt-names)
+  (define (make-argument-parser opt-names)
     (let* ((nm (format-option-names opt-names))
            (err-msg (string-append "missing arguments for " nm)))
       (parser-satisfies argument-string? err-msg)))
@@ -79,69 +79,38 @@
   (define (flag-parser ts succeed _fail)
     (succeed #t ts))
 
-  ;;;; Options
-
-  (define-record-type <option>
-    (raw-option parser properties)
-    option?
-    (parser option-parser)           ; an argument parser
-    (properties option-properties))  ; a key/value map of option properties
-
-  ;;; (Symbol . list) alist implementation of properties.
-
-  (define (option-get-property opt key)
-    (cond ((assv key (option-properties opt)) => cdr)
-          (else #f)))
-
-  (define (option-add-property opt key val)
-    (raw-option (option-parser opt)
-                (alist-update key val (option-properties opt))))
-
-  (define alist->properties values)
-
-  ;;; Convenient property accessors
-
-  (define (option-names opt)
-    (or (option-get-property opt 'names)
-        (error 'option-names "option has no defined names")))
-
-  (define (option-argument-name opt)
-    (or (option-get-property opt 'argument-name)
-        (error 'option-argument-name
-               "option has no defined argument name")))
-
-  (define (option-help opt)
-    (option-get-property opt 'help))
-
-  ;; Exported constructor. Defaults to an option that takes a single
-  ;; string argument.
-  (define make-option
-    (case-lambda
-      ((names) (make-option names 'ARG values))
-      ((names arg-name) (make-option names arg-name values))
-      ((names arg-name conv)
        (let ((arg-p (if arg-name (argument names) flag-parser))
              (props (alist->properties `((names . ,names)
                                          (argument-name . ,arg-name)))))
          (option-map conv (raw-option arg-p props))))))
 
-  (define (make-flag names)
-    (raw-option flag-parser
-                (alist->properties `((names . ,names)))))
+  (define make-cli-option
+    (case-lambda
+      ((names) (make-cli-option names 'ARG values))
+      ((names arg-name) (make-cli-option names arg-name values))
+      ((names arg-name conv)
+       (assert (and (list? names) (s1:every symbol? names)))
+       (assert (or (symbol? arg-name) (not arg-name)))
+       (assert (procedure? conv))
+       (let ((parser (if arg-name
+                         (make-argument-parser names)
+                         flag-parser))
+             (props (if arg-name
+                        `((argument-name . ,arg-name))
+                        '())))
+         (make-option names parser props)))))
 
-  (define (option-map f opt)
-    (raw-option (parser-map f (option-parser opt))
-                (option-properties opt)))
+  (define (make-cli-flag names)
+    (make-cli-option names
+                 flag-parser
+                 (alist->properties `((names . ,names)))))
 
-  ;;; Option combinators
-
-  ;; Add a help string to opt.
-  (define (option-add-help s opt)
-    (option-add-property opt 'help s))
-
-  ;; Add an argument name (symbol) to opt.
-  (define (option-add-argument-name name opt)
-    (option-add-property opt 'argument-name name))
+  (define (option-map proc opt)
+    (assert (procedure? proc))
+    (assert (option? opt))
+    (make-cli-option (option-names opt)
+                 (parser-map proc (option-parser opt))
+                 (option-properties opt)))
 
   ;;;; Driver
 
@@ -242,13 +211,14 @@
       ((%opt-clause flag names help)
        (option-add-help help (%opt-clause flag names)))
       ((%opt-clause option names arg)
-       (make-option (%normalize names) 'arg))
+       (make-cli-option (%normalize names) 'arg))
       ((%opt-clause option names arg help)
-       (option-add-help help (make-option (%normalize names) 'arg)))
+       (option-add-help help
+                        (make-cli-option (%normalize names) 'arg)))
       ((%opt-clause option names arg help conv)
        (option-add-help
         help
-        (make-option (%normalize names) 'arg conv)))))
+        (make-cli-option (%normalize names) 'arg conv)))))
 
   (define-syntax %normalize
     (syntax-rules ()
