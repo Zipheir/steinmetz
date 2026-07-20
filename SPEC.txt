@@ -49,42 +49,11 @@ Most options include a 'help' property associated with a string
 describing the option.
 
 
+### Syntactic interface
 
-## Parsing
-
-(parser-exception msg irritant ...)
-
-Raises an exception indicating that something went wrong during
-command-line parsing.
-
-
-(process-cli options [cli-list]) -> [alist, list]
-
-A easy-to-use high-level parsing procedure.  *options* is a list of
-Option objects.  Parses *cli-list* (a list of strings, or the value of
-‘(cdr (command-line))’ by default) and returns two values: an alist
-associating the name of each option encountered with its argument, and
-a list of tokens unassociated with any of the options (the “operands”).
-
-Example:
-
-    (let ((opts (options
-                  (option (f) FILE "input file")
-                  (flag (v) "verbose output"))))
-      (process-cli opts '("-f" "myfile" "-v" "frobnitz")))
-
-    ⇒ ((f . "myfile") (v . #t))
-      ("frobnitz")
-
-TODO: Support the -- end-of-options marker.
-
-
-### Syntax
-
-(options <clause> ...)
+(options <clause> ...) → (list Option)
 
 The 'options' form is a convenient interface to the options library.
-It’s used to declare a set of CLI options with the usual properties.
 Each clause describes a single option and is of one of the following
 forms:
 
@@ -93,7 +62,7 @@ forms:
 
 The (flag …) form describes a boolean flag which takes no arguments;
 (option …) describes an option taking an argument.
-<name-or-names> is either a symbol or a list of symbols (both unquoted)
+<name-or-names> is either an identifier or a list of identifiers
 and gives the acceptable forms of an option. <arg-name> and <conv> have
 the same meaning as they do in make-option. <help-text> is a string
 describing the option.
@@ -106,7 +75,46 @@ Example:
     (define my-opts
       (options
         (option (f file)    FILE "input file")
-        (option (k chunk)   NUM  "chunk to operate on" number-conv)
+        (option (k chunk)   NUM  "chunk to operate on" string->number)
         (flag   (v verbose)      "verbose output")))
 
-Here, *number-conv* is an argument converter wrapping 'string->number'.
+
+
+## Parsing
+
+(parser-exception message irritant ...)
+
+Raises a continuable exception indicating that something went wrong
+during command-line parsing.  *message* must be a string.  The
+*irritant*s may be anything.  The raised object is a compound condition
+satisfying ‘parser-condition?’ and including (at least) ‘&message’ and
+‘&irritants’ components.
+
+
+(parser-condition? obj) → boolean
+
+True of *obj* is a condition raised by ‘parser-exception’.
+
+
+(process-cli options [cli-list]) -> [alist, list]
+
+A easy-to-use high-level parsing procedure.  *options* is a list of
+Option objects.  Parses *cli-list* (a list of strings, or the value of
+‘(cdr (command-line))’ by default) and returns two values: an alist
+associating the name of each option encountered with its argument, and
+a list of tokens unassociated with any of the options (the “operands”).
+
+If an unknown option is encountered while parsing, an object satisfying
+‘parser-condition?’ is raised continuably.
+
+Example:
+
+    (let ((opts (options
+                  (option (f) FILE "input file")
+                  (flag (v) "verbose output"))))
+      (process-cli opts '("-f" "myfile" "-v" "frobnitz")))
+
+    ⇒ ((f . "myfile") (v . #t))
+      ("frobnitz")
+
+TODO: Support the -- end-of-options marker.
