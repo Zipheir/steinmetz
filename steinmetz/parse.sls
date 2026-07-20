@@ -192,10 +192,13 @@
   ;; a list of operands (objects not associated with options).
   ;;
   ;; TODO: Support the -- operand guard.  Probably not here, though.
-  (define (process-cli options cli-list)
-    (let-values (((opts opers)
-                  (fold-cli options accum cli-list '() '())))
-      (values (reverse opts) (reverse opers))))
+  (define process-cli
+    (case-lambda
+      ((opts) (process-cli opts (cdr (command-line))))
+      ((opts cli-list)
+       (let-values (((opts opers)
+                     (fold-cli options accum cli-list '() '())))
+         (values (reverse opts) (reverse opers))))))
 
   (define (accum name arg opts opers)
     (if name

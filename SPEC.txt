@@ -55,7 +55,28 @@ describing the option.
 (parser-exception msg irritant ...)
 
 Raises an exception indicating that something went wrong during
-command-line parsing. *Details to be worked out soon.*
+command-line parsing.
+
+
+(process-cli options [cli-list]) -> [alist, list]
+
+A easy-to-use high-level parsing procedure.  *options* is a list of
+Option objects.  Parses *cli-list* (a list of strings, or the value of
+‘(cdr (command-line))’ by default) and returns two values: an alist
+associating the name of each option encountered with its argument, and
+a list of tokens unassociated with any of the options (the “operands”).
+
+Example:
+
+    (let ((opts (options
+                  (option (f) FILE "input file")
+                  (flag (v) "verbose output"))))
+      (process-cli opts '("-f" "myfile" "-v" "frobnitz")))
+
+    ⇒ ((f . "myfile") (v . #t))
+      ("frobnitz")
+
+TODO: Support the -- end-of-options marker.
 
 
 ### Syntax
