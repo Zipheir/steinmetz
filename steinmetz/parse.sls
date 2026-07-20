@@ -2,8 +2,7 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz parse)
-  (export option-map
-          fold-cli
+  (export fold-cli
           process-cli
           put-usage
           options
@@ -112,15 +111,6 @@
        (assert (and (list? names) (s1:every symbol? names)))
        (assert (list? props))
        (make-option names #f flag-parser props))))
-
-  ;; TODO: Delete this?
-  (define (option-map proc opt)
-    (assert (procedure? proc))
-    (assert (option? opt))
-    (make-cli-option (option-names opt)
-                     (option-argument-name opt)
-                 (parser-map proc (option-parser opt))
-                 (option-properties opt)))
 
   ;;;; Driver
 

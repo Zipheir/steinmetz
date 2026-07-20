@@ -3,7 +3,6 @@
 
 (library (steinmetz)
   (export make-cli-option
-          option-map
           option-argument-name
           option-names
           fold-cli
