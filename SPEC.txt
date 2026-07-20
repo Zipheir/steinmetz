@@ -104,24 +104,32 @@ describing the option.
 
 #### Core procedures
 
+(make-option names argument-name parser properties) → option
+
+Arguement types:
+
+(: names (list symbol))
+(: argument-name (or symbol #f))
+(: parser procedure)
+(: properties (alist symbol *))
+
+Returns a new Option object.  These fields have the following
+accessors:
+
+* ‘option-names’
+* ‘option-argument-name’
+* ‘option-parser’
+* ‘option-properties’
+
+
 (option? obj) → boolean
 
 Returns ‘#t’ if *obj* is an Option and ‘#f’ otherwise.
 
 
-(option-names option) → (list symbol)
+An Option’s property alist can be manipulated with the following
+convenience procedures.
 
-Returns a list of acceptable names for *option*.
-
-
-(option-argument-name option)
-
-The name (a symbol) of the option's argument, used in documentation
-and diagnostic messages.  '#f' if the option takes no argument.
-
-
-An Option also contains a key-value mapping for arbitrary properties.
-These can be manipulated with the following procedures.
 
 (option-property-ref option key) → *
 
@@ -129,6 +137,7 @@ Returns the value associated with *key* (a symbol) in *option*'s
 property mapping.  If no association exists, returns #f.  (FIXME:
 This should probably raise an exception on failure, to avoid the
 ambiguity associated with returning #f.)
+
 
 (option-set-property option key obj) → option
 

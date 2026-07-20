@@ -36,6 +36,7 @@
 
   ;;;; Options
 
+  ;; TODO: Type-checked version of constructor for export.
   (define-record-type (option make-option option?)
     (fields
       (immutable names option-names) ; a list of symbols
