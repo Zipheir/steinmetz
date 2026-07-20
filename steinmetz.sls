@@ -2,20 +2,16 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz)
-  (export make-option
+  (export make-cli-option
           option-map
-          option-help
           option-argument-name
-          option-add-help
-          option-add-argument-name
           option-names
           fold-cli
           process-cli
           put-usage
           options
-          make-flag
-          option
-          flag)
+          make-cli-flag
+          )
   (import (steinmetz options)
           (steinmetz parse)
           (steinmetz usage)

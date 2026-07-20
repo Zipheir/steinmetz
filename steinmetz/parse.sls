@@ -7,8 +7,9 @@
           process-cli
           put-usage
           options
-          make-flag
-          flag)
+          make-cli-option
+          make-cli-flag
+          )
   (import (rnrs base)
           (rnrs control (6))
           (rnrs lists (6))
@@ -65,6 +66,9 @@
   ;;; and two continuations, 'succeed' and 'fail'. It is expected to
   ;;; either invoke 'succeed' on a result and the rest of the input, or
   ;;; invoke 'fail' on an error message (string).
+  ;;;
+  ;;; TODO: Do we really need a failure continuation?  Seems like
+  ;;; overkill.  Returning a value or raising an exception is easier.
 
   ;; Parse an argument.
   (define (make-argument-parser opt-names)
@@ -79,36 +83,40 @@
   (define (flag-parser ts succeed _fail)
     (succeed #t ts))
 
-       (let ((arg-p (if arg-name (argument names) flag-parser))
-             (props (alist->properties `((names . ,names)
-                                         (argument-name . ,arg-name)))))
-         (option-map conv (raw-option arg-p props))))))
-
   (define make-cli-option
     (case-lambda
-      ((names) (make-cli-option names 'ARG values))
-      ((names arg-name) (make-cli-option names arg-name values))
+      ((names) (make-cli-option names 'ARG values '()))
+      ((names arg-name)
+       (make-cli-option names arg-name values '()))
       ((names arg-name conv)
+       (make-cli-option names arg-name conv '()))
+      ((names arg-name conv props)
        (assert (and (list? names) (s1:every symbol? names)))
        (assert (or (symbol? arg-name) (not arg-name)))
        (assert (procedure? conv))
+       (assert (list? props))
        (let ((parser (if arg-name
                          (make-argument-parser names)
-                         flag-parser))
-             (props (if arg-name
-                        `((argument-name . ,arg-name))
-                        '())))
-         (make-option names parser props)))))
+                         flag-parser)))
+         (make-option names
+                      arg-name
+                      (parser-map conv parser)
+                      props)))))
 
-  (define (make-cli-flag names)
-    (make-cli-option names
-                 flag-parser
-                 (alist->properties `((names . ,names)))))
+  (define make-cli-flag
+    (case-lambda
+      ((names) (make-cli-flag names '()))
+      ((names props)
+       (assert (and (list? names) (s1:every symbol? names)))
+       (assert (list? props))
+       (make-option names #f flag-parser props))))
 
+  ;; TODO: Delete this?
   (define (option-map proc opt)
     (assert (procedure? proc))
     (assert (option? opt))
     (make-cli-option (option-names opt)
+                     (option-argument-name opt)
                  (parser-map proc (option-parser opt))
                  (option-properties opt)))
 
@@ -129,6 +137,9 @@
           (else (parser-exception "invalid option" name))))
 
   (define (fold-cli options proc cli-lis . seeds)
+    (assert (and (list? options) (s1:every option? options)))
+    (assert (procedure? proc))
+    (assert (and (list? cli-lis) (s1:every string? cli-lis)))
     (letrec*
      ((opt-tab (make-option-table options))
       (tokens (clean-command-line cli-lis))
@@ -207,18 +218,21 @@
   (define-syntax %opt-clause
     (syntax-rules (option flag)
       ((%opt-clause flag names)
-       (make-flag (%normalize names)))
-      ((%opt-clause flag names help)
-       (option-add-help help (%opt-clause flag names)))
+       (make-cli-flag (%normalize names)))
+      ((%opt-clause flag names help-str)
+       (make-cli-flag (%normalize names) '((help . help-str))))
       ((%opt-clause option names arg)
        (make-cli-option (%normalize names) 'arg))
-      ((%opt-clause option names arg help)
-       (option-add-help help
-                        (make-cli-option (%normalize names) 'arg)))
-      ((%opt-clause option names arg help conv)
-       (option-add-help
-        help
-        (make-cli-option (%normalize names) 'arg conv)))))
+      ((%opt-clause option names arg help-str)
+       (make-cli-option (%normalize names)
+                        'arg
+                        values
+                        '((help . help-str))))
+      ((%opt-clause option names arg help-str conv)
+       (make-cli-option (%normalize names)
+                        'arg
+                        conv
+                        '((help . help-str))))))
 
   (define-syntax %normalize
     (syntax-rules ()
