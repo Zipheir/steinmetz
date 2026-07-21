@@ -18,6 +18,7 @@
           (rnrs lists (6))
           (rnrs hashtables (6))
           (rnrs io ports (6))
+          (rnrs programs)
           (prefix (srfi :1) s1:)
           (srfi :9 records)
           (srfi :115)
