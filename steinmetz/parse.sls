@@ -10,6 +10,7 @@
           make-cli-flag
           flag
           option
+          parser-condition?
           )
   (import (rnrs base)
           (rnrs conditions)
