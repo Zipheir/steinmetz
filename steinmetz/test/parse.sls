@@ -4,6 +4,8 @@
 (library (steinmetz test parse)
   (export run-tests)
   (import (rnrs base)
+          (rnrs exceptions)
+          (rnrs sorting)
 	  (prefix (srfi :1) s1:)
 	  (srfi :64)
 	  (steinmetz options)
@@ -82,5 +84,60 @@
           '("verbose output" "badger")
           (list (option-property-ref opt 'help)
                 (option-property-ref opt 'animal)))))
+
+    (test-group "fold-cli"
+      (let ((opts (options
+                    (option (f file) FILE)
+                    (flag (v verbose)))))
+        (test-eqv "fold-cli: count options, ignore operands"
+          4
+          (guard (con
+                   ((parser-condition? con) -1)
+                   (else (raise-continuable con)))
+            (fold-cli opts
+                      (lambda (_name _arg n)
+                        (+ n 1))
+                      '("-v" "-f" "foo" "--verbose" "--file" "bar")
+                      0)))
+
+        (test-equal "fold-cli: ignore options, return operands"
+          '("a" "b")
+          (guard (con
+                   ((parser-condition? con) '())
+                   (else (raise-continuable con)))
+            (list-sort
+             string<?
+             (fold-cli opts
+                       (lambda (name arg rands)
+                         (if name rands (cons arg rands)))
+                       '("-v" "a" "-f" "foo" "--file" "bar" "b")
+                       '()))))
+
+        (test-equal
+          "fold-cli: return options (not canonicalized) and operands"
+          '(((f . "foo") (file . "bar") (v . #t) (verbose . #t))
+            ("a" "b"))
+          (guard (con
+                   ((parser-condition? con) '())
+                   (else (raise-continuable con)))
+            (let*-values
+             (((cli)
+               '("-v" "a" "-f" "foo" "--file" "bar" "b" "--verbose"))
+              ((opt-alist rands)
+               (fold-cli opts
+                         (lambda (name arg os rs)
+                           (if name
+                               (values (cons (cons name arg) os)
+                                       rs)
+                               (values os (cons arg rs))))
+                         cli
+                         '()
+                         '())))
+              (list (list-sort (lambda (p1 p2)
+                                 (string<? (symbol->string (car p1))
+                                           (symbol->string (car p2))))
+                               opt-alist)
+                    (list-sort string<? rands)))))
+        ))
     )
   )
