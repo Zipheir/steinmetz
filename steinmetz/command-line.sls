@@ -18,29 +18,27 @@
   ;; There is a conflict with "X style" options (one dash followed by
   ;; a multi-character option name). These are lexed as clusters.
   (define (clean-command-line lis)
-    (let ((maybe-split
-           (lambda (s)
-             (cond ((srfi-115:regexp-matches? short-option-cluster s)
-                    (cluster->strings s))
-                   ((srfi-115:regexp-matches long-option/equals s) =>
-                    (lambda (m)
-                      (list (srfi-115:regexp-match-submatch m 1)
-                            (srfi-115:regexp-match-submatch m 2))))
-                   (else (list s))))))
+    (let*
+     ((short-option-cluster
+       (srfi-115:regexp '(: #\- alphabetic (+ alphabetic))))
+      (long-option/equals
+       (srfi-115:regexp '(: (submatch (: "--" (+ (or alphabetic #\-))))
+                            #\=
+                            (submatch (+ graphic)))))
+      ;; Break up a cluster into a list of short options.
+      (cluster->strings
+       (lambda (s)
+         (map (lambda (c) (string #\- c))
+              (cdr (string->list s)))))
+      (maybe-split
+       (lambda (s)
+         (cond ((srfi-115:regexp-matches? short-option-cluster s)
+                (cluster->strings s))
+               ((srfi-115:regexp-matches long-option/equals s) =>
+                (lambda (m)
+                  (list (srfi-115:regexp-match-submatch m 1)
+                        (srfi-115:regexp-match-submatch m 2))))
+               (else (list s))))))
+
       (srfi-1:append-map maybe-split lis)))
-
-  (define short-option-cluster
-    (srfi-115:regexp '(: #\- alphabetic (+ alphabetic))))
-
-  (define long-option/equals
-    (srfi-115:regexp '(: (submatch (: "--" (+ (or alphabetic #\-))))
-                         #\=
-                         (submatch (+ graphic)))))
-
-  ;; String -> (list String)
-  ;; Break up a cluster of short options.
-  (define (cluster->strings s)
-    (map (lambda (c) (string #\- c))
-         (cdr (string->list s))))
-
   )
