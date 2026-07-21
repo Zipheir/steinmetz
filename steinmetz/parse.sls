@@ -187,10 +187,10 @@
                            (remove (lambda (p) (eqv? name (car p)))
                                    alist))))
                   (else (cons (cons name arg) alist)))))
+         ;; FIXME: Uses *opt*'s first name as canonical.  This should
+         ;; at least ensure that all occurrences of an option get
+         ;; accumulated the same name.
          ((accum)
-          ;; FIXME: Uses *opt*'s first name as canonical.  This should
-          ;; at least ensure that all occurrences of an option get
-          ;; accumulated the same name.
           (lambda (opt arg opts opers)
             (if opt
                 (values (adjoin/pool (car (option-names opt))
