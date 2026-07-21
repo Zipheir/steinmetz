@@ -167,7 +167,7 @@ without arguments[†] may be run together.  For example, ‘-abc’ is
 equivalent to ‘-a -b -c’.  The argument of a short option is always the
 next token.  For a long option, the argument is the next token unless
 an argument was supplied as part of the option token, with the two
-components being separated by an ‘=’ character.  For example, e.g.
+components being separated by an ‘=’ character.  For example,
 ‘--output=foo.log’ is equivalent to ‘--output foo.log’.  Note that “X
 Windows–style” long options with a single leading dash (e.g.
 ‘-output’) are not supported, since they conflict unavoidably with
