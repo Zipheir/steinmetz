@@ -32,7 +32,7 @@
     (assert (option? option))
     (let ((names (option-names option))
           (argname (option-argument-name option))
-          (help (option-get-property option 'help)))
+          (help (option-property-ref option 'help)))
       (put-string port "  ") ; indent
       ;; Print option names.
       (case (length names)
