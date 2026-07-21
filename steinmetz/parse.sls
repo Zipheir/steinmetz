@@ -73,7 +73,7 @@
       ((names arg-name conv)
        (make-cli-option names arg-name conv '()))
       ((names arg-name conv props)
-       (assert (and (list? names) (s1:every symbol? names)))
+       (assert (option-names? names))
        (assert (or (symbol? arg-name) (not arg-name)))
        (assert (procedure? conv))
        (assert (list? props))
@@ -94,7 +94,7 @@
     (case-lambda
       ((names) (make-cli-flag names '()))
       ((names props)
-       (assert (and (list? names) (s1:every symbol? names)))
+       (assert (option-names? names))
        (assert (list? props))
        (make-option names #f flag-parser props))))
 
