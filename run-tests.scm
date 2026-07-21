@@ -5,6 +5,7 @@
         (srfi :64)
 	(steinmetz test runner)
 	(prefix (steinmetz test options) options:)
+	(prefix (steinmetz test parse) parse:)
 	)
 
 (test-runner-factory custom-test-runner-factory)
@@ -12,6 +13,7 @@
 (test-begin "steinmetz")
 
 (options:run-tests)
+(parse:run-tests)
 
 (test-end)
 
