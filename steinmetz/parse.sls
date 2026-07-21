@@ -142,6 +142,10 @@
 
   ;; Nuts-&-bolts general interface.
   ;;
+  ;; Currently, an operand is signaled to *proc* by passing #f as
+  ;; the first (name) argument and the token itself as the second
+  ;; (argument) argument.  This may be a little too subtle.
+  ;;
   ;; TODO: Determine how to handle --.  Currently fold-cli does not
   ;; treat it specially, since not every program will want that. 
   ;; Handling it at a higher level, though, is awkward, and every
