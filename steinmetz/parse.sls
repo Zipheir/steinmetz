@@ -21,10 +21,7 @@
           (rnrs io ports (6))
           (rnrs programs)
           (prefix (srfi :1) s1:)
-          (srfi :9 records)
-          (srfi :115)
-          (only (srfi :152) string-index string-skip string-drop-while
-                            string-concatenate string-join)
+          (prefix (srfi :152) s152:)
           (steinmetz options)
           (steinmetz usage)
           (steinmetz command-line)
@@ -138,7 +135,7 @@
        (lambda (s)
          (and (option-string? s)
               (string->symbol
-               (string-drop-while s (lambda (c) (eqv? c #\-)))))))
+               (s152:string-drop-while s (lambda (c) (eqv? c #\-)))))))
       (accum-option
        (lambda (name ts seeds cont)
          (let*-values (((opt) (lookup-option-by-name name))
