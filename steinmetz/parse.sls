@@ -148,13 +148,13 @@
   ;; do additional work (as process-cli does below).  Maybe fold-cli
   ;; could take an additional parameter indicating whether to support
   ;; -- as "operand guard".
-  (define (fold-cli options proc cli-lis . seeds)
-    (assert (and (list? options) (s1:every option? options)))
+  (define (fold-cli opts proc cli-lis . seeds)
+    (assert (and (list? opts) (s1:every option? opts)))
     (assert (procedure? proc))
     ;; TODO: Check listiness here & check strings bit by bit.
     (assert (and (list? cli-lis) (s1:every string? cli-lis)))
     (letrec*
-     ((opt-tab (make-option-table options))
+     ((opt-tab (make-option-table opts))
       (tokens (clean-command-line cli-lis))
       (accum-option
        (lambda (name ts seeds cont)
