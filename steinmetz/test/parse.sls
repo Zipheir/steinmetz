@@ -66,5 +66,21 @@
           '("output file" "badger")
           (list (option-property-ref opt 'help)
                 (option-property-ref opt 'animal)))))
+
+    (test-group "make-cli-flag"
+      (let ((opt (make-cli-flag '(v verbose)
+                                '((help . "verbose output")
+                                  (animal . "badger")))))
+        (test-assert "'make-cli-flag' returns an option"
+          (option? opt))
+
+        (test-equal "names of option created by 'make-cli-flag'"
+          '(v verbose)
+          (option-names opt))
+
+        (test-equal "properties of option created by 'make-cli-flag'"
+          '("verbose output" "badger")
+          (list (option-property-ref opt 'help)
+                (option-property-ref opt 'animal)))))
     )
   )
