@@ -106,7 +106,7 @@ describing the option.
 
 (make-option names argument-name parser properties) → option
 
-Arguement types:
+Argument types:
 
 (: names (list symbol))
 (: argument-name (or symbol #f))
