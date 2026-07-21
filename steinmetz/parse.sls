@@ -198,7 +198,7 @@
       ((opts) (process-cli opts (cdr (command-line))))
       ((opts cli-list)
        (let-values (((opts opers)
-                     (fold-cli options accum cli-list '() '())))
+                     (fold-cli opts accum cli-list '() '())))
          (values (reverse opts) (reverse opers))))))
 
   (define (accum name arg opts opers)
