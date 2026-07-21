@@ -32,12 +32,6 @@
 
   ;;;; Type predicates & utility
 
-  ;; Add (key . val) to alist, replacing any existing pair with
-  ;; car key. May derange alist.
-  (define (alist-update key val alist)
-    (cons (cons key val)
-          (remove (lambda (p) (eqv? key (car p))) alist)))
-
   (define (option-names? x)
     (and (list? x) (s1:every symbol? x)))
 
@@ -64,21 +58,6 @@
 
   ;;;; Argument parsers
 
-  (define (parser-map proc parser)
-    (lambda (in)
-      (let-values (((val rest) (parser in)))
-        (values (proc val) rest))))
-
-  ;; Parse an argument.
-  ;; TODO: Additional predicate for excluding ill-typed arguments?
-  (define (make-argument-parser opt-names)
-    (assert (option-names? opt-names))
-    (lambda (tokens)
-      (let ((t (car tokens)) (rest (cdr tokens)))
-        (if (argument-string? t)
-            (values t rest)
-            (parser-exception "missing option argument" opt-names)))))
-
   ;; A flag takes no arguments, so this always succeeds and consumes
   ;; no tokens.
   (define (flag-parser tokens)
@@ -98,12 +77,17 @@
        (assert (or (symbol? arg-name) (not arg-name)))
        (assert (procedure? conv))
        (assert (list? props))
-       (let ((parser (if arg-name
-                         (make-argument-parser names)
-                         flag-parser)))
+       (let
+        ((argument-parser
+          (lambda (tokens)
+            (let ((t (car tokens)) (rest (cdr tokens)))
+              (if (argument-string? t)
+                  (conv t rest)
+                  (parser-exception "missing option argument"
+                                    names))))))
          (make-option names
                       arg-name
-                      (parser-map conv parser)
+                      (if arg-name argument-parser flag-parser)
                       props)))))
 
   (define make-cli-flag
@@ -116,30 +100,6 @@
 
   ;;;; Driver
 
-  ;;; TODO: Decide on a canonical form for options with multiple names.
-  ;;; If -o and --output are names for the same option, then the same
-  ;;; option name should be produced for both.
-  ;;;
-  ;;; This would mean restricting the number of names an option can
-  ;;; have (e.g. short, long, or short and long), or explicitly asking
-  ;;; the library user to select a canonical name.  I lean toward the
-  ;;; former, since having multiple names of the same format for a
-  ;;; single option seems confusing in general.
-
-  ;; Could be a perfect hash table.
-  (define (make-option-table opts)
-    (let ((table (make-eqv-hashtable)))
-      (for-each (lambda (opt)
-                  (for-each (lambda (name)
-                              (hashtable-set! table name opt))
-                            (option-names opt)))
-                opts)
-      table))
-
-  (define (lookup-option-by-name opt-tab name)
-    (cond ((hashtable-ref opt-tab name #f))
-          (else (parser-exception "invalid option" name))))
-
   ;; Nuts-&-bolts general interface.
   ;;
   ;; Currently, an operand is signaled to *proc* by passing #f as
@@ -147,7 +107,7 @@
   ;; (argument) argument.  This may be a little too subtle.
   ;;
   ;; TODO: Determine how to handle --.  Currently fold-cli does not
-  ;; treat it specially, since not every program will want that. 
+  ;; treat it specially, since not every program will want that.
   ;; Handling it at a higher level, though, is awkward, and every
   ;; program that *does* want special handling of -- will have to
   ;; do additional work (as process-cli does below).  Maybe fold-cli
@@ -159,11 +119,29 @@
     ;; TODO: Check listiness here & check strings bit by bit.
     (assert (and (list? cli-lis) (s1:every string? cli-lis)))
     (letrec*
-     ((opt-tab (make-option-table opts))
-      (tokens (clean-command-line cli-lis))
+     ((opt-tab
+       (let ((table (make-eqv-hashtable)))
+         (for-each (lambda (opt)
+                     (for-each (lambda (name)
+                                 (hashtable-set! table name opt))
+                               (option-names opt)))
+                   opts)
+         table))
+      ;; Assoc *name* in opt-tab.
+      (lookup-option-by-name
+       (lambda (name)
+         (cond ((hashtable-ref opt-tab name #f))
+               (else (parser-exception "invalid option" name)))))
+      ;; If *s* is a string describing a long or short option,
+      ;; return its name as a symbol. Otherwise, return #f.
+      (option-string->name
+       (lambda (s)
+         (and (option-string? s)
+              (string->symbol
+               (string-drop-while s (lambda (c) (eqv? c #\-)))))))
       (accum-option
        (lambda (name ts seeds cont)
-         (let*-values (((opt) (lookup-option-by-name opt-tab name))
+         (let*-values (((opt) (lookup-option-by-name name))
                        ((arg rest) ((option-parser opt) ts))
                        (seeds* (apply proc opt arg seeds)))
            (cont seeds* rest))))
@@ -179,14 +157,17 @@
                       (let-values ((seeds* (apply proc #f t seeds)))
                         (fold-loop seeds* ts*)))))))))
 
-      (fold-loop seeds tokens)))
+      (fold-loop seeds (clean-command-line cli-lis))))
 
-  ;; If s is a string describing a long or short option, returns its
-  ;; name as a symbol. Otherwise, returns #f.
-  (define (option-string->name s)
-    (and (option-string? s)
-         (string->symbol
-          (string-drop-while s (lambda (c) (eqv? c #\-))))))
+  ;;; TODO: Decide on a canonical form for options with multiple names.
+  ;;; If -o and --output are names for the same option, then the same
+  ;;; option name should be produced for both.
+  ;;;
+  ;;; This would mean restricting the number of names an option can
+  ;;; have (e.g. short, long, or short and long), or explicitly asking
+  ;;; the library user to select a canonical name.  I lean toward the
+  ;;; former, since having multiple names of the same format for a
+  ;;; single option seems confusing in general.
 
   ;; Easy high-level interface.  Parses *cli-list* and returns two
   ;; values: an alist associating each option with its arguments, and
@@ -197,30 +178,32 @@
     (case-lambda
       ((opts) (process-cli opts (cdr (command-line))))
       ((opts cli-list)
-       (let-values (((opts opers)
-                     (fold-cli opts accum cli-list '() '())))
+       (let*-values
+        ;; If *name* has an association in *alist*, then append
+        ;; *arg* to the cdr of *name*'s pair.  Otherwise, just add
+        ;; (name .  arg) to *alist*.
+        (((adjoin/pool)
+          (lambda (name arg alist)
+            (cond ((assv name alist) =>
+                   (lambda (p)
+                     (cons (cons (car p) (append (cdr p) (list arg)))
+                           (remove (lambda (p) (eqv? name (car p)))
+                                   alist))))
+                  (else (cons (cons name arg) alist)))))
+         ((accum)
+          ;; FIXME: Uses *opt*'s first name as canonical.  This should
+          ;; at least ensure that all occurrences of an option get
+          ;; accumulated the same name.
+          (lambda (opt arg opts opers)
+            (if opt
+                (values (adjoin/pool (car (option-names opt))
+                                     arg
+                                     opts)
+                        opers)
+                (values opts (cons arg opers)))))
+         ((opts opers) (fold-cli opts accum cli-list '() '())))
+
          (values (reverse opts) (reverse opers))))))
-
-  ;; FIXME: Uses *opt*'s first name as canonical.  This should at
-  ;; least ensure that all occurrences of an option get accumulated the
-  ;; same name.
-  (define (accum opt arg opts opers)
-    (if opt
-        (values (adjoin/pool (car (option-names opt))
-                             arg
-                             opts)
-                opers)
-        (values opts (cons arg opers))))
-
-  ;; If *name* has an association in *alist*, then append *arg* to the
-  ;; cdr of *name*'s pair.  Otherwise, just add (name .  arg) to
-  ;; *alist*.
-  (define (adjoin/pool name arg alist)
-    (cond ((assv name alist) =>
-           (lambda (p)
-             (cons (cons (car p) (append (cdr p) (list arg)))
-                   (remove (lambda (p) (eqv? name (car p))) alist))))
-          (else (cons (cons name arg) alist))))
 
   ;;;; Syntax
 
@@ -231,33 +214,33 @@
   (define-syntax options
     (syntax-rules ()
       ((options (e ...) ...)
-       (list (%opt-clause e ...) ...))))
+       (letrec-syntax
+        ((normalize
+          (syntax-rules ()
+            ((normalize (name0 . names)) '(name0 . names))
+            ((normalize name) '(name))))
+         (opt-clause
+          (syntax-rules (option flag)
+            ((opt-clause flag names)
+             (make-cli-flag (normalize names)))
+            ((opt-clause flag names help-str)
+             (make-cli-flag (normalize names) '((help . help-str))))
+            ((opt-clause option names arg)
+             (make-cli-option (normalize names) 'arg))
+            ((opt-clause option names arg help-str)
+             (make-cli-option (normalize names)
+                              'arg
+                              values
+                              '((help . help-str))))
+            ((opt-clause option names arg help-str conv)
+             (make-cli-option (normalize names)
+                              'arg
+                              conv
+                              '((help . help-str)))))))
+
+         (list (opt-clause e ...) ...)))))
 
   (define-syntax flag (syntax-rules ()))
   (define-syntax option (syntax-rules ()))
-
-  (define-syntax %opt-clause
-    (syntax-rules (option flag)
-      ((%opt-clause flag names)
-       (make-cli-flag (%normalize names)))
-      ((%opt-clause flag names help-str)
-       (make-cli-flag (%normalize names) '((help . help-str))))
-      ((%opt-clause option names arg)
-       (make-cli-option (%normalize names) 'arg))
-      ((%opt-clause option names arg help-str)
-       (make-cli-option (%normalize names)
-                        'arg
-                        values
-                        '((help . help-str))))
-      ((%opt-clause option names arg help-str conv)
-       (make-cli-option (%normalize names)
-                        'arg
-                        conv
-                        '((help . help-str))))))
-
-  (define-syntax %normalize
-    (syntax-rules ()
-      ((%normalize (name0 . names)) '(name0 . names))
-      ((%normalize name) '(name))))
 
 )
