@@ -224,6 +224,10 @@
 
   ;;;; Syntax
 
+  ;;; TODO: An exception should be raised if the names of two or more
+  ;;; clauses overlap.  If we switch to syntax-case, this can be an
+  ;;; expand-time exception.
+
   (define-syntax options
     (syntax-rules ()
       ((options (e ...) ...)
