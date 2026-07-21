@@ -143,7 +143,7 @@
   ;; Nuts-&-bolts general interface.
   ;;
   ;; Currently, an operand is signaled to *proc* by passing #f as
-  ;; the first (name) argument and the token itself as the second
+  ;; the first (option) argument and the token itself as the second
   ;; (argument) argument.  This may be a little too subtle.
   ;;
   ;; TODO: Determine how to handle --.  Currently fold-cli does not
@@ -163,8 +163,9 @@
       (tokens (clean-command-line cli-lis))
       (accum-option
        (lambda (name ts seeds cont)
-         (let*-values (((arg rest) (process-option name opt-tab ts))
-                       (seeds* (apply proc name arg seeds)))
+         (let*-values (((opt) (lookup-option-by-name opt-tab name))
+                       ((arg rest) ((option-parser opt) ts))
+                       (seeds* (apply proc opt arg seeds)))
            (cont seeds* rest))))
       (fold-loop
        (lambda (seeds ts)
@@ -187,12 +188,6 @@
          (string->symbol
           (string-drop-while s (lambda (c) (eqv? c #\-))))))
 
-  ;; Match *name* to an option structure and apply the associated
-  ;; parser to *tokens*.
-  (define (process-option name opt-table tokens)
-    (let ((opt (lookup-option-by-name opt-table name)))
-      ((option-parser opt) tokens)))
-
   ;; Easy high-level interface.  Parses *cli-list* and returns two
   ;; values: an alist associating each option with its arguments, and
   ;; a list of operands (objects not associated with options).
@@ -206,9 +201,15 @@
                      (fold-cli opts accum cli-list '() '())))
          (values (reverse opts) (reverse opers))))))
 
-  (define (accum name arg opts opers)
-    (if name
-        (values (adjoin/pool name arg opts) opers)
+  ;; FIXME: Uses *opt*'s first name as canonical.  This should at
+  ;; least ensure that all occurrences of an option get accumulated the
+  ;; same name.
+  (define (accum opt arg opts opers)
+    (if opt
+        (values (adjoin/pool (car (option-names opt))
+                             arg
+                             opts)
+                opers)
         (values opts (cons arg opers))))
 
   ;; If *name* has an association in *alist*, then append *arg* to the

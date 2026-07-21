@@ -201,17 +201,18 @@ Argument types:
 A general-purpose parsing procedure modeled on SRFI 37's 'args-fold'.
 Folds *proc* over the result of parsing *cli-list* with the parsers
 attached to the *options*.  At each step, *proc* is applied to an
-option name (a symbol), the option's argument (a string, or #f if the
+Option, the option's argument token (a string, or #f if the
 option has no argument), and the current seeds.  For example, if the
 first two elements of *cli-list* are "-f" and "foo", then *proc* will
-be invoked as ‘(proc 'f "foo")’.  [TODO: Canonical names of options.]
+be invoked as ‘(proc f-opt "foo")’, where *f-opt* is the Option whose
+names include ‘f’.
 
 The *seed* arguments are used as the initial seeds, and
 the values returned by *proc* are used as the seeds for the next step.
 
 If a token is encountered which is not an option or an option’s
 argument, it is passed as the second argument to *proc*, and *proc*'s
-first (name) argument will be #f.  For example, if the first element
+first (option) argument will be #f.  For example, if the first element
 of *cli-list* is "frob", then *proc* will be invoked as ‘(proc #f
 "frob")’.
 

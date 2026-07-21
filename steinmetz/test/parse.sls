@@ -114,8 +114,8 @@
                        '()))))
 
         (test-equal
-          "fold-cli: return options (not canonicalized) and operands"
-          '(((f . "foo") (file . "bar") (v . #t) (verbose . #t))
+          "fold-cli: return options (semi-canonicalized) and operands"
+          '(((f . "bar") (f . "foo") (v . #t) (v . #t))
             ("a" "b"))
           (guard (con
                    ((parser-condition? con) '())
@@ -125,10 +125,11 @@
                '("-v" "a" "-f" "foo" "--file" "bar" "b" "--verbose"))
               ((opt-alist rands)
                (fold-cli opts
-                         (lambda (name arg os rs)
-                           (if name
-                               (values (cons (cons name arg) os)
-                                       rs)
+                         (lambda (opt arg os rs)
+                           (if opt
+                               (let ((name (car (option-names opt))))
+                                 (values (cons (cons name arg) os)
+                                         rs))
                                (values os (cons arg rs))))
                          cli
                          '()
