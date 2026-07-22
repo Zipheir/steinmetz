@@ -205,9 +205,10 @@ Returns a copy of *option* with a new property association of
 
 A single option may have multiple “short” (single-character) and “long”
 (two-or-more-character) names.  Following tradition, short options
-without arguments[†] may be run together.  For example, ‘-abc’ is
-equivalent to ‘-a -b -c’.  The argument of a short option is always the
-next token.  For a long option, the argument is the next token unless
+without arguments followed by a single option that may take an argument
+can be run together.  For example, ‘-ab’ is
+equivalent to ‘-a -b’ if the -a option takes no argument.  The argument of a short option is always the
+next token.[†]  For a long option, the argument is the next token unless
 an argument was supplied as part of the option token, with the two
 components being separated by an ‘=’ character.  For example,
 ‘--output=foo.log’ is equivalent to ‘--output foo.log’.  Note that “X
@@ -215,9 +216,8 @@ Windows–style” long options with a single leading dash (e.g.
 ‘-output’) are not supported, since they conflict unavoidably with
 short-option clusters.
 
-†: Many UNIX programs give an argument following a cluster to the last
-option in the cluster.  For example, ‘foo.tar’ is the argument of ‘-f’
-in the command ‘tar -cvf foo.tar’.  Steinmetz allows this convention.
+†: FIXME: Steinmetz should support short options run together with
+their arguments, e.g. -ffoo.
 
 
 ### Procedures
