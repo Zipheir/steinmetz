@@ -23,9 +23,9 @@
             (display "FAIL: ")
             (display (test-runner-test-name runner))
             (display ". Expected ")
-            (display (test-result-ref runner 'expected-value))
+            (write (test-result-ref runner 'expected-value))
             (display ", got ")
-            (display (test-result-ref runner 'actual-value))
+            (write (test-result-ref runner 'actual-value))
             (display ".\n")))))
       (test-final
        (lambda (runner)
