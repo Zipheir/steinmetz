@@ -114,22 +114,48 @@ describing the option.
 
 #### Core procedures
 
-(make-option names argument-name parser properties) → option
+(make-option names argument-name argument-parser properties) → option
 
 Argument types:
 
 (: names (list symbol))
 (: argument-name (or symbol #f))
-(: parser procedure)
+(: argument-parser procedure)
 (: properties (alist symbol *))
 
-Returns a new Option object.  These fields have the following
-accessors:
+Returns a new Option with fields determined by the arguments.
 
-* ‘option-names’
-* ‘option-argument-name’
-* ‘option-parser’
-* ‘option-properties’
+*argument-parser* must accept a single string-list argument and return
+two values: the value of the option’s argument and a suffix of the list
+argument.  An argument parser should signal a parser exception if its
+input list is invalid.  For example, the following is a valid parser:
+
+    (lambda (tokens)
+      (if (null? tokens)
+          (parser-exception "missing argument" tokens)
+          (values (car tokens) (cdr tokens))))
+
+
+(option-names option) → (list symbol)
+
+Returns a list of the accepted names of *option*.
+
+
+(option-argument-name option) → (or symbol #f)
+
+Returns the symbolic name of *option*’s argument.
+
+
+(option-argument-parser option) → procedure
+
+Returns the argument parser associated with *option*.
+
+
+(option-properties->alist option) → (alist symbol *)
+
+Returns the properties mapping of *option* as a symbol-keyed alist.
+Mutating this alist causes undefined behavior: it may or may not be
+*option*’s internal representation of its properties mapping.
 
 
 (option? obj) → boolean

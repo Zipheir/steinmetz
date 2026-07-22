@@ -4,8 +4,8 @@
 (library (steinmetz options)
   (export make-option
           option?
-          option-parser
-          option-properties
+          option-argument-parser
+          option-properties->alist
           option-names
           option-argument-name
           option-property-ref
@@ -41,22 +41,25 @@
     (fields
       (immutable names option-names) ; a list of symbols
       (immutable argument-name option-argument-name) ; a symbol or #f
-      (immutable parser option-parser)  ; an argument parser
+      (immutable argument-parser option-argument-parser)  ; procedure
       ;; a key/value map of option properties
       (immutable properties option-properties)))
+
+  (define (option-properties->alist opt)
+    (option-properties opt))
 
   ;;; (Symbol . list) alist implementation of properties.
 
   (define (option-property-ref opt key)
     (assert (option? opt))
-    (cond ((assv key (option-properties opt)) => cdr)
+    (cond ((assv key (option-properties->alist opt)) => cdr)
           (else #f)))
 
   (define (option-set-property opt key val)
     (assert (option? opt))
     (make-option (option-names opt)
                  (option-argument-name opt)
-                 (option-parser opt)
-                 (alist-update key val (option-properties opt))))
+                 (option-argument-parser opt)
+                 (alist-update key val (option-properties->alist opt))))
 
   )

@@ -139,7 +139,7 @@
       (accum-option
        (lambda (name ts seeds cont)
          (let*-values (((opt) (lookup-option-by-name name))
-                       ((arg rest) ((option-parser opt) ts))
+                       ((arg rest) ((option-argument-parser opt) ts))
                        (seeds* (apply proc opt arg seeds)))
            (cont seeds* rest))))
       (fold-loop

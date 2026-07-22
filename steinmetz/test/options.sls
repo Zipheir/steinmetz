@@ -25,13 +25,13 @@
           'FILE
           (option-argument-name opt))
 
-        (test-eqv "option-parser"
+        (test-eqv "option-argument-parser"
           values
-          (option-parser opt))
+          (option-argument-parser opt))
 
-        (test-equal "option-properties"
+        (test-equal "option-properties->alist"
           '((help . "input file"))
-          (option-properties opt))
+          (option-properties->alist opt))
 
         (test-equal "option-property-ref on existing key"
           "input file"
