@@ -15,6 +15,10 @@
   (define (find-option-by-names names opts)
     (s1:find (lambda (o) (equal? names (option-names o))) opts))
 
+  (define (sym-pair<? p1 p2)
+    (string<? (symbol->string (car p1))
+              (symbol->string (car p2))))
+
   (define (run-tests)
     (test-group "options macro"
       (let ((opts (options
@@ -142,6 +146,54 @@
                                            (symbol->string (car p2))))
                                opt-alist)
                     (list-sort string<? rands)))))
+        ))
+
+    (test-group "process-command-line"
+      (let* ((opts (options
+                    (option (file f) FILE)
+                    (flag (verbose v))))
+             ;; Returns a list of the two lists returned by
+             ;; 'process-command-line'.  The option alist is sorted
+             ;; by option name.
+             (pcl->list/sorted-opts
+              (lambda (cl-list)
+                (let-values (((opts rands)
+                              (process-command-line opts cl-list)))
+                  (list (list-sort sym-pair<? opts) rands)))))
+
+        (test-equal "process-command-line"
+          '(((file "foo"))
+            ("bash" "ksh" "csh"))
+          (pcl->list/sorted-opts '("--file" "foo" "bash" "ksh" "csh")))
+
+        (test-equal
+          "process-command-line, duplicate options"
+          '(((file "foo" "bar") (verbose #t))
+            ("bash"))
+          (pcl->list/sorted-opts
+           '("--file" "foo" "-v" "-f" "bar" "bash")))
+
+        (test-equal "process-command-line, clusters"
+          '(((file "foo") (verbose #t))
+            ("bash" "csh"))
+          (pcl->list/sorted-opts '("-vf" "foo" "bash" "csh")))
+
+        (test-equal "process-command-line, '=' syntax"
+          '(((file "foo"))
+            ("bash" "csh"))
+          (pcl->list/sorted-opts '("--file=foo" "bash" "csh")))
+
+        (test-equal "process-command-line, clusters & '=' syntax"
+          '(((file "foo" "bar") (verbose #t))
+            ("bash" "csh"))
+          (pcl->list/sorted-opts
+           '("-vf" "foo" "--file=bar" "bash" "csh")))
+
+        (test-equal "process-command-line, interleaved operands"
+          '(((file "foo") (verbose #t))
+            ("bash" "ksh" "csh"))
+          (pcl->list/sorted-opts
+           '("bash" "--file" "foo" "ksh" "--verbose" "csh")))
         ))
     )
   )
