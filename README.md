@@ -9,8 +9,7 @@ Suggestions are appreciated.
 
 * Prefer portable R6RS Scheme.
 
-* Support a reasonable subset of the option styles that GNU getopt
-  and Haskell’s optparse-applicative can handle.
+* Support at least the features of POSIX getopt(3).
 
 * Provide a nice high-level macro language for describing command
   line syntax.
