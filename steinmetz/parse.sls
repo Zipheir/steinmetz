@@ -176,17 +176,17 @@
       ((opts) (process-command-line opts (cdr (command-line))))
       ((opts cl-list)
        (let*-values
-        ;; If *name* has an association in *alist*, then append
-        ;; *arg* to the cdr of *name*'s pair.  Otherwise, just add
-        ;; (name .  arg) to *alist*.
+        ;; If *name* has an association in *alist*, then push *arg*
+        ;; onto the cdr of *name*'s pair.  Otherwise, just add
+        ;; (name . (arg)) to *alist*.
         (((adjoin/pool)
           (lambda (name arg alist)
             (cond ((assv name alist) =>
                    (lambda (p)
-                     (cons (cons (car p) (append (cdr p) (list arg)))
-                           (remove (lambda (p) (eqv? name (car p)))
-                                   alist))))
-                  (else (cons (cons name arg) alist)))))
+                     (cons (cons (car p) (cons arg (cdr p)))
+                           (s1:remove (lambda (p) (eqv? name (car p)))
+                                      alist))))
+                  (else (cons (list name arg) alist)))))
          ;; FIXME: Uses *opt*'s first name as canonical.  This should
          ;; at least ensure that all occurrences of an option get
          ;; accumulated the same name.
@@ -201,7 +201,9 @@
          ((opts opers)
           (parse-command-line opts accum cl-list '() '())))
 
-         (values (reverse opts) (reverse opers))))))
+         (values (map (lambda (p) (cons (car p) (reverse (cdr p))))
+                      opts)
+                 (reverse opers))))))
 
   ;;;; Syntax
 

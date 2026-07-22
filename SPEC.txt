@@ -225,10 +225,12 @@ True of *obj* is a condition raised by ‘parser-exception’.
 A easy-to-use high-level parsing procedure.  *options* is a list of
 Option objects.  Parses *cl-list* (a list of strings, or the value of
 ‘(cdr (command-line))’ by default) and returns two values: an alist
-associating the name of each option encountered with its argument, and
+associating the name of each option encountered with a list of
+arguments, and
 a list of tokens unassociated with any of the options (the “operands”).
-The operand list preserves the order of the tokens of *cl-list*, but
-the order of the option-argument alist is unspecified.
+The order of *cl-list* is preserved in the operand list and in each
+option’s argument list, but the order of the options-and-arguments
+alist is unspecified.
 
 If an unknown option is encountered while parsing, an object satisfying
 ‘parser-condition?’ is raised continuably.
@@ -237,13 +239,17 @@ Example:
 
     (let ((opts (options
                   (option (f) FILE "input file")
-                  (flag (v) "verbose output"))))
-      (process-command-line opts '("-f" "myfile" "-v" "frobnitz")))
+                  (flag (v) "verbose output")))
+          (cl '("-f" "file1" "-v" "-f" "file2" "frobnitz")))
+      (process-command-line opts cl))
 
-    ⇒ ((f . "myfile") (v . #t))
+    ⇒ ((v #t) (f "file1" "file2"))
       ("frobnitz")
 
 TODO: Support the -- end-of-options marker.
+
+FIXME: Flags aren't treated specially at the moment, so N appearances
+of a single flag will result in a list of N #t values.
 
 
 (parse-command-line options proc cl-list seed ...) → *
