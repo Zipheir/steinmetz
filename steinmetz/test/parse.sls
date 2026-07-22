@@ -15,9 +15,8 @@
   (define (find-option-by-names names opts)
     (s1:find (lambda (o) (equal? names (option-names o))) opts))
 
-  (define (sym-pair<? p1 p2)
-    (string<? (symbol->string (car p1))
-              (symbol->string (car p2))))
+  (define (string-key<? p1 p2)
+    (string<? (car p1) (car p2)))
 
   (define (run-tests)
     (test-group "options macro"
@@ -27,7 +26,7 @@
         (test-assert "options returns a list"
           (list? opts))
 
-        (let ((opt (find-option-by-names '(f file) opts)))
+        (let ((opt (find-option-by-names '("f" "file") opts)))
           ;; If we found opt, it must have the expected names.
           (test-assert "names of option created by 'options' (1)"
             (option? opt))
@@ -40,7 +39,7 @@
             "input file"
             (option-property-ref opt 'help)))
 
-        (let ((opt (find-option-by-names '(v) opts)))
+        (let ((opt (find-option-by-names '("v") opts)))
           (test-assert "names of option created by 'options' (2)"
             (option? opt))
 
@@ -52,7 +51,7 @@
         ))
 
     (test-group "make-cli-option"
-      (let ((opt (make-cli-option '(o output)
+      (let ((opt (make-cli-option '("o" "output")
                                   'FILE
                                   values
                                   '((help . "output file")
@@ -61,7 +60,7 @@
           (option? opt))
 
         (test-equal "names of option created by 'make-cli-option'"
-          '(o output)
+          '("o" "output")
           (option-names opt))
 
         (test-equal "arg. name of option created by 'make-cli-option'"
@@ -74,14 +73,14 @@
                 (option-property-ref opt 'animal)))))
 
     (test-group "make-cli-flag"
-      (let ((opt (make-cli-flag '(v verbose)
+      (let ((opt (make-cli-flag '("v" "verbose")
                                 '((help . "verbose output")
                                   (animal . "badger")))))
         (test-assert "'make-cli-flag' returns an option"
           (option? opt))
 
         (test-equal "names of option created by 'make-cli-flag'"
-          '(v verbose)
+          '("v" "verbose")
           (option-names opt))
 
         (test-equal "properties of option created by 'make-cli-flag'"
@@ -122,7 +121,7 @@
         (test-equal
           "parse-command-line: return options (semi-canonicalized) \
            and operands"
-          '(((f . "bar") (f . "foo") (v . #t) (v . #t))
+          '((("f" . "bar") ("f" . "foo") ("v" . #t) ("v" . #t))
             ("a" "b"))
           (guard (con
                    ((parser-condition? con) '())
@@ -142,8 +141,7 @@
                 '()
                 '())))
               (list (list-sort (lambda (p1 p2)
-                                 (string<? (symbol->string (car p1))
-                                           (symbol->string (car p2))))
+                                 (string<? (car p1) (car p2)))
                                opt-alist)
                     (list-sort string<? rands)))))
         ))
@@ -151,7 +149,8 @@
     (test-group "process-command-line"
       (let* ((opts (options
                     (option (file f) FILE)
-                    (flag (verbose v))))
+                    (flag (verbose v))
+                    (flag ("1"))))
              ;; Returns a list of the two lists returned by
              ;; 'process-command-line'.  The option alist is sorted
              ;; by option name.
@@ -159,38 +158,44 @@
               (lambda (cl-list)
                 (let-values (((opts rands)
                               (process-command-line opts cl-list)))
-                  (list (list-sort sym-pair<? opts) rands)))))
+                  (list (list-sort string-key<? opts) rands)))))
 
         (test-equal "process-command-line"
-          '(((file "foo"))
+          '((("file" "foo"))
             ("bash" "ksh" "csh"))
           (pcl->list/sorted-opts '("--file" "foo" "bash" "ksh" "csh")))
 
+        (test-equal "process-command-line, numeric flag"
+          '((("1" #t) ("file" "foo"))
+            ("bash" "ksh" "csh"))
+          (pcl->list/sorted-opts
+           '("--file" "foo" "-1" "bash" "ksh" "csh")))
+
         (test-equal
           "process-command-line, duplicate options"
-          '(((file "foo" "bar") (verbose #t))
+          '((("1" #t) ("file" "foo" "bar") ("verbose" #t))
             ("bash"))
           (pcl->list/sorted-opts
-           '("--file" "foo" "-v" "-f" "bar" "bash")))
+           '("--file" "foo" "-v" "-f" "bar" "-1" "bash")))
 
         (test-equal "process-command-line, clusters"
-          '(((file "foo") (verbose #t))
+          '((("file" "foo") ("verbose" #t))
             ("bash" "csh"))
           (pcl->list/sorted-opts '("-vf" "foo" "bash" "csh")))
 
         (test-equal "process-command-line, '=' syntax"
-          '(((file "foo"))
+          '((("file" "foo"))
             ("bash" "csh"))
           (pcl->list/sorted-opts '("--file=foo" "bash" "csh")))
 
         (test-equal "process-command-line, clusters & '=' syntax"
-          '(((file "foo" "bar") (verbose #t))
+          '((("file" "foo" "bar") ("verbose" #t))
             ("bash" "csh"))
           (pcl->list/sorted-opts
            '("-vf" "foo" "--file=bar" "bash" "csh")))
 
         (test-equal "process-command-line, interleaved operands"
-          '(((file "foo") (verbose #t))
+          '((("file" "foo") ("verbose" #t))
             ("bash" "ksh" "csh"))
           (pcl->list/sorted-opts
            '("bash" "--file" "foo" "ksh" "--verbose" "csh")))

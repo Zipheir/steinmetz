@@ -16,7 +16,7 @@
           (rnrs conditions)
           (rnrs control)
           (rnrs exceptions)
-          (only (rnrs lists) assv)
+          (only (rnrs lists) assoc)
           (rnrs hashtables)
           (rnrs programs)
           (prefix (srfi :1) s1:)
@@ -29,7 +29,8 @@
   ;;;; Type predicates & utility
 
   (define (option-names? x)
-    (and (list? x) (s1:every symbol? x)))
+    (and (list? x) (s1:every string? x)))
+
 
   ;; TODO: Tighten up (use a reg. ex.)
   (define (option-string? s)
@@ -116,7 +117,7 @@
     (assert (and (list? cli-lis) (s1:every string? cli-lis)))
     (letrec*
      ((opt-tab
-       (let ((table (make-eqv-hashtable)))
+       (let ((table (make-hashtable string-hash string=?)))
          (for-each (lambda (opt)
                      (for-each (lambda (name)
                                  (hashtable-set! table name opt))
@@ -133,8 +134,7 @@
       (option-string->name
        (lambda (s)
          (and (option-string? s)
-              (string->symbol
-               (s152:string-drop-while s (lambda (c) (eqv? c #\-)))))))
+              (s152:string-drop-while s (lambda (c) (eqv? c #\-))))))
       (accum-option
        (lambda (name ts seeds cont)
          (let*-values (((opt) (lookup-option-by-name name))
@@ -180,10 +180,10 @@
         ;; (name . (arg)) to *alist*.
         (((adjoin/pool)
           (lambda (name arg alist)
-            (cond ((assv name alist) =>
+            (cond ((assoc name alist) =>
                    (lambda (p)
                      (cons (cons (car p) (cons arg (cdr p)))
-                           (s1:remove (lambda (p) (eqv? name (car p)))
+                           (s1:remove (lambda (p) (equal? name (car p)))
                                       alist))))
                   (else (cons (list name arg) alist)))))
          ;; FIXME: Uses *opt*'s first name as canonical.  This should
@@ -210,14 +210,26 @@
   ;;; clauses overlap.  If we switch to syntax-case, this can be an
   ;;; expand-time exception.
 
+  (define (stringify-names names)
+    (map (lambda (x)
+           (cond ((symbol? x) (symbol->string x))
+                 ((string? x) x)
+                 (else
+                  (assertion-violation 'options
+                                       "invalid option name"
+                                       x))))
+         names))
+
   (define-syntax options
     (syntax-rules ()
       ((options (e ...) ...)
        (letrec-syntax
         ((normalize
           (syntax-rules ()
-            ((normalize (name0 . names)) '(name0 . names))
-            ((normalize name) '(name))))
+            ((normalize (name0 . names))
+             (stringify-names '(name0 . names)))
+            ((normalize name)
+             (stringify-names '(name)))))
          (opt-clause
           (syntax-rules (option flag)
             ((opt-clause flag names)

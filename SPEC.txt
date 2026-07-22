@@ -28,10 +28,20 @@ forms:
 
 The (flag …) form describes a boolean flag which takes no arguments;
 (option …) describes an option taking an argument.
-<name-or-names> is either an identifier or a list of identifiers
-and gives the acceptable forms of an option. <arg-name> and <conv> have
+<name-or-names> is either a string, an identifier, or a list of
+strings or identifiers,
+and gives the acceptable forms of an option (with leading dashes
+omitted). <arg-name> and <conv> have
 the same meaning as they do in make-option. <help-text> is a string
 describing the option.
+
+
+Note: Option names may be written as identifiers for convenience, but
+will be stored as strings in the actual Option objects.  For example,
+
+    (map option-names (options (flag (v verbose))))
+      ⇒ (("v" "verbose"))
+
 
 The acceptable command-line form of each name is determined by its
 length.  A single-character name like ‘o’ will be parsed as a “short”
@@ -51,8 +61,10 @@ Example:
     (define my-opts
       (options
         (option (f file)    FILE "input file")
-        (option (k chunk)   NUM  "chunk to operate on" string->number)
-        (flag   (v verbose)      "verbose output")))
+        (option (k chunk)   NUM  "chunk to operate on"
+          string->number)
+        (flag   (v verbose)      "verbose output")
+        (flag   ("1")            "a numeric option")))
 
 
 ### Procedural interface
@@ -68,11 +80,15 @@ automatically generate parsers and fill in details which users of the
 
 Argument types:
 
+(: names (list string))
 (: arg-name (or symbol #f))
 (: conv-proc procedure)
 (: properties (alist symbol *))
 
 Returns an Option object describing a command-line option.
+
+*names* gives the command-line forms of the option, with leading dashes
+omitted.
 
 If *arg-name* is provided, the command-line option will take a (single)
 required argument.  If it is false, the option will not take an
@@ -118,7 +134,7 @@ describing the option.
 
 Argument types:
 
-(: names (list symbol))
+(: names (list string))
 (: argument-name (or symbol #f))
 (: argument-parser procedure)
 (: properties (alist symbol *))
@@ -136,7 +152,7 @@ input list is invalid.  For example, the following is a valid parser:
           (values (car tokens) (cdr tokens))))
 
 
-(option-names option) → (list symbol)
+(option-names option) → (list string)
 
 Returns a list of the accepted names of *option*.
 
@@ -225,7 +241,7 @@ True of *obj* is a condition raised by ‘parser-exception’.
 A easy-to-use high-level parsing procedure.  *options* is a list of
 Option objects.  Parses *cl-list* (a list of strings, or the value of
 ‘(cdr (command-line))’ by default) and returns two values: an alist
-associating the name of each option encountered with a list of
+associating the name of each option encountered (as a string) with a list of
 arguments, and
 a list of tokens unassociated with any of the options (the “operands”).
 The order of *cl-list* is preserved in the operand list and in each
@@ -243,7 +259,7 @@ Example:
           (cl '("-f" "file1" "-v" "-f" "file2" "frobnitz")))
       (process-command-line opts cl))
 
-    ⇒ ((v #t) (f "file1" "file2"))
+    ⇒ (("v" #t) ("f" "file1" "file2"))
       ("frobnitz")
 
 TODO: Support the -- end-of-options marker.

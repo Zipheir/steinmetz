@@ -39,7 +39,7 @@
   ;; TODO: Type-checked version of constructor for export.
   (define-record-type (option make-option option?)
     (fields
-      (immutable names option-names) ; a list of symbols
+      (immutable names option-names) ; a list of strings
       (immutable argument-name option-argument-name) ; a symbol or #f
       (immutable argument-parser option-argument-parser)  ; procedure
       ;; a key/value map of option properties
