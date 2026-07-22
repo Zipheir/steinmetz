@@ -100,7 +100,8 @@
              '("-v" "-f" "foo" "--verbose" "--file" "bar")
              0)))
 
-        (test-equal "parse-command-line: ignore options, return operands"
+        (test-equal
+          "parse-command-line: ignore options, return operands"
           '("a" "b")
           (guard (con
                    ((parser-condition? con) '())
