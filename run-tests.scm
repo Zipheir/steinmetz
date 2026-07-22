@@ -16,5 +16,3 @@
 (parse:run-tests)
 
 (test-end)
-
-(exit 0)

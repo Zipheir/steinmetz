@@ -247,5 +247,5 @@ first (option) argument will be #f.  For example, if the first element
 of *cl-list* is "frob", then *proc* will be invoked as ‘(proc #f
 "frob")’.
 
-*parse-command-line* returns the values returned by the final invocation of
-*proc*.
+*parse-command-line* returns the values returned by the final
+invocation of *proc*.

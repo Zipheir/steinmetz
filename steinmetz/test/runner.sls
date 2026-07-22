@@ -5,6 +5,7 @@
   (export custom-test-runner-factory)
   (import (rnrs base)
           (rnrs io simple)
+          (rnrs programs)
           (srfi :64)
           )
 
@@ -37,7 +38,8 @@
          (newline)
          (display "Total skips: ")
          (display (test-runner-skip-count runner))
-         (newline))))
+         (newline)
+         (exit (if (zero? (test-runner-fail-count runner)) 0 1)))))
 
       (test-runner-on-test-end! runner test-end)
       (test-runner-on-final! runner test-final)

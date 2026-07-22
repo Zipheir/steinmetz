@@ -103,13 +103,13 @@
   ;; the first (option) argument and the token itself as the second
   ;; (argument) argument.  This may be a little too subtle.
   ;;
-  ;; TODO: Determine how to handle --.  Currently parse-command-line does not
-  ;; treat it specially, since not every program will want that.
-  ;; Handling it at a higher level, though, is awkward, and every
-  ;; program that *does* want special handling of -- will have to
-  ;; do additional work (as process-command-line does below).  Maybe parse-command-line
-  ;; could take an additional parameter indicating whether to support
-  ;; -- as "operand guard".
+  ;; TODO: Determine how to handle --.  Currently parse-command-line
+  ;; does not treat it specially, since not every program will want
+  ;; that.  Handling it at a higher level, though, is awkward, and
+  ;; every program that *does* want special handling of -- will have to
+  ;; do additional work (as process-command-line does below).  Maybe
+  ;; parse-command-line could take an additional parameter indicating
+  ;; whether to support -- as "operand guard".
   (define (parse-command-line opts proc cli-lis . seeds)
     (assert (and (list? opts) (s1:every option? opts)))
     (assert (procedure? proc))
@@ -198,7 +198,8 @@
                                      opts)
                         opers)
                 (values opts (cons arg opers)))))
-         ((opts opers) (parse-command-line opts accum cl-list '() '())))
+         ((opts opers)
+          (parse-command-line opts accum cl-list '() '())))
 
          (values (reverse opts) (reverse opers))))))
 

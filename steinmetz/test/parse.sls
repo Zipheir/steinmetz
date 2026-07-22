@@ -94,11 +94,11 @@
           (guard (con
                    ((parser-condition? con) -1)
                    (else (raise-continuable con)))
-            (parse-command-line opts
-                      (lambda (_name _arg n)
-                        (+ n 1))
-                      '("-v" "-f" "foo" "--verbose" "--file" "bar")
-                      0)))
+            (parse-command-line
+             opts
+             (lambda (_name _arg n) (+ n 1))
+             '("-v" "-f" "foo" "--verbose" "--file" "bar")
+             0)))
 
         (test-equal "parse-command-line: ignore options, return operands"
           '("a" "b")
@@ -107,14 +107,16 @@
                    (else (raise-continuable con)))
             (list-sort
              string<?
-             (parse-command-line opts
-                       (lambda (name arg rands)
-                         (if name rands (cons arg rands)))
-                       '("-v" "a" "-f" "foo" "--file" "bar" "b")
-                       '()))))
+             (parse-command-line
+              opts
+              (lambda (name arg rands)
+              (if name rands (cons arg rands)))
+              '("-v" "a" "-f" "foo" "--file" "bar" "b")
+              '()))))
 
         (test-equal
-          "parse-command-line: return options (semi-canonicalized) and operands"
+          "parse-command-line: return options (semi-canonicalized) \
+           and operands"
           '(((f . "bar") (f . "foo") (v . #t) (v . #t))
             ("a" "b"))
           (guard (con
@@ -124,16 +126,16 @@
              (((cli)
                '("-v" "a" "-f" "foo" "--file" "bar" "b" "--verbose"))
               ((opt-alist rands)
-               (parse-command-line opts
-                         (lambda (opt arg os rs)
-                           (if opt
-                               (let ((name (car (option-names opt))))
-                                 (values (cons (cons name arg) os)
-                                         rs))
-                               (values os (cons arg rs))))
-                         cli
-                         '()
-                         '())))
+               (parse-command-line
+                opts
+                (lambda (opt arg os rs)
+                  (if opt
+                      (let ((name (car (option-names opt))))
+                        (values (cons (cons name arg) os) rs))
+                      (values os (cons arg rs))))
+                cli
+                '()
+                '())))
               (list (list-sort (lambda (p1 p2)
                                  (string<? (symbol->string (car p1))
                                            (symbol->string (car p2))))
