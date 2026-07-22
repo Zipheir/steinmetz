@@ -5,8 +5,8 @@
   (export make-cli-option
           option-argument-name
           option-names
-          fold-cli
-          process-cli
+          parse-command-line
+          process-command-line
           put-usage
           options
           make-cli-flag

@@ -85,36 +85,36 @@
           (list (option-property-ref opt 'help)
                 (option-property-ref opt 'animal)))))
 
-    (test-group "fold-cli"
+    (test-group "parse-command-line"
       (let ((opts (options
                     (option (f file) FILE)
                     (flag (v verbose)))))
-        (test-eqv "fold-cli: count options, ignore operands"
+        (test-eqv "parse-command-line: count options, ignore operands"
           4
           (guard (con
                    ((parser-condition? con) -1)
                    (else (raise-continuable con)))
-            (fold-cli opts
+            (parse-command-line opts
                       (lambda (_name _arg n)
                         (+ n 1))
                       '("-v" "-f" "foo" "--verbose" "--file" "bar")
                       0)))
 
-        (test-equal "fold-cli: ignore options, return operands"
+        (test-equal "parse-command-line: ignore options, return operands"
           '("a" "b")
           (guard (con
                    ((parser-condition? con) '())
                    (else (raise-continuable con)))
             (list-sort
              string<?
-             (fold-cli opts
+             (parse-command-line opts
                        (lambda (name arg rands)
                          (if name rands (cons arg rands)))
                        '("-v" "a" "-f" "foo" "--file" "bar" "b")
                        '()))))
 
         (test-equal
-          "fold-cli: return options (semi-canonicalized) and operands"
+          "parse-command-line: return options (semi-canonicalized) and operands"
           '(((f . "bar") (f . "foo") (v . #t) (v . #t))
             ("a" "b"))
           (guard (con
@@ -124,7 +124,7 @@
              (((cli)
                '("-v" "a" "-f" "foo" "--file" "bar" "b" "--verbose"))
               ((opt-alist rands)
-               (fold-cli opts
+               (parse-command-line opts
                          (lambda (opt arg os rs)
                            (if opt
                                (let ((name (car (option-names opt))))

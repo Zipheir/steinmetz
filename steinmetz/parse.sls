@@ -2,8 +2,8 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz parse)
-  (export fold-cli
-          process-cli
+  (export parse-command-line
+          process-command-line
           put-usage
           options
           make-cli-option
@@ -103,14 +103,14 @@
   ;; the first (option) argument and the token itself as the second
   ;; (argument) argument.  This may be a little too subtle.
   ;;
-  ;; TODO: Determine how to handle --.  Currently fold-cli does not
+  ;; TODO: Determine how to handle --.  Currently parse-command-line does not
   ;; treat it specially, since not every program will want that.
   ;; Handling it at a higher level, though, is awkward, and every
   ;; program that *does* want special handling of -- will have to
-  ;; do additional work (as process-cli does below).  Maybe fold-cli
+  ;; do additional work (as process-command-line does below).  Maybe parse-command-line
   ;; could take an additional parameter indicating whether to support
   ;; -- as "operand guard".
-  (define (fold-cli opts proc cli-lis . seeds)
+  (define (parse-command-line opts proc cli-lis . seeds)
     (assert (and (list? opts) (s1:every option? opts)))
     (assert (procedure? proc))
     ;; TODO: Check listiness here & check strings bit by bit.
@@ -166,15 +166,15 @@
   ;;; former, since having multiple names of the same format for a
   ;;; single option seems confusing in general.
 
-  ;; Easy high-level interface.  Parses *cli-list* and returns two
+  ;; Easy high-level interface.  Parses *cl-list* and returns two
   ;; values: an alist associating each option with its arguments, and
   ;; a list of operands (objects not associated with options).
   ;;
   ;; TODO: Support the -- operand guard.  Probably not here, though.
-  (define process-cli
+  (define process-command-line
     (case-lambda
-      ((opts) (process-cli opts (cdr (command-line))))
-      ((opts cli-list)
+      ((opts) (process-command-line opts (cdr (command-line))))
+      ((opts cl-list)
        (let*-values
         ;; If *name* has an association in *alist*, then append
         ;; *arg* to the cdr of *name*'s pair.  Otherwise, just add
@@ -198,7 +198,7 @@
                                      opts)
                         opers)
                 (values opts (cons arg opers)))))
-         ((opts opers) (fold-cli opts accum cli-list '() '())))
+         ((opts opers) (parse-command-line opts accum cl-list '() '())))
 
          (values (reverse opts) (reverse opers))))))
 

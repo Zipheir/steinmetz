@@ -194,14 +194,14 @@ satisfying ‘parser-condition?’ and including (at least) ‘&message’ and
 True of *obj* is a condition raised by ‘parser-exception’.
 
 
-(process-cli options [cli-list]) -> [alist, list]
+(process-command-line options [cl-list]) -> [alist, list]
 
 A easy-to-use high-level parsing procedure.  *options* is a list of
-Option objects.  Parses *cli-list* (a list of strings, or the value of
+Option objects.  Parses *cl-list* (a list of strings, or the value of
 ‘(cdr (command-line))’ by default) and returns two values: an alist
 associating the name of each option encountered with its argument, and
 a list of tokens unassociated with any of the options (the “operands”).
-The operand list preserves the order of the tokens of *cli-list*, but
+The operand list preserves the order of the tokens of *cl-list*, but
 the order of the option-argument alist is unspecified.
 
 If an unknown option is encountered while parsing, an object satisfying
@@ -212,7 +212,7 @@ Example:
     (let ((opts (options
                   (option (f) FILE "input file")
                   (flag (v) "verbose output"))))
-      (process-cli opts '("-f" "myfile" "-v" "frobnitz")))
+      (process-command-line opts '("-f" "myfile" "-v" "frobnitz")))
 
     ⇒ ((f . "myfile") (v . #t))
       ("frobnitz")
@@ -220,21 +220,21 @@ Example:
 TODO: Support the -- end-of-options marker.
 
 
-(fold-cli options proc cli-list seed ...) → *
+(parse-command-line options proc cl-list seed ...) → *
 
 Argument types:
 
 (: options (list Option))
 (: proc (procedure))
-(: cli-list (list string))
+(: cl-list (list string))
 (: seed *)
 
-A general-purpose parsing procedure modeled on SRFI 37's 'args-fold'.
-Folds *proc* over the result of parsing *cli-list* with the parsers
+A general-purpose parsing procedure similar to SRFI 37's 'args-fold'.
+Folds *proc* over the result of parsing *cl-list* with the parsers
 attached to the *options*.  At each step, *proc* is applied to an
 Option, the option's argument token (a string, or #f if the
 option has no argument), and the current seeds.  For example, if the
-first two elements of *cli-list* are "-f" and "foo", then *proc* will
+first two elements of *cl-list* are "-f" and "foo", then *proc* will
 be invoked as ‘(proc f-opt "foo")’, where *f-opt* is the Option whose
 names include ‘f’.
 
@@ -244,8 +244,8 @@ the values returned by *proc* are used as the seeds for the next step.
 If a token is encountered which is not an option or an option’s
 argument, it is passed as the second argument to *proc*, and *proc*'s
 first (option) argument will be #f.  For example, if the first element
-of *cli-list* is "frob", then *proc* will be invoked as ‘(proc #f
+of *cl-list* is "frob", then *proc* will be invoked as ‘(proc #f
 "frob")’.
 
-*fold-cli* returns the values returned by the final invocation of
+*parse-command-line* returns the values returned by the final invocation of
 *proc*.
