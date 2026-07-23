@@ -51,9 +51,11 @@
                ;; exist).
                (if (and opt (not (option-argument-name opt)))
                    (split-cluster rest (cons (string #\- first) opts))
-                   (reverse (s1:cons* (apply string rest)
-                                      (string #\- first)
-                                      opts)))))))
+                   (let ((final-opts (cons (string #\- first) opts)))
+                     (reverse (if (null? rest)
+                                  final-opts  ; no bogus "" argument
+                                  (cons (apply string rest)
+                                        final-opts)))))))))
 
       (process-token
        (lambda (token)
