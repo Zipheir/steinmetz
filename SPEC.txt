@@ -93,7 +93,7 @@ omitted.
 If *arg-name* is provided, the command-line option will take a (single)
 required argument.  If it is false, the option will not take an
 argument (and its parser will raise an exception if an argument is
-provided).  TODO: Optional arguments.
+provided).
 
 If *conv-proc* is provided, it must be a procedure which accepts a
 single string argument and returns a single value.  *conv-proc* is
@@ -204,20 +204,24 @@ Returns a copy of *option* with a new property association of
 ### Parsing conventions
 
 A single option may have multiple “short” (single-character) and “long”
-(two-or-more-character) names.  Following tradition, short options
-without arguments followed by a single option that may take an argument
-can be run together.  For example, ‘-ab’ is equivalent to ‘-a -b’ if
-the -a option takes no argument.  The argument of a short option is
-always the next token.[†]  For a long option, the argument is the next
-token unless an argument was supplied as part of the option token, with
-the two components being separated by an ‘=’ character.  For example,
-‘--output=foo.log’ is equivalent to ‘--output foo.log’.  Note that “X
-Windows–style” long options with a single leading dash (e.g. 
-‘-output’) are not supported, since they conflict unavoidably with
-short-option clusters.
+(two-or-more-character) names.  Following tradition (and POSIX), short
+options without arguments followed by a single option that may take an
+argument can be run together.  For example, ‘-ab’ is equivalent to ‘-a
+-b’ if the -a option takes no argument.  The argument of a short option
+is either the next token, or the rest of the option string.  e.g. 
+‘-ab’ is equivalent to ‘-a’ ‘b’ (option ‘a’, argument ‘b’) whenever the
+-a option takes an argument.  (The distinction between option clusters
+and short options with run-in arguments is clear but rather subtle.)
 
-†: FIXME: Steinmetz should support short options run together with
-their arguments, e.g. -ffoo.
+For a long option, the argument is the next token unless an argument
+was supplied as part of the option token, with the two components being
+separated by an ‘=’ character.  For example, ‘--output=foo.log’ is
+equivalent to ‘--output foo.log’.
+
+Note that “X Windows–style” long options with a single leading dash
+(e.g.  ‘-output’) are not supported, since they conflict unavoidably
+with short-option clusters.  Optional arguments complicate cluster
+analysis, but they might be supported at some later date.
 
 
 ### Procedures
