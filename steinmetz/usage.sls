@@ -40,6 +40,12 @@
       (string-append (format-option-names names) arg-str)))
 
   ;; Write descriptions of the *options* to *port*.
+  ;;
+  ;; FIXME: Given the tendency of some programs to use very long option
+  ;; names, I think there should be a bound set on *left-width*.  If
+  ;; this bound is exceeded, the left-column width is set to the max
+  ;; allowable and the help text for a too-long is printed on the
+  ;; following line.
   (define (put-option-doc-lines port options)
     (assert (output-port? port))
     (assert (and (list? options) (s1:every option? options)))
@@ -69,10 +75,12 @@
     (assert (list? options))
     (assert (string? header))
     (assert (string? footer))
-    (put-string port header)
-    (put-char port #\newline)
+    (when (not (equal? "" header))
+      (put-string port header)
+      (put-char port #\newline))
     (put-option-doc-lines port options)
-    (put-string port footer)
-    (put-char port #\newline))
+    (when (not (equal? "" footer))
+      (put-string port footer)
+      (put-char port #\newline)))
 
   )
