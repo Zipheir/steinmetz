@@ -1,57 +1,22 @@
 This file may be out of date. Don’t take it seriously.
 
-* ✓ Figure out how the applicative libraries collect options in a
-  record structure regardless of their order on the line.
+* Support optional and default arguments?
 
-  Done. Too complicated to be worth the effort.
+  Only if you do these yourself using `parse-command-line`.
 
-* The fold interface is quite flexible, so let’s keep it. We should
-  provide a "dumb" driver returning an alist, though, for people who
-  don’t need the general form. Figure out what this should look like.
+* Allow the procedure invoked by `parse-command-line` to halt parsing,
+  maybe.  This would allow library users to decide how to handle
+  interleaved operands, for example.
 
-* ✓ It should be possible to give an option several names, but this
-  raises some challenges. When an option has multiple names, which
-  do we pass to the collector--the one parsed, or a canonical name?
-  It seems clear that error messages should refer to the parsed
-  name, but this complicates error-message generation. Now an argument
-  parser needs to know the last token parsed; this is a significant
-  complication.
-
-  A possible solution: Instead of passing the collection procedure
-  an option name, we pass it the option structure. This makes the
-  user's life more complex. We also have to pick a canonical name
-  for the simple 'parse-cli->alist' interface; there's no way around
-  it. I don't see a simple way to solve the error message issue.
-
-  Adopted dpk's suggestion: Print all of an option's names in error
-  messages.
-
-* ✓ Design the syntactic layer. This should include at least a
-  declarative form that quickly generates a list of options.
-  e.g.
-  ```
-      (options ((n num) 1 (NUM string->number) "Number of frobs.")
-               ((v) 0 () "Verbose output."))
-  ```
-  This is a little clumsy.
-
-* Support optional and default arguments? Or can we push these to
-  a higher layer?
-
-  We do want to support these directly in the specification of
-  options, since option documentation should describe them.
+* `process-command-line` should follow POSIX: halt when the first
+  operand is reached and return the rest of the tokens as operands.
 
 * ✓ Decide how which argument schemes to support, and figure out how
   they interact with argument names. Should we support multiple
   arguments? The getopt fans say no, except via the `--opt=a,b,c`
   syntax. If we do, should we support variadic options?
 
-  How are multiple arguments named? An option that takes two arguments
-  might call them `ARG1` and `ARG2`, or it might call them
-  `ARG ...`.
-
-  For now, I’m adopting the simplest solution: Each option takes one
-  or zero arguments.
+  Allow long options, but otherwise follow the POSIX guidelines.
 
 * ✓ `make-option` and `options` argument order: The docstring should
   probably come before the conversion function, since most options
@@ -62,29 +27,23 @@ This file may be out of date. Don’t take it seriously.
 
 * Accumulate arguments in option declaration order? (Thanks jcowan)
 
+  I’m no longer (2026) sure what I meant by this.
+
 * Support `--no-foo` when the flag `--foo` has been defined? Should
   this be automatic, or optional? (Thanks jcowan)
 
-* ✓ Support `--`.
+  I think not.  Too surprising.
 
-* Rework usage formatting and library organization.  Currently it's
-  necessary is `include` either `doc-portable.scm` or `doc-fmt.scm`,
-  since there is a cyclic dependency between the usage-generating
-  form `make-usage` and the option-type accessors.  It would be
-  nice to get rid of this cycle.
+* Support `--`.
 
-  The two `make-usage` implementations also have problems.  `fmt`
-  (or its SRFI 166 update, `show`) is the best tool here, but it has
-  a lot of dependencies & is quite a pain to get running on R6RS
-  implementations (especially Chez).  On the other hand, the portable
-  `make-usage` implementation is long and produces ugly output.
+  This was done, then undone.  It remains (2026-07) TODO.
 
-  It should be possible to provide a miniature pretty-printing library
-  to handle this specific problem.  What features should it provide?
+* More documentation-formatting features?
 
-  + Stateful indentation
-  + Columnated output (for option-argument-description lines)
-  + Output-width parameter (for columnated output, at least; preferably
-    for paragraphs as well)
+* Argument splitting (with `,` or space delimiters) on demand.
 
-  Those seem to comprise the minimum set.
+  This could be supported via an option property.  If
+  `argument-delimiter`, say, has a character associated with it, then
+  split the argument on that character.
+
+* Completions for bash, etc.
