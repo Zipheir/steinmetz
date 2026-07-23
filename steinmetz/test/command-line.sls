@@ -32,27 +32,27 @@
         (let ((tokens '("-f" "foo" "-a" "-1" "--long" "bar" "bash")))
           (test-equal "command line that needs no processing"
             tokens
-            (clean-command-line opt-tab tokens)))
+            (normalize-command-line opt-tab tokens)))
 
         (test-equal "short options with run-in arguments"
           '("-f" "abc")
-          (clean-command-line opt-tab '("-fabc")))
+          (normalize-command-line opt-tab '("-fabc")))
 
         (test-equal "short option cluster, last takes no argument"
           '("-a" "-b")
-          (clean-command-line opt-tab '("-ab")))
+          (normalize-command-line opt-tab '("-ab")))
 
         (test-equal "short option cluster, last has run-in argument (1)"
           '("-a" "-b" "-c" "bash")
-          (clean-command-line opt-tab '("-abcbash")))
+          (normalize-command-line opt-tab '("-abcbash")))
 
         (test-equal "short option cluster, last has run-in argument (2)"
           '("-a" "-b" "-c" "1a")
-          (clean-command-line opt-tab '("-abc1a")))
+          (normalize-command-line opt-tab '("-abc1a")))
 
         (test-equal "long option with run-in argument"
           '("--long" "short")
-          (clean-command-line opt-tab '("--long=short")))
+          (normalize-command-line opt-tab '("--long=short")))
         )))
   )
 

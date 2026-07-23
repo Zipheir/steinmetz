@@ -2,7 +2,7 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz command-line)
-  (export clean-command-line)
+  (export normalize-command-line)
   (import (rnrs base)
           (rnrs hashtables)
           (prefix (srfi :1) s1:)
@@ -27,7 +27,7 @@
   ;;
   ;; (If we were to support optional arguments, the situation with
   ;; clusters would be completely ambiguous.)
-  (define (clean-command-line opt-tab tokens)
+  (define (normalize-command-line opt-tab tokens)
     (letrec*
      ((cluster
        (s115:regexp '(: "-" (submatch (at-least 2 alphanumeric)))))

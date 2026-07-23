@@ -157,7 +157,7 @@
                       (let-values ((seeds* (apply proc #f t seeds)))
                         (fold-loop seeds* ts*)))))))))
 
-      (fold-loop seeds (clean-command-line opt-tab cli-lis))))
+      (fold-loop seeds (normalize-command-line opt-tab cli-lis))))
 
   ;;; TODO: Decide on a canonical form for options with multiple names.
   ;;; If -o and --output are names for the same option, then the same
