@@ -27,14 +27,10 @@
   ;;
   ;; (If we were to support optional arguments, the situation with
   ;; clusters would be completely ambiguous.)
-  ;;
-  ;; To do all of this, the to-be-processed tokens are kept on a
-  ;; stack.  'split-cluster' sometimes pushes sub-clusters back onto
-  ;; this stack.
   (define (clean-command-line opt-tab tokens)
     (letrec*
-     ((cluster (s115:regexp '(: (submatch #\- alphanumeric)
-                                (submatch (+ alphanumeric)))))
+     ((cluster
+       (s115:regexp '(: "-" (submatch (at-least 2 alphanumeric)))))
       (long-option/equals
        (s115:regexp
         '(: (submatch (: "--" alphanumeric (+ (or alphanumeric #\-))))
@@ -42,44 +38,38 @@
             (submatch (+ alphanumeric)))))
 
       (split-cluster
-       (lambda (match s)
-         (let* ((first (s115:regexp-match-submatch match 1))
-                (rest (s115:regexp-match-submatch match 2))
-                (name (substring first 1 2))
-                (opt (hashtable-ref opt-tab name #f)))
-           (cond ((not opt)  ; parser error in the making
-                  (values (list s) '()))
-                 ;; If *opt* takes an argument, then we are dealing
-                 ;; with a run-in argument ("-OARG" syntax).
-                 ((option-argument-name opt)
-                  (values (list rest first) '()))
-                 (else  ; first option of cluster; push the rest
-                  ;; FIXME: Prepending a dash is rather silly.
-                  (values (list first)
-                          (list (string-append "-" rest))))))))
+       (lambda (chars opts)
+         (if (null? chars)
+             (reverse opts)
+             (let* ((first (car chars))
+                    (rest (cdr chars))
+                    (opt (hashtable-ref opt-tab (string first) #f)))
+               ;; If the first char denotes an option with no argument,
+               ;; then add it to the opts list and continue examining
+               ;; the rest of the cluster.  Otherwise, consider the rest
+               ;; of the cluster an argument (even if *opt* doesn't
+               ;; exist).
+               (if (and opt (not (option-argument-name opt)))
+                   (split-cluster rest (cons (string #\- first) opts))
+                   (reverse (s1:cons* (apply string rest)
+                                      (string #\- first)
+                                      opts)))))))
 
-      ;; Returns two values: a list of processed tokens and a new
-      ;; stack of tokens still to be processed.
       (process-token
-       (lambda (ts)
-         (let ((top (car ts)) (rest (cdr ts)))
-           (cond ((s115:regexp-matches cluster top) =>
-                  (lambda (m)
-                    (let-values (((proc todo) (split-cluster m top)))
-                      (values proc (append todo rest)))))
-                 ((s115:regexp-matches long-option/equals top) =>
-                  (lambda (m)
-                    (values (list (s115:regexp-match-submatch m 2)
-                                  (s115:regexp-match-submatch m 1))
-                            rest)))
-                 (else (values (list top) rest))))))
+       (lambda (token)
+         (assert (string? token))
+         (cond ((s115:regexp-matches cluster token) =>
+                (lambda (m)
+                  (split-cluster
+                   (string->list (s115:regexp-match-submatch m 1))
+                   '())))
+               ((s115:regexp-matches long-option/equals token) =>
+                (lambda (m)
+                  (list (s115:regexp-match-submatch m 1)
+                        (s115:regexp-match-submatch m 2))))
+               (else (list token))))))
 
-      (process-loop
-        (lambda (processed ts)
-          (if (null? ts)
-              (reverse processed)
-              (let-values (((proc todo) (process-token ts)))
-                (process-loop (append proc processed) todo))))))
-
-      (process-loop '() tokens)))
+      (assert (hashtable? opt-tab))
+      (assert (list? tokens))
+      (s1:append-map process-token tokens)))
   )

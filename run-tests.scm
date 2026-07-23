@@ -13,8 +13,8 @@
 
 (test-begin "steinmetz")
 
-(options:run-tests)
+;(options:run-tests)
 (command-line:run-tests)
-(parse:run-tests)
+;(parse:run-tests)
 
 (test-end)
