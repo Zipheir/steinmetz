@@ -124,23 +124,27 @@
                                (option-names opt)))
                    opts)
          table))
+
       ;; Assoc *name* in opt-tab.
       (lookup-option-by-name
        (lambda (name)
          (cond ((hashtable-ref opt-tab name #f))
                (else (parser-exception "invalid option" name)))))
+
       ;; If *s* is a string describing a long or short option,
       ;; return its name as a symbol. Otherwise, return #f.
       (option-string->name
        (lambda (s)
          (and (option-string? s)
               (s152:string-drop-while s (lambda (c) (eqv? c #\-))))))
+
       (accum-option
        (lambda (name ts seeds cont)
          (let*-values (((opt) (lookup-option-by-name name))
                        ((arg rest) ((option-argument-parser opt) ts))
                        (seeds* (apply proc opt arg seeds)))
            (cont seeds* rest))))
+
       (fold-loop
        (lambda (seeds ts)
          (if (null? ts)

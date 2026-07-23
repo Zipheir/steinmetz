@@ -40,6 +40,7 @@
         '(: (submatch (: "--" alphanumeric (+ (or alphanumeric #\-))))
             #\=
             (submatch (+ alphanumeric)))))
+
       (split-cluster
        (lambda (match s)
          (let* ((first (s115:regexp-match-submatch match 1))
@@ -56,6 +57,7 @@
                   ;; FIXME: Prepending a dash is rather silly.
                   (values (list first)
                           (list (string-append "-" rest))))))))
+
       ;; Returns two values: a list of processed tokens and a new
       ;; stack of tokens still to be processed.
       (process-token
@@ -71,6 +73,7 @@
                                   (s115:regexp-match-submatch m 1))
                             rest)))
                  (else (values (list top) rest))))))
+
       (process-loop
         (lambda (processed ts)
           (if (null? ts)
