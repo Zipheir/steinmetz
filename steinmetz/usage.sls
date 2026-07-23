@@ -7,6 +7,7 @@
   (import (rnrs base)
           (rnrs control)
           (rnrs io ports)
+          (prefix (srfi :1) s1:)
           (prefix (srfi :152) s152:)
           (steinmetz options)
           )
@@ -14,43 +15,53 @@
   ;;;; Option & usage documentation
 
   ;;; Sadly, there is next to nothing portable in the formatted-output
-  ;;; area.  The following could be improved significantly if SRFI 166
-  ;;; or a full 'printf' or FORMAT-style procedure were available.
+  ;;; area.  This is all rather nuts-&-bolts.
 
-  (define (option-name->string sym)
-    (let ((s (symbol->string sym)))
-      (if (= (string-length s) 1)  ; short option?
-          (string-append "-" s)
-          (string-append "--" s))))
+  (define (longest-string strings)
+    (s1:fold (lambda (s long) (max long (string-length s)))
+             0
+             strings))
 
   (define (format-option-names names)
-    (s152:string-join (map option-name->string names) ", "))
+    (let ((dashed (map (lambda (name)
+                         (if (= (string-length name) 1)
+                             (string-append "-" name)
+                             (string-append "--" name)))
+                       names)))
+      (s152:string-join dashed ", ")))
 
-  ;; Write a description of *option* to *port*.
-  (define (put-option-doc-line port option)
-    (assert (output-port? port))
-    (assert (option? option))
+  (define (format-option-signature option)
     (let ((names (option-names option))
-          (argname (option-argument-name option))
-          (help (option-property-ref option 'help)))
-      (put-string port "  ") ; indent
-      ;; Print option names.
-      (case (length names)
-        ((1)
-         (put-string port (option-name->string (car names))))
-        (else
-         (put-string port "(")
-         (put-string port (format-option-names names))
-         (put-string port ")")))
-      (when argname
-        (assert (symbol? argname))
-        (put-string port " ")
-        (put-string port (symbol->string argname)))
-      (when help
-        (assert (string? help))
-        (put-string port "  ")
-        (put-string port help))
-      (put-string port "\n")))
+          (arg-str (cond ((option-argument-name option) =>
+                          (lambda (sym)
+                            (string-append " "
+                                           (symbol->string sym))))
+                         (else ""))))
+      (string-append (format-option-names names) arg-str)))
+
+  ;; Write descriptions of the *options* to *port*.
+  (define (put-option-doc-lines port options)
+    (assert (output-port? port))
+    (assert (and (list? options) (s1:every option? options)))
+    (let* ((indent
+            (lambda ()
+              (put-string port "  ")))
+           (sigs (map format-option-signature options))
+           (helps (map (lambda (opt)
+                         (option-property-ref opt 'help))
+                       options))
+           (left-width (+ 2 (longest-string sigs))))
+      (for-each
+       (lambda (sig help)
+         (indent)
+         (cond (help
+                (put-string port
+                            (s152:string-pad-right sig left-width))
+                (put-string port help))
+               (else (put-string port sig)))
+         (put-char port #\newline))
+       sigs
+       helps)))
 
   ;; Writes a usage message to *port*.
   (define (put-usage port options header footer)
@@ -60,9 +71,7 @@
     (assert (string? footer))
     (put-string port header)
     (put-char port #\newline)
-    (for-each (lambda (opt)
-                (put-option-doc-line port opt))
-              options)
+    (put-option-doc-lines port options)
     (put-string port footer)
     (put-char port #\newline))
 
