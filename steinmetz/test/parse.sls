@@ -6,6 +6,7 @@
   (import (rnrs base)
           (rnrs exceptions)
           (rnrs sorting)
+          (rnrs io simple)
           (prefix (srfi :1) s1:)
           (srfi :64)
           (steinmetz options)
@@ -124,7 +125,7 @@
               total)))
 
         (test-equal
-          "parse-command-line: ignore options, return operands"
+          "parse-command-line: ignore options, return operands (1)"
           '("a" "b")
           (guard (con
                    ((parser-condition? con) '())
@@ -139,6 +140,23 @@
                            '("-v" "a" "-f" "foo" "--file" "bar" "b")
                            '())))
               (list-sort string<? rands))))
+
+        (test-equal
+          "parse-command-line: ignore options, return operands (2)"
+          '("a" "--file" "bar" "b")
+          (guard (con
+                   ((parser-condition? con) '())
+                   (else (raise-continuable con)))
+            (let-values (((rands _junk)
+                          (parse-command-line
+                           opts
+                           (lambda (name arg rands)
+                             (if name
+                                 (values #t rands)
+                                 (values #t (cons arg rands))))
+                           '("-v" "a" "-f" "foo" "--" "--file" "bar" "b")
+                           '())))
+              (reverse rands))))
 
         (test-equal
           "parse-command-line: return options (semi-canonicalized) \
@@ -208,6 +226,26 @@
           (pcl->list/sorted-opts
            opts
            '("-vf" "foo" "--file=bar" "bash" "csh")))
+
+        (test-equal
+          "process-command-line, end-of-options symbol (--)"
+          '((("file" "foo"))
+            ("-v" "-f" "bar" "-1" "bash"))
+          (pcl->list/sorted-opts
+           opts
+           '("--file" "foo" "--" "-v" "-f" "bar" "-1" "bash")))
+
+        (test-expect-fail
+         (test-match-name
+          "process-command-line, -- argument shouldn't end opt. parsing"))
+
+        (test-equal
+          "process-command-line, -- argument shouldn't end opt. parsing"
+          '((("1" #t) ("file" "foo" "--") ("verbose" #t))
+            ("bash"))
+          (pcl->list/sorted-opts
+           opts
+           '("--file" "foo" "-v" "-f" "--" "-1" "bash")))
         )
 
       (let ((opts

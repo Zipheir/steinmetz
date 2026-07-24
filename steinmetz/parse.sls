@@ -157,13 +157,19 @@
          (cond ((hashtable-ref opt-tab name #f))
                (else (parser-exception "invalid option" name)))))
 
+      ;; Have we seen -- yet?
+      (more-options #t)
+
       ;; FIXME: Split this up.
       (parse-loop
        (lambda (seeds ts)
          (if (null? ts)
              (ylppa-values seeds '())
              (let ((t (car ts)) (ts* (cdr ts)))
-               (cond ((option-string->name t) =>
+               (cond ((equal? t "--")
+                      (set! more-options #f)
+                      (parse-loop seeds ts*))
+                     ((and more-options (option-string->name t)) =>
                       (lambda (name)
                         (let*-values (((opt)
                                        (lookup-option-by-name name))
