@@ -29,9 +29,9 @@ This file may be out of date. Don’t take it seriously.
 
   Yes, at least in `process-command-line`.
 
-* Support `--`.
+* ✓ Support `--`.
 
-  This was done, then undone.  It remains (2026-07) TODO.
+* Support `--` as an argument.
 
 * More documentation-formatting features?
 

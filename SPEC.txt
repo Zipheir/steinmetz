@@ -221,6 +221,9 @@ Note that “X Windows–style” long options with a single leading dash
 with short-option clusters.  Optional arguments complicate cluster
 analysis, but they might be supported at some later date.
 
+The first non-argument occurrence of ‘--’ terminates option parsing.
+All remaining tokens are treated as arguments.
+
 
 ### Procedures
 
@@ -281,8 +284,6 @@ Example:
       ; ⇒ (("-e" "little")) ("foo")
       (parse-command-line opts '("-e" "medium" "foo")))
       ; parser exception: invalid argument "medium"
-
-TODO: Support the -- end-of-options marker.
 
 FIXME: Flags aren't treated specially at the moment, so N appearances
 of a single flag will result in a list of N #t values.
