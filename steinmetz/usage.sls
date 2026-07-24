@@ -32,12 +32,13 @@
 
   (define (format-option-signature option)
     (let ((names (option-names option))
-          (arg-str (cond ((option-argument-name option) =>
-                          (lambda (sym)
-                            (string-append " "
-                                           (symbol->string sym))))
-                         (else ""))))
-      (string-append (format-option-names names) arg-str)))
+          (arg-str
+           (cond ((option-get-property option 'allowed-arguments) =>
+                  (lambda (args)
+                    (s152:string-join args "|")))
+                 ((option-argument-name option) => symbol->string)
+                 (else ""))))
+      (string-append (format-option-names names) " " arg-str)))
 
   ;; Write descriptions of the *options* to *port*.
   ;;

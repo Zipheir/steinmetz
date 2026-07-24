@@ -17,7 +17,7 @@
           (rnrs conditions)
           (rnrs control)
           (rnrs exceptions)
-          (only (rnrs lists) assoc)
+          (only (rnrs lists) assoc member)
           (rnrs hashtables)
           (rnrs programs)
           (prefix (srfi :1) s1:)
@@ -85,11 +85,20 @@
        (assert (or (symbol? arg-name) (not arg-name)))
        (assert (procedure? conv))
        (assert (list? props))
-       (let
-        ((argument-parser
+       (let*
+        ((allowed-args
+          (cond ((assoc 'allowed-arguments props) =>
+                 (lambda (p)
+                   (let ((args (cdr p)))
+                     (assert (and (list? args) (s1:every string? args)))
+                     args)))
+                (else #f)))
+         (argument-parser
           (lambda (tokens)
             (let ((t (car tokens)) (rest (cdr tokens)))
-              (if (argument-string? t)
+              (if (and (argument-string? t)
+                       (or (not allowed-args)
+                           (member t allowed-args)))
                   (conv t rest)
                   (parser-exception "missing option argument"
                                     names))))))
