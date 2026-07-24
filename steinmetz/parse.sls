@@ -41,6 +41,12 @@
   (define (argument-string? s)
     (not (option-string? s)))
 
+  ;; If *s* is a string describing a long or short option,
+  ;; return its name as a symbol. Otherwise, return #f.
+  (define (option-string->name s)
+     (and (option-string? s)
+          (s152:string-drop-while s (lambda (c) (eqv? c #\-)))))
+
   ;;;; Parser utilities
 
   (define-condition-type &parser &condition
@@ -131,13 +137,6 @@
          (cond ((hashtable-ref opt-tab name #f))
                (else (parser-exception "invalid option" name)))))
 
-      ;; If *s* is a string describing a long or short option,
-      ;; return its name as a symbol. Otherwise, return #f.
-      (option-string->name
-       (lambda (s)
-         (and (option-string? s)
-              (s152:string-drop-while s (lambda (c) (eqv? c #\-))))))
-
       (accum-option
        (lambda (name ts seeds cont)
          (let*-values (((opt) (lookup-option-by-name name))
@@ -145,19 +144,19 @@
                        (seeds* (apply proc opt arg seeds)))
            (cont seeds* rest))))
 
-      (fold-loop
+      (parse-loop
        (lambda (seeds ts)
          (if (null? ts)
              (apply values seeds)
              (let ((t (car ts)) (ts* (cdr ts)))
                (cond ((option-string->name t) =>
                       (lambda (name)
-                        (accum-option name ts* seeds fold-loop)))
+                        (accum-option name ts* seeds parse-loop)))
                      (else
                       (let-values ((seeds* (apply proc #f t seeds)))
-                        (fold-loop seeds* ts*)))))))))
+                        (parse-loop seeds* ts*)))))))))
 
-      (fold-loop seeds (normalize-command-line opt-tab cli-lis))))
+      (parse-loop seeds (normalize-command-line opt-tab cli-lis))))
 
   ;;; TODO: Decide on a canonical form for options with multiple names.
   ;;; If -o and --output are names for the same option, then the same
@@ -178,35 +177,35 @@
     (case-lambda
       ((opts) (process-command-line opts (cdr (command-line))))
       ((opts cl-list)
-       (let*-values
-        ;; If *name* has an association in *alist*, then push *arg*
-        ;; onto the cdr of *name*'s pair.  Otherwise, just add
-        ;; (name . (arg)) to *alist*.
-        (((adjoin/pool)
-          (lambda (name arg alist)
-            (cond ((assoc name alist) =>
-                   (lambda (p)
-                     (cons (cons (car p) (cons arg (cdr p)))
-                           (s1:remove (lambda (p) (equal? name (car p)))
-                                      alist))))
-                  (else (cons (list name arg) alist)))))
-         ;; FIXME: Uses *opt*'s first name as canonical.  This should
-         ;; at least ensure that all occurrences of an option get
-         ;; accumulated the same name.
-         ((accum)
-          (lambda (opt arg opts opers)
-            (if opt
-                (values (adjoin/pool (car (option-names opt))
-                                     arg
-                                     opts)
-                        opers)
-                (values opts (cons arg opers)))))
-         ((opts opers)
-          (parse-command-line opts accum cl-list '() '())))
-
+       (let*-values (((opts opers)
+                      (parse-command-line opts
+                                          accumulate
+                                          cl-list
+                                          '()
+                                          '())))
          (values (map (lambda (p) (cons (car p) (reverse (cdr p))))
                       opts)
                  (reverse opers))))))
+
+  ;; If *name* has an association in *alist*, then push *arg*
+  ;; onto the cdr of *name*'s pair.  Otherwise, just add
+  ;; (name . (arg)) to *alist*.
+  (define (adjoin/push name arg alist)
+    (cond ((assoc name alist) =>
+           (lambda (p)
+             (cons (cons (car p) (cons arg (cdr p)))
+                   (s1:remove (lambda (p) (equal? name (car p)))
+                              alist))))
+          (else (cons (list name arg) alist))))
+
+  ;; FIXME: Uses *opt*'s first name as canonical.  This should
+  ;; at least ensure that all occurrences of an option get
+  ;; accumulated the same name.
+  (define (accumulate opt arg opts opers)
+     (if opt
+         (values (adjoin/push (car (option-names opt)) arg opts)
+                 opers)
+         (values opts (cons arg opers))))
 
   ;;;; Syntax
 
@@ -227,33 +226,33 @@
   (define-syntax options
     (syntax-rules ()
       ((options (e ...) ...)
-       (letrec-syntax
-        ((normalize
-          (syntax-rules ()
-            ((normalize (name0 . names))
-             (stringify-names '(name0 . names)))
-            ((normalize name)
-             (stringify-names '(name)))))
-         (opt-clause
-          (syntax-rules (option flag)
-            ((opt-clause flag names)
-             (make-cli-flag (normalize names)))
-            ((opt-clause flag names help-str)
-             (make-cli-flag (normalize names) '((help . help-str))))
-            ((opt-clause option names arg)
-             (make-cli-option (normalize names) 'arg))
-            ((opt-clause option names arg help-str)
-             (make-cli-option (normalize names)
-                              'arg
-                              values
-                              '((help . help-str))))
-            ((opt-clause option names arg help-str conv)
-             (make-cli-option (normalize names)
-                              'arg
-                              conv
-                              '((help . help-str)))))))
+       (list (opt-clause e ...) ...))))
 
-         (list (opt-clause e ...) ...)))))
+  (define-syntax normalize
+    (syntax-rules ()
+      ((normalize (name0 . names))
+       (stringify-names '(name0 . names)))
+      ((normalize name)
+       (stringify-names '(name)))))
+
+  (define-syntax opt-clause
+    (syntax-rules (option flag)
+      ((opt-clause flag names)
+       (make-cli-flag (normalize names)))
+      ((opt-clause flag names help-str)
+       (make-cli-flag (normalize names) '((help . help-str))))
+      ((opt-clause option names arg)
+       (make-cli-option (normalize names) 'arg))
+      ((opt-clause option names arg help-str)
+       (make-cli-option (normalize names)
+                        'arg
+                        values
+                        '((help . help-str))))
+      ((opt-clause option names arg help-str conv)
+       (make-cli-option (normalize names)
+                        'arg
+                        conv
+                        '((help . help-str))))))
 
   (define-syntax flag (syntax-rules ()))
   (define-syntax option (syntax-rules ()))
