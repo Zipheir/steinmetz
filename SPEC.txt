@@ -264,6 +264,24 @@ Example:
     ⇒ (("v" #t) ("f" "file1" "file2"))
       ("frobnitz")
 
+If an option has the ‘allowed-arguments’ property and its associated
+value is a list of strings, then only arguments from that list will
+be considered valid.  Others will raise parser exceptions.  (The test
+is done before an option’s argument converter is applied to the
+argument string.)
+
+Example:
+
+    (let ((opts
+           (list (make-option '("e")
+                              'ENDIANNESS
+                              string->symbol
+                              '((allowed-arguments "big" "little"))))))
+      (parse-command-line opts '("-e" "little" "foo"))
+      ; ⇒ (("-e" "little")) ("foo")
+      (parse-command-line opts '("-e" "medium" "foo")))
+      ; parser exception: invalid argument "medium"
+
 TODO: Support the -- end-of-options marker.
 
 FIXME: Flags aren't treated specially at the moment, so N appearances
