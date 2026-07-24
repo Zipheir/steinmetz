@@ -47,3 +47,5 @@ This file may be out of date. Don’t take it seriously.
   split the argument on that character.
 
 * Completions for bash, etc.
+
+* Property for allowed argument values, e.g. for “enum”-type options.
