@@ -4,11 +4,11 @@ This file may be out of date. Don’t take it seriously.
 
   Only if you do these yourself using `parse-command-line`.
 
-* Allow the procedure invoked by `parse-command-line` to halt parsing,
+* ✓ Allow the procedure invoked by `parse-command-line` to halt parsing,
   maybe.  This would allow library users to decide how to handle
   interleaved operands, for example.
 
-* `process-command-line` should follow POSIX: halt when the first
+* ✓ `process-command-line` should follow POSIX: halt when the first
   operand is reached and return the rest of the tokens as operands.
 
 * ✓ Decide how which argument schemes to support, and figure out how
@@ -27,12 +27,7 @@ This file may be out of date. Don’t take it seriously.
 
 * Accumulate arguments in option declaration order? (Thanks jcowan)
 
-  I’m no longer (2026) sure what I meant by this.
-
-* Support `--no-foo` when the flag `--foo` has been defined? Should
-  this be automatic, or optional? (Thanks jcowan)
-
-  I think not.  Too surprising.
+  Yes, at least in `process-command-line`.
 
 * Support `--`.
 
