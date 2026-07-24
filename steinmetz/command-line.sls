@@ -10,6 +10,15 @@
           (steinmetz options)
           )
 
+  (define cluster
+    (s115:regexp '(: "-" (submatch (at-least 2 alphanumeric)))))
+
+  (define long-option/equals
+    (s115:regexp
+     '(: (submatch (: "--" alphanumeric (+ (or alphanumeric #\-))))
+         #\=
+         (submatch (+ alphanumeric)))))
+
   ;; Pre-process *tokens* to remove option clusters and run-in
   ;; arguments.  According to my reading of POSIX, a cluster (like
   ;; -abc) must be handled in one of two ways, depending on whether the
@@ -29,15 +38,7 @@
   ;; clusters would be completely ambiguous.)
   (define (normalize-command-line opt-tab tokens)
     (letrec*
-     ((cluster
-       (s115:regexp '(: "-" (submatch (at-least 2 alphanumeric)))))
-      (long-option/equals
-       (s115:regexp
-        '(: (submatch (: "--" alphanumeric (+ (or alphanumeric #\-))))
-            #\=
-            (submatch (+ alphanumeric)))))
-
-      (split-cluster
+     ((split-cluster
        (lambda (chars opts)
          (if (null? chars)
              (reverse opts)
