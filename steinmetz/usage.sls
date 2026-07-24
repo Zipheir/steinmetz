@@ -54,7 +54,7 @@
               (put-string port "  ")))
            (sigs (map format-option-signature options))
            (helps (map (lambda (opt)
-                         (option-property-ref opt 'help))
+                         (option-get-property opt 'help))
                        options))
            (left-width (+ 2 (longest-string sigs))))
       (for-each

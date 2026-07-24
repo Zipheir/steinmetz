@@ -8,7 +8,7 @@
           option-properties->alist
           option-names
           option-argument-name
-          option-property-ref
+          option-get-property
           option-set-property
           )
   (import (rnrs base)
@@ -50,7 +50,7 @@
 
   ;;; (Symbol . list) alist implementation of properties.
 
-  (define (option-property-ref opt key)
+  (define (option-get-property opt key)
     (assert (option? opt))
     (cond ((assv key (option-properties->alist opt)) => cdr)
           (else #f)))

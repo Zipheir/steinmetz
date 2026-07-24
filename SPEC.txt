@@ -183,12 +183,10 @@ An Option’s property alist can be manipulated with the following
 convenience procedures.
 
 
-(option-property-ref option key) → *
+(option-get-property option key) → *
 
 Returns the value associated with *key* (a symbol) in *option*'s
-property mapping.  If no association exists, returns #f.  (FIXME:
-This should probably raise an exception on failure, to avoid the
-ambiguity associated with returning #f.)
+property mapping.  If no association exists, returns #f.
 
 
 (option-set-property option key obj) → option
