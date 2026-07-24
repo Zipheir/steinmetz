@@ -99,7 +99,7 @@
               (if (and (argument-string? t)
                        (or (not allowed-args)
                            (member t allowed-args)))
-                  (conv t rest)
+                  (values (conv t) rest)
                   (parser-exception "missing option argument"
                                     names))))))
          (make-option names
