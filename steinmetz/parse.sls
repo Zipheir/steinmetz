@@ -93,13 +93,19 @@
                      (assert (and (list? args) (s1:every string? args)))
                      args)))
                 (else #f)))
+         (invalid-arg-message
+          (and allowed-args
+               (string-append "invalid argument: must be one of "
+                              (s152:string-join allowed-args ", "))))
          (argument-parser
           (lambda (tokens)
             (let ((t (car tokens)) (rest (cdr tokens)))
-              (if (and (argument-string? t)
-                       (or (not allowed-args)
-                           (member t allowed-args)))
-                  (values (conv t) rest)
+              (if (argument-string? t)
+                  (if (or (not allowed-args) (member t allowed-args))
+                      (values (conv t) rest)
+                      (parser-exception invalid-arg-message
+                                        (car names)
+                                        t))
                   (parser-exception "missing option argument"
                                     names))))))
          (make-option names
