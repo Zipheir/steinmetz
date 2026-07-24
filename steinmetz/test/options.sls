@@ -33,23 +33,23 @@
           '((help . "input file"))
           (option-properties->alist opt))
 
-        (test-equal "option-property-ref on existing key"
+        (test-equal "option-get-property on existing key"
           "input file"
-          (option-property-ref opt 'help))
+          (option-get-property opt 'help))
 
-        (test-equal "option-property-ref on missing key"
+        (test-equal "option-get-property on missing key"
           #f
-          (option-property-ref opt 'flabs))
+          (option-get-property opt 'flabs))
 
         (test-equal "add new key with option-set-property"
           "hello"
-          (option-property-ref
+          (option-get-property
            (option-set-property opt 'flabs "hello")
            'flabs))
 
         (test-equal "change existing key with option-set-property"
           "read from FILE"
-          (option-property-ref
+          (option-get-property
            (option-set-property opt 'help "read from FILE")
            'help))
         )))

@@ -37,7 +37,7 @@
 
           (test-equal "help text of option created by 'options' (1)"
             "input file"
-            (option-property-ref opt 'help)))
+            (option-get-property opt 'help)))
 
         (let ((opt (find-option-by-names '("v") opts)))
           (test-assert "names of option created by 'options' (2)"
@@ -47,7 +47,7 @@
             (not (option-argument-name opt)))
 
           (test-assert "help text of option created by 'options' (2)"
-            (not (option-property-ref opt 'help))))
+            (not (option-get-property opt 'help))))
         ))
 
     (test-group "make-cli-option"
@@ -69,8 +69,8 @@
 
         (test-equal "properties of option created by 'make-cli-option'"
           '("output file" "badger")
-          (list (option-property-ref opt 'help)
-                (option-property-ref opt 'animal)))))
+          (list (option-get-property opt 'help)
+                (option-get-property opt 'animal)))))
 
     (test-group "make-cli-flag"
       (let ((opt (make-cli-flag '("v" "verbose")
@@ -85,8 +85,8 @@
 
         (test-equal "properties of option created by 'make-cli-flag'"
           '("verbose output" "badger")
-          (list (option-property-ref opt 'help)
-                (option-property-ref opt 'animal)))))
+          (list (option-get-property opt 'help)
+                (option-get-property opt 'animal)))))
 
     (test-group "parse-command-line"
       (let ((opts (options
