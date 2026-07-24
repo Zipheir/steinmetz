@@ -18,6 +18,24 @@
   (define (string-key<? p1 p2)
     (string<? (car p1) (car p2)))
 
+  ;; Returns a list of the two lists returned by
+  ;; 'process-command-line'.  The option alist is sorted
+  ;; by option name.
+  (define (pcl->list/sorted-opts opts cl-list)
+    (let-values (((opts rands)
+                  (process-command-line opts cl-list)))
+      (list (list-sort string-key<? opts) rands)))
+
+  ;; SRFI 64's test-error is outdated & approximately useless.
+  (define-syntax our-test-error
+    (syntax-rules ()
+      ((out-test-error name con-pred expr)
+       (test-assert name
+         (guard (con
+                  ((con-pred con) #t)
+                  (else #f))
+           expr)))))
+
   (define (run-tests)
     (test-group "options macro"
       (let ((opts (options
@@ -152,25 +170,18 @@
       (let* ((opts (options
                     (option (file f) FILE)
                     (flag (verbose v))
-                    (flag ("1"))))
-             ;; Returns a list of the two lists returned by
-             ;; 'process-command-line'.  The option alist is sorted
-             ;; by option name.
-             (pcl->list/sorted-opts
-              (lambda (cl-list)
-                (let-values (((opts rands)
-                              (process-command-line opts cl-list)))
-                  (list (list-sort string-key<? opts) rands)))))
-
+                    (flag ("1")))))
         (test-equal "process-command-line"
           '((("file" "foo"))
             ("bash" "ksh" "csh"))
-          (pcl->list/sorted-opts '("--file" "foo" "bash" "ksh" "csh")))
+          (pcl->list/sorted-opts opts
+                                 '("--file" "foo" "bash" "ksh" "csh")))
 
         (test-equal "process-command-line, numeric flag"
           '((("1" #t) ("file" "foo"))
             ("bash" "ksh" "csh"))
           (pcl->list/sorted-opts
+           opts
            '("--file" "foo" "-1" "bash" "ksh" "csh")))
 
         (test-equal
@@ -178,23 +189,59 @@
           '((("1" #t) ("file" "foo" "bar") ("verbose" #t))
             ("bash"))
           (pcl->list/sorted-opts
+           opts
            '("--file" "foo" "-v" "-f" "bar" "-1" "bash")))
 
         (test-equal "process-command-line, clusters"
           '((("file" "foo") ("verbose" #t))
             ("bash" "csh"))
-          (pcl->list/sorted-opts '("-vf" "foo" "bash" "csh")))
+          (pcl->list/sorted-opts opts '("-vf" "foo" "bash" "csh")))
 
         (test-equal "process-command-line, '=' syntax"
           '((("file" "foo"))
             ("bash" "csh"))
-          (pcl->list/sorted-opts '("--file=foo" "bash" "csh")))
+          (pcl->list/sorted-opts opts '("--file=foo" "bash" "csh")))
 
         (test-equal "process-command-line, clusters & '=' syntax"
           '((("file" "foo" "bar") ("verbose" #t))
             ("bash" "csh"))
           (pcl->list/sorted-opts
+           opts
            '("-vf" "foo" "--file=bar" "bash" "csh")))
+        )
+
+      (let ((opts
+             (list
+              (make-cli-option '("e")
+                               'ENDIANNESS
+                               values
+                               '((allowed-arguments "big" "little")))
+              (make-cli-option '("a" "sort-algorithm")
+                               'ALGORITHM-NAME
+                               values
+                               '((allowed-arguments "quick"
+                                                    "merge"
+                                                    "bubble"
+                                                    "bogo"))))))
+        (test-equal "process-command-line, valid fixed arguments (1)"
+          '((("a" "bubble") ("e" "big"))
+            ("csh" "rc"))
+          (pcl->list/sorted-opts
+           opts
+           '("-e" "big" "-a" "bubble" "csh" "rc")))
+
+        (test-equal "process-command-line, valid fixed arguments (2)"
+          '((("a" "merge") ("e" "little"))
+            ("csh" "rc"))
+          (pcl->list/sorted-opts
+           opts
+           '("--sort-algorithm=merge" "-elittle" "csh" "rc")))
+
+        (our-test-error "process-command-line, invalid fixed arguments"
+          parser-condition?
+          (pcl->list/sorted-opts
+           opts
+           '("-e" "medium" "-a" "bogo" "csh" "rc")))
         ))
     )
   )
