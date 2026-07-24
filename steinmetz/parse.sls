@@ -11,6 +11,7 @@
           flag
           option
           parser-condition?
+          ylppa-values
           )
   (import (rnrs base)
           (rnrs conditions)
@@ -46,6 +47,10 @@
   (define (option-string->name s)
      (and (option-string? s)
           (s152:string-drop-while s (lambda (c) (eqv? c #\-)))))
+
+  ;; Return the contents of *vs* and each of *rest* as values.
+  (define (ylppa-values vs . rest)
+    (apply values (append vs rest)))
 
   ;;;; Parser utilities
 
@@ -137,24 +142,30 @@
          (cond ((hashtable-ref opt-tab name #f))
                (else (parser-exception "invalid option" name)))))
 
-      (accum-option
-       (lambda (name ts seeds cont)
-         (let*-values (((opt) (lookup-option-by-name name))
-                       ((arg rest) ((option-argument-parser opt) ts))
-                       (seeds* (apply proc opt arg seeds)))
-           (cont seeds* rest))))
-
+      ;; FIXME: Split this up.
       (parse-loop
        (lambda (seeds ts)
          (if (null? ts)
-             (apply values seeds)
+             (ylppa-values seeds '())
              (let ((t (car ts)) (ts* (cdr ts)))
                (cond ((option-string->name t) =>
                       (lambda (name)
-                        (accum-option name ts* seeds parse-loop)))
+                        (let*-values (((opt)
+                                       (lookup-option-by-name name))
+                                      ((aparser)
+                                       (option-argument-parser opt))
+                                      ((arg ts**) (aparser ts*))
+                                      ((continue . seeds*)
+                                       (apply proc opt arg seeds)))
+                          (if continue
+                              (parse-loop seeds* ts**)
+                              (ylppa-values seeds ts)))))
                      (else
-                      (let-values ((seeds* (apply proc #f t seeds)))
-                        (parse-loop seeds* ts*)))))))))
+                      (let-values (((continue . seeds*)
+                                    (apply proc #f t seeds)))
+                        (if continue
+                            (parse-loop seeds* ts*)
+                            (ylppa-values seeds ts))))))))))
 
       (parse-loop seeds (normalize-command-line opt-tab cli-lis))))
 
@@ -181,11 +192,10 @@
                       (parse-command-line opts
                                           accumulate
                                           cl-list
-                                          '()
                                           '())))
          (values (map (lambda (p) (cons (car p) (reverse (cdr p))))
                       opts)
-                 (reverse opers))))))
+                 opers)))))
 
   ;; If *name* has an association in *alist*, then push *arg*
   ;; onto the cdr of *name*'s pair.  Otherwise, just add
@@ -201,11 +211,10 @@
   ;; FIXME: Uses *opt*'s first name as canonical.  This should
   ;; at least ensure that all occurrences of an option get
   ;; accumulated the same name.
-  (define (accumulate opt arg opts opers)
-     (if opt
-         (values (adjoin/push (car (option-names opt)) arg opts)
-                 opers)
-         (values opts (cons arg opers))))
+  (define (accumulate opt arg opts)
+     (and opt
+          (values #t
+                  (adjoin/push (car (option-names opt)) arg opts))))
 
   ;;;; Syntax
 

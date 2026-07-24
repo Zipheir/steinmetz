@@ -97,11 +97,13 @@
           (guard (con
                    ((parser-condition? con) -1)
                    (else (raise-continuable con)))
-            (parse-command-line
-             opts
-             (lambda (_name _arg n) (+ n 1))
-             '("-v" "-f" "foo" "--verbose" "--file" "bar")
-             0)))
+            (let-values (((total _rest)
+                          (parse-command-line
+                           opts
+                           (lambda (_name _arg n) (values #t (+ n 1)))
+                           '("-v" "-f" "foo" "--verbose" "--file" "bar")
+                           0)))
+              total)))
 
         (test-equal
           "parse-command-line: ignore options, return operands"
@@ -109,14 +111,16 @@
           (guard (con
                    ((parser-condition? con) '())
                    (else (raise-continuable con)))
-            (list-sort
-             string<?
-             (parse-command-line
-              opts
-              (lambda (name arg rands)
-              (if name rands (cons arg rands)))
-              '("-v" "a" "-f" "foo" "--file" "bar" "b")
-              '()))))
+            (let-values (((rands _junk)
+                          (parse-command-line
+                           opts
+                           (lambda (name arg rands)
+                             (if name
+                                 (values #t rands)
+                                 (values #t (cons arg rands))))
+                           '("-v" "a" "-f" "foo" "--file" "bar" "b")
+                           '())))
+              (list-sort string<? rands))))
 
         (test-equal
           "parse-command-line: return options (semi-canonicalized) \
@@ -128,17 +132,15 @@
                    (else (raise-continuable con)))
             (let*-values
              (((cli)
-               '("-v" "a" "-f" "foo" "--file" "bar" "b" "--verbose"))
+               '("-v" "-f" "foo" "--file" "bar" "--verbose" "a" "b"))
               ((opt-alist rands)
                (parse-command-line
                 opts
-                (lambda (opt arg os rs)
-                  (if opt
-                      (let ((name (car (option-names opt))))
-                        (values (cons (cons name arg) os) rs))
-                      (values os (cons arg rs))))
+                (lambda (opt arg os)
+                  (and opt  ; halt at first operand
+                       (let ((name (car (option-names opt))))
+                         (values #t (cons (cons name arg) os)))))
                 cli
-                '()
                 '())))
               (list (list-sort (lambda (p1 p2)
                                  (string<? (car p1) (car p2)))
@@ -193,12 +195,6 @@
             ("bash" "csh"))
           (pcl->list/sorted-opts
            '("-vf" "foo" "--file=bar" "bash" "csh")))
-
-        (test-equal "process-command-line, interleaved operands"
-          '((("file" "foo") ("verbose" #t))
-            ("bash" "ksh" "csh"))
-          (pcl->list/sorted-opts
-           '("bash" "--file" "foo" "ksh" "--verbose" "csh")))
         ))
     )
   )

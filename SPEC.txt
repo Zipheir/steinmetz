@@ -282,16 +282,21 @@ Argument types:
 (: seed *)
 
 A general-purpose parsing procedure similar to SRFI 37's 'args-fold'.
-Folds *proc* over the result of parsing *cl-list* with the parsers
-attached to the *options*.  At each step, *proc* is applied to an
-Option, the option's argument token (a string, or #f if the
+Applies *proc* to options and arguments derived from *cl-list*.
+At each step, *proc* is applied to an
+Option, the option's argument value (or #f if the
 option has no argument), and the current seeds.  For example, if the
 first two elements of *cl-list* are "-f" and "foo", then *proc* will
 be invoked as ‘(proc f-opt "foo")’, where *f-opt* is the Option whose
-names include ‘f’.
+names include ‘f’.  *proc* is expected to return one or more values,
+the first of which is interpreted as a boolean indicating whether to
+keep parsing: if it is false, *parse-command-line* halts immediately,
+returning the current seeds and the remaining suffix of *cl-list* as
+multiple values.
 
 The *seed* arguments are used as the initial seeds, and
-the values returned by *proc* are used as the seeds for the next step.
+the remaining values returned by *proc* (those after the "keep
+parsing?" boolean) are used as the seeds for the next step.
 
 If a token is encountered which is not an option or an option’s
 argument, it is passed as the second argument to *proc*, and *proc*'s
@@ -300,4 +305,4 @@ of *cl-list* is "frob", then *proc* will be invoked as ‘(proc #f
 "frob")’.
 
 *parse-command-line* returns the values returned by the final
-invocation of *proc*.
+invocation of *proc*, followed by the remaining suffix of *cl-list*.
