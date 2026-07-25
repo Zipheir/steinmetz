@@ -42,30 +42,30 @@
       (let ((opts (options
                     (option (f file) FILE "input file")
                     (flag (v)))))
-        (test-assert "options returns a list"
+        (test-assert "returns a list"
           (list? opts))
 
         (let ((opt (find-option-by-names '("f" "file") opts)))
           ;; If we found opt, it must have the expected names.
-          (test-assert "names of option created by 'options' (1)"
+          (test-assert "names of option (1)"
             (option? opt))
 
-          (test-equal "argument name of option created by 'options' (1)"
+          (test-equal "argument name of option (1)"
             'FILE
             (option-argument-name opt))
 
-          (test-equal "help text of option created by 'options' (1)"
+          (test-equal "help text of option (2)"
             "input file"
             (option-get-property opt 'help)))
 
         (let ((opt (find-option-by-names '("v") opts)))
-          (test-assert "names of option created by 'options' (2)"
+          (test-assert "names of option (2)"
             (option? opt))
 
-          (test-assert "argument name of flag created by 'options'"
+          (test-assert "argument name of flag"
             (not (option-argument-name opt)))
 
-          (test-assert "help text of option created by 'options' (2)"
+          (test-assert "help text of option (2)"
             (not (option-get-property opt 'help))))
         ))
 
@@ -75,18 +75,18 @@
                                   values
                                   '((help . "output file")
                                     (animal . "badger")))))
-        (test-assert "'make-cli-option' returns an option"
+        (test-assert "returns an option"
           (option? opt))
 
-        (test-equal "names of option created by 'make-cli-option'"
+        (test-equal "names of option"
           '("o" "output")
           (option-names opt))
 
-        (test-equal "arg. name of option created by 'make-cli-option'"
+        (test-equal "argument name of option"
           'FILE
           (option-argument-name opt))
 
-        (test-equal "properties of option created by 'make-cli-option'"
+        (test-equal "properties of option"
           '("output file" "badger")
           (list (option-get-property opt 'help)
                 (option-get-property opt 'animal)))))
@@ -95,14 +95,14 @@
       (let ((opt (make-cli-flag '("v" "verbose")
                                 '((help . "verbose output")
                                   (animal . "badger")))))
-        (test-assert "'make-cli-flag' returns an option"
+        (test-assert "returns an option"
           (option? opt))
 
-        (test-equal "names of option created by 'make-cli-flag'"
+        (test-equal "names of option"
           '("v" "verbose")
           (option-names opt))
 
-        (test-equal "properties of option created by 'make-cli-flag'"
+        (test-equal "properties of option"
           '("verbose output" "badger")
           (list (option-get-property opt 'help)
                 (option-get-property opt 'animal)))))
