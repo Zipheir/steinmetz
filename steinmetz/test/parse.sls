@@ -111,7 +111,7 @@
       (let ((opts (options
                     (option (f file) FILE)
                     (flag (v verbose)))))
-        (test-eqv "parse-command-line: count options, ignore operands"
+        (test-eqv "count options, ignore operands"
           4
           (guard (con
                    ((parser-condition? con) -1)
@@ -125,7 +125,7 @@
               total)))
 
         (test-equal
-          "parse-command-line: ignore options, return operands (1)"
+          "ignore options, return operands (1)"
           '("a" "b")
           (guard (con
                    ((parser-condition? con) '())
@@ -142,7 +142,7 @@
               (list-sort string<? rands))))
 
         (test-equal
-          "parse-command-line: ignore options, return operands (2)"
+          "ignore options, return operands (2)"
           '("a" "--file" "bar" "b")
           (guard (con
                    ((parser-condition? con) '())
@@ -159,8 +159,7 @@
               (reverse rands))))
 
         (test-equal
-          "parse-command-line: return options (semi-canonicalized) \
-           and operands"
+          "return options (semi-canonicalized) and operands"
           '((("f" . "bar") ("f" . "foo") ("v" . #t) ("v" . #t))
             ("a" "b"))
           (guard (con
@@ -208,7 +207,7 @@
           (pcl->list/sorted-opts opts
                                  '("--file" "foo" "bash" "ksh" "csh")))
 
-        (test-equal "process-command-line, numeric flag"
+        (test-equal "numeric flag"
           '((("1" #t) ("file" "foo"))
             ("bash" "ksh" "csh"))
           (pcl->list/sorted-opts
@@ -216,24 +215,24 @@
            '("--file" "foo" "-1" "bash" "ksh" "csh")))
 
         (test-equal
-          "process-command-line, duplicate options"
+          "duplicate options"
           '((("1" #t) ("file" "foo" "bar") ("verbose" #t))
             ("bash"))
           (pcl->list/sorted-opts
            opts
            '("--file" "foo" "-v" "-f" "bar" "-1" "bash")))
 
-        (test-equal "process-command-line, clusters"
+        (test-equal "clusters"
           '((("file" "foo") ("verbose" #t))
             ("bash" "csh"))
           (pcl->list/sorted-opts opts '("-vf" "foo" "bash" "csh")))
 
-        (test-equal "process-command-line, '=' syntax"
+        (test-equal "'=' syntax"
           '((("file" "foo"))
             ("bash" "csh"))
           (pcl->list/sorted-opts opts '("--file=foo" "bash" "csh")))
 
-        (test-equal "process-command-line, clusters & '=' syntax"
+        (test-equal "clusters & '=' syntax"
           '((("file" "foo" "bar") ("verbose" #t))
             ("bash" "csh"))
           (pcl->list/sorted-opts
@@ -241,7 +240,7 @@
            '("-vf" "foo" "--file=bar" "bash" "csh")))
 
         (test-equal
-          "process-command-line, end-of-options symbol (--)"
+          "end-of-options symbol (--)"
           '((("file" "foo"))
             ("-v" "-f" "bar" "-1" "bash"))
           (pcl->list/sorted-opts
@@ -249,7 +248,7 @@
            '("--file" "foo" "--" "-v" "-f" "bar" "-1" "bash")))
 
         (test-equal
-          "process-command-line, -- argument shouldn't end opt. parsing"
+          "-- argument shouldn't end opt. parsing"
           '((("1" #t) ("file" "foo" "--") ("verbose" #t))
             ("bash"))
           (pcl->list/sorted-opts
@@ -274,21 +273,21 @@
                                                     "merge"
                                                     "bubble"
                                                     "bogo"))))))
-        (test-equal "process-command-line, valid fixed arguments (1)"
+        (test-equal "valid fixed arguments (1)"
           '((("a" "bubble") ("e" "big"))
             ("csh" "rc"))
           (pcl->list/sorted-opts
            opts
            '("-e" "big" "-a" "bubble" "csh" "rc")))
 
-        (test-equal "process-command-line, valid fixed arguments (2)"
+        (test-equal "valid fixed arguments (2)"
           '((("a" "merge") ("e" "little"))
             ("csh" "rc"))
           (pcl->list/sorted-opts
            opts
            '("--sort-algorithm=merge" "-elittle" "csh" "rc")))
 
-        (our-test-error "process-command-line, invalid fixed arguments"
+        (our-test-error "invalid fixed arguments"
           parser-condition?
           (pcl->list/sorted-opts
            opts
