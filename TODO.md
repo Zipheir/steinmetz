@@ -31,7 +31,7 @@ This file may be out of date. Don’t take it seriously.
 
 * ✓ Support `--`.
 
-* Support `--` as an argument.
+* ✓ Support `--` as an argument.
 
 * More documentation-formatting features?
 

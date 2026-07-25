@@ -248,10 +248,6 @@
            opts
            '("--file" "foo" "--" "-v" "-f" "bar" "-1" "bash")))
 
-        (test-expect-fail
-         (test-match-name
-          "process-command-line, -- argument shouldn't end opt. parsing"))
-
         (test-equal
           "process-command-line, -- argument shouldn't end opt. parsing"
           '((("1" #t) ("file" "foo" "--") ("verbose" #t))
@@ -262,7 +258,7 @@
 
         (our-test-error "parser exception on missing argument"
           parser-condition?
-          (parse-command-line opts '("--file")))
+          (process-command-line opts '("--file")))
         )
 
       (let ((opts

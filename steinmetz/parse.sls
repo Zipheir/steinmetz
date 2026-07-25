@@ -32,15 +32,9 @@
   (define (option-names? x)
     (and (list? x) (s1:every string? x)))
 
-
-  ;; TODO: Tighten up (use a reg. ex.)
   (define (option-string? s)
     (and (not (equal? s ""))
          (eqv? #\- (string-ref s 0))))
-
-  ;; An argument is anything that doesn't look like an option.
-  (define (argument-string? s)
-    (not (option-string? s)))
 
   ;; If *s* is a string describing a long or short option,
   ;; return its name as a symbol. Otherwise, return #f.
@@ -99,15 +93,15 @@
                               (s152:string-join allowed-args ", "))))
          (argument-parser
           (lambda (tokens)
-            (let ((t (car tokens)) (rest (cdr tokens)))
-              (if (argument-string? t)
+            (if (null? tokens)
+                (parser-exception "missing option argument" names)
+                (let ((t (car tokens)) (rest (cdr tokens)))
                   (if (or (not allowed-args) (member t allowed-args))
                       (values (conv t) rest)
                       (parser-exception invalid-arg-message
                                         (car names)
-                                        t))
-                  (parser-exception "missing option argument"
-                                    names))))))
+                                        t)))))))
+
          (make-option names
                       arg-name
                       (if arg-name argument-parser flag-parser)
