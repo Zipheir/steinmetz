@@ -32,6 +32,13 @@
     <h1>steinmetz</h1>
     <h2>A Scheme command-line-parsing library</h2>
 
+    <h2>Source</h2>
+
+    <p><a href="https://github.com/Zipheir/steinmetz">The R6RS version
+      of steinmetz is on GitHub.</a>  In addition to the R6RS standard
+      libraries, it depends on SRFIs 1, 115, and 152.  SRFI 64 is
+      required to run the included tests.</p>
+
     <h2>Using steinmetz</h2>
 
     <p>There are three libraries of general utility:</p>
@@ -204,7 +211,7 @@
 
     <p>Most options include a 'help' property associated with a string
       describing the option.</p>
-    
+
     <h4>Core procedures</h4>
 
     <div class="proc-spec">
@@ -217,10 +224,10 @@
       <dl>
         <dt><var>names</var></dt>
         <dd>A list of strings.</dd>
-        
+
         <dt><var>argument-name</var></dt>
         <dd>A symbol or <code>#f</code></dd>
-        
+
         <dt><var>argument-parser</var></dt>
         <dd>
           <p>A procedure that accepts a single string-list
@@ -352,92 +359,119 @@
       components.</p>
     </div>
 
-<p>(parser-condition? obj) → boolean
+    <div class="proc-spec">
+      <p><code>(parser-condition? <var>obj</var>)</code> → boolean</p>
 
-<p>True of <var>obj</var> is a condition raised by <code>parser-exception</code>.
+      <p>True of <var>obj</var> is a condition raised by
+        <code>parser-exception</code>.</p>
+    </div>
 
+    <div class="proc-spec">
+      <p>(process-command-line <var>options</var>
+        [<var>cl-list</var>])</code> → [alist, list]</p>
 
-<p>(process-command-line options [cl-list]) -> [alist, list]
+      <p>A easy-to-use high-level parsing procedure.
+        <var>options</var> is a list of Option objects.  Parses
+        <var>cl-list</var> (a list of strings, or the value of
+        <code>(cdr (command-line))</code> by default) and returns
+        two values: an alist associating the name of each option
+        encountered (as a string) with a list of arguments, and a
+        list of tokens unassociated with any of the options (the
+        “operands”). The order of <var>cl-list</var> is preserved
+        in the operand list and in each option’s argument list, but
+        the order of the options-and-arguments alist is
+        unspecified.</p>
 
-<p>A easy-to-use high-level parsing procedure.  <var>options</var> is a list of
-Option objects.  Parses <var>cl-list</var> (a list of strings, or the value of
-<code>(cdr (command-line))</code> by default) and returns two values: an alist
-associating the name of each option encountered (as a string) with a list of
-arguments, and
-a list of tokens unassociated with any of the options (the “operands”).
-The order of <var>cl-list</var> is preserved in the operand list and in each
-option’s argument list, but the order of the options-and-arguments
-alist is unspecified.
+      <p>If an unknown option is encountered while parsing, an
+        object satisfying <code>parser-condition?</code> is raised
+        continuably.</p>
 
-<p>If an unknown option is encountered while parsing, an object satisfying
-<code>parser-condition?</code> is raised continuably.
+      <h4>Example</h4>
 
-<p>Example:
+      <pre class="example"><code>(let ((opts (options
+             (option (f) FILE "input file")
+             (flag (v) "verbose output")))
+      (cl '("-f" "file1" "-v" "-f" "file2" "frobnitz")))
+  (process-command-line opts cl))
 
-    (let ((opts (options
-                  (option (f) FILE "input file")
-                  (flag (v) "verbose output")))
-          (cl '("-f" "file1" "-v" "-f" "file2" "frobnitz")))
-      (process-command-line opts cl))
+⇒ (("v" #t) ("f" "file1" "file2"))
+  ("frobnitz")</code></pre>
 
-    ⇒ (("v" #t) ("f" "file1" "file2"))
-      ("frobnitz")
+      <p>If an option has the <code>allowed-arguments</code> property
+        and its associated value is a list of strings, then only
+        arguments from that list will be considered valid.  Others will
+        raise parser exceptions.  (The test is done before an option’s
+        argument converter is applied to the argument string.)</p>
 
-<p>If an option has the <code>allowed-arguments</code> property and its associated
-value is a list of strings, then only arguments from that list will
-be considered valid.  Others will raise parser exceptions.  (The test
-is done before an option’s argument converter is applied to the
-argument string.)
+      <h4>Example</h4>
 
-Example:
+      <pre class="example"><code>(let ((opts
+       (list (make-option '("e")
+                          'ENDIANNESS
+                          string->symbol
+                          '((allowed-arguments "big" "little"))))))
+  (parse-command-line opts '("-e" "little" "foo"))
+  ; ⇒ (("-e" "little")) ("foo")
+  (parse-command-line opts '("-e" "medium" "foo")))
+  ; parser exception: invalid argument "medium"</code></pre>
 
-    (let ((opts
-           (list (make-option '("e")
-                              'ENDIANNESS
-                              string->symbol
-                              '((allowed-arguments "big" "little"))))))
-      (parse-command-line opts '("-e" "little" "foo"))
-      ; ⇒ (("-e" "little")) ("foo")
-      (parse-command-line opts '("-e" "medium" "foo")))
-      ; parser exception: invalid argument "medium"
+      <p>FIXME: Flags aren’t treated specially at the moment, so
+        <var>n</var> appearances of a single flag will result in a list
+        of <var>n</var> <code>#t</code> values.</p>
+    </div>
 
-<p>FIXME: Flags aren't treated specially at the moment, so N appearances
-of a single flag will result in a list of N #t values.
+    <div class="proc-spec">
+      <p><code>(parse-command-line <var>options</var> <var>proc</var>
+        <var>cl-list</var> <var>seed</var> …)</code> → *</p>
 
+      <p>Argument types:</p>
 
-<p>(parse-command-line options proc cl-list seed ...) → *
+      <dl>
+        <dt><var>options</var></dt>
+        <dd>A list of Options.</dd>
 
-<p>Argument types:
+        <dt><var>proc</var></dt>
+        <dd>A procedure as described below.</dd>
 
-(: options (list Option))
-(: proc (procedure))
-(: cl-list (list string))
-(: seed *)
+        <dt><var>cl-list</var></dt>
+        <dd>A list of strings.</dd>
 
-<p>A general-purpose parsing procedure similar to SRFI 37's 'args-fold'.
-Applies <var>proc</var> to options and arguments derived from <var>cl-list</var>.
-At each step, <var>proc</var> is applied to an
-Option, the option's argument value (or #f if the
-option has no argument), and the current seeds.  For example, if the
-first two elements of <var>cl-list</var> are "-f" and "foo", then <var>proc</var> will
-be invoked as <code>(proc f-opt "foo")</code>, where <var>f-opt</var> is the Option whose
-names include <code>f</code>.  <var>proc</var> is expected to return one or more values,
-the first of which is interpreted as a boolean indicating whether to
-keep parsing: if it is false, <var>parse-command-line</var> halts immediately,
-returning the current seeds and the remaining suffix of <var>cl-list</var> as
-multiple values.
+        <dt><var>seed</var></dt>
+        <dd>An arbitrary value.</dd>
+      </dl>
 
-<p>The <var>seed</var> arguments are used as the initial seeds, and
-the remaining values returned by <var>proc</var> (those after the "keep
-parsing?" boolean) are used as the seeds for the next step.
+      <p>A general-purpose parsing procedure similar to SRFI 37's
+        <code>args-fold</code>. Applies <var>proc</var> to options
+        and arguments derived from <var>cl-list</var>. At each step,
+        <var>proc</var> is applied to an Option, the option's argument
+        value (or <code>#f</code> if the option has no argument), and
+        the current seeds.  For example, if the first two elements of
+        <var>cl-list</var> are <code>"-f"</code> and <code>"foo"</code>,
+        then <var>proc</var> will be invoked as <code>(proc f-opt
+        "foo")</code>, where <var>f-opt</var> is the Option whose names
+        include <code>f</code>.  <var>proc</var> is expected to return
+        one or more values, the first of which is interpreted as a
+        boolean indicating whether to keep parsing: if it is false,
+        <var>parse-command-line</var> halts immediately, returning the
+        current seeds and the remaining suffix of <var>cl-list</var>
+        as multiple values.</p>
 
-<p>If a token is encountered which is not an option or an option’s
-argument, it is passed as the second argument to <var>proc</var>, and <var>proc</var>'s
-first (option) argument will be #f.  For example, if the first element
-of <var>cl-list</var> is "frob", then <var>proc</var> will be invoked as <code>(proc #f
-"frob")</code>.
+      <p>The <var>seed</var> arguments are used as the initial
+        seeds, and the remaining values returned by <var>proc</var>
+        (those after the “keep parsing?” boolean) are used as the
+        seeds for the next step.</p>
 
-<p><var>parse-command-line</var> returns the values returned by the final
-invocation of <var>proc</var>, followed by the remaining suffix of <var>cl-list</var>.
+      <p>If a token is encountered which is not an option or
+        an option’s argument, it is passed as the second argument
+        to <var>proc</var>, and <var>proc</var>’s first (option)
+        argument will be <code>#f</code>.  For example, if the first
+        element of <var>cl-list</var> is <code>"frob"</code>, then
+        <var>proc</var> will be invoked as
+        <code>(proc #f "frob")</code>.</p>
+
+      <p><var>parse-command-line</var> returns the values returned
+        by the final invocation of <var>proc</var>, followed by the
+        remaining suffix of <var>cl-list</var>.</p>
+    </div>
   </body>
 </html>
