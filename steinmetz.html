@@ -1,0 +1,396 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+   "http://www.w3.org/TR/html4/strict.dtd">
+<html lang="en">
+  <head>
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <!--
+    <style type="text/css">
+      div.note {
+          border: solid;
+          margin: 1em;
+          padding-left: 1em;
+          padding-right: 1em;
+      }
+
+      div.proc-spec {
+          margin-top: 30px;
+          margin-bottom: 30px;
+      }
+
+      /* Syntactic variables */
+      var.syn { font-style: normal; }
+      var.syn:before { content: "\27E8"; }
+      var.syn:after { content: "\27E9"; }
+
+      pre.example { margin-left: 2em; }
+    </style>
+    -->
+    <title>steinmetz: A Scheme command-line-parsing library</title>
+  </head>
+
+  <body>
+    <h1>steinmetz</h1>
+    <h2>A Scheme command-line-parsing library</h2>
+
+    <h2>Using steinmetz</h2>
+
+    <p>There are three libraries of general utility:</p>
+
+    <dl>
+      <dt><code>(steinmetz parse)</code></dt>
+      <dd>Exports the two primary parsing procedures and the high-level
+        option-definition forms.  For simple programs, this is all
+        you’ll need.</p>
+
+      <dt><code>(steinmetz options)</code></dt>
+      <dd>Exports the low-level option interface.</dd>
+
+      <dt><code>(steinmetz usage)</code></dt>
+      <dd>Exports <code>display-usage</code>, a procedure for printing
+        formatted usage information drawn from a set of options.</dd>
+    </dd>
+
+    <p>The <code>(steinmetz command-line)</code> is available but
+      probably not very interesting.  It provides a command-line
+      pre-processor which is used by the parsing procedures.</p>
+
+
+    <h2>Options</h2>
+
+    <p>Command-line options are described by the Option record type.
+      The high-level syntactic interface to creating Options will be
+      described first, followed by the high-level procedural interface,
+      and then finally the lower-level core procedures exported by
+      <code>(steinmetz options)</code>.</p>
+
+    <h3>Syntactic interface</h3>
+
+    <p><code>(options <var class="syn">clause</var> …)</code> →
+      (list Option)</p>
+
+    <p>The <code>options</code> form is a convenient interface to the
+       options library.  Each clause describes a single option and is
+       of one of the following forms:</p>
+
+    <pre><code>(flag <var class="syn">name-or-names</var> [<var class="syn">help-text</var>])
+(option <var class="syn">name-or-names</var> [<var class="syn">arg-name</var> [<var class="syn">help-text</var> [<var class="syn">conv</var>]]])</code></pre>
+
+    <p>The <code>(flag …)</code> form describes a boolean flag
+      which takes no arguments; <code>(option …)</code> describes
+      an option taking an argument.
+      <var class="syn">name-or-names</var> is either a string, an
+      identifier, or a list of strings or identifiers, and gives
+      the acceptable forms of an option (with leading dashes
+      omitted).  <var class="syn">arg-name</var> and <var
+      class="syn">conv</var> have the same meaning as they do in
+      make-option.  <var class="syn">help-text</var> is a string
+      describing the option.</p>
+
+    <div class="note">
+      <h4>Note</h4>
+
+      <p>Option names may be written as identifiers for convenience,
+        but will be stored as strings in the actual Option objects.
+        For example,</p>
+
+      <pre class="example"><code>(map option-names (options (flag (v verbose))))
+  ⇒ (("v" "verbose"))</code></pre>
+    </div>
+
+    <p>The acceptable command-line form of each name is determined
+      by its length.  A single-character name like <code>o</code>
+      will be parsed as a “short” option, i.e. <code>-o</code>,
+      while a two-or-more-character name like <code>output</code>
+      will be parsed as a “long” option, i.e.
+      <code>--output</code>.  See
+      <a href="parsing-conventions">Parsing conventions</a> below for
+      more details on how options and their arguments are parsed.</p>
+
+    <p>The value of an <code>options</code> form is a list of option
+      structures representing the CLI options described by its
+      clauses.</p>
+
+    <p>TODO: An exception should be raised if the names of two or more
+      clauses overlap.</p>
+
+    <h4>Example</h4>
+
+    <pre class="example"><code>(define my-opts
+  (options
+   (option (f file)    FILE "input file")
+   (option (k chunk)   NUM  "chunk to operate on" string->number)
+   (flag   (v verbose)      "verbose output")
+   (flag   ("1")            "a numeric option")))</code></pre>
+
+
+    <h3>Procedural interface</h3>
+
+    <h4>High-level</h4>
+
+    <p>These procedures are exported by <code>(steinmetz parse)</code>.
+      They automatically generate parsers and fill in details which
+      users of the <code>(steinmetz options)</code> interface must
+      provide explicitly.</p>
+
+    <div class="proc-spec">
+      <p><code>(make-cli-option <var>names</var>
+        [<var>arg-name</var> [<var>conv-proc</var>
+        [<var>properties</var>]]])</code> → option</p>
+
+    <p>Argument types:</p>
+
+    <dl>
+      <dt><var>names</var></dt>
+      <dd>A list of strings</dd>
+
+      <dt><var>arg-name</var></dt>
+      <dd>A symbol or <code>#f</code>.</dd>
+
+      <dt><var>conv-proc</var></dt>
+      <dd>A procedure taking a single string and returning a single
+        value.</dd>
+
+      <dt><var>properties</var></dt>
+      <dd>A symbol-keyed association list.</dd>
+    </dl>
+
+Returns an Option object describing a command-line option.
+
+<var>names</var> gives the command-line forms of the option, with leading dashes
+omitted.
+
+If <var>arg-name</var> is provided, the command-line option will take a (single)
+required argument.  If it is false, the option will not take an
+argument (and its parser will raise an exception if an argument is
+provided).
+
+If <var>conv-proc</var> is provided, it must be a procedure which accepts a
+single string argument and returns a single value.  <var>conv-proc</var> is
+applied to the value of the option’s command-line argument.
+<var>conv-proc</var> defaults to <code>values</code>.
+
+If <var>properties</var> is provided, it must be a symbol-keyed alist.  Any
+number of arbitrary properties may be added.  (See also “Common
+properties” below.)  <var>properties</var> defaults to an empty list.
+
+The parser generated by <code>make-cli-option</code> will associate a name of the
+option with the value of <code>(<var>conv-proc</var> <var>arg</var>)</code>, where <var>arg</var> is the
+option’s command-line argument, if the option is encountered at all.
+
+TODO: Determine canonical option names.
+
+
+(make-cli-flag names [properties]) → option
+
+A restricted version of <code>make-cli-option</code> for creating “flags”, options
+which take no arguments and are merely present or absent.  <var>names</var> and
+<var>properties</var> have the same types and meanings they do for
+<code>make-cli-option</code>.
+
+The parser generated by <code>make-cli-flag</code> will associate a name of the
+flag with <code>#t</code>, if the flag is encountered at all.
+
+
+##### Common properties
+
+Most options include a 'help' property associated with a string
+describing the option.
+
+
+#### Core procedures
+
+(make-option names argument-name argument-parser properties) → option
+
+Argument types:
+
+(: names (list string))
+(: argument-name (or symbol #f))
+(: argument-parser procedure)
+(: properties (alist symbol *))
+
+Returns a new Option with fields determined by the arguments.
+
+<var>argument-parser</var> must accept a single string-list argument and return
+two values: the value of the option’s argument and a suffix of the list
+argument.  An argument parser should signal a parser exception if its
+input list is invalid.  For example, the following is a valid parser:
+
+    (lambda (tokens)
+      (if (null? tokens)
+          (parser-exception "missing argument" tokens)
+          (values (car tokens) (cdr tokens))))
+
+
+(option-names option) → (list string)
+
+Returns a list of the accepted names of <var>option</var>.
+
+
+(option-argument-name option) → (or symbol #f)
+
+Returns the symbolic name of <var>option</var>’s argument.
+
+
+(option-argument-parser option) → procedure
+
+Returns the argument parser associated with <var>option</var>.
+
+
+(option-properties->alist option) → (alist symbol *)
+
+Returns the properties mapping of <var>option</var> as a symbol-keyed alist.
+Mutating this alist causes undefined behavior: it may or may not be
+<var>option</var>’s internal representation of its properties mapping.
+
+
+(option? obj) → boolean
+
+Returns <code>#t</code> if <var>obj</var> is an Option and <code>#f</code> otherwise.
+
+
+An Option’s property alist can be manipulated with the following
+convenience procedures.
+
+
+(option-get-property option key) → *
+
+Returns the value associated with <var>key</var> (a symbol) in <var>option</var>'s
+property mapping.  If no association exists, returns #f.
+
+
+(option-set-property option key obj) → option
+
+Returns a copy of <var>option</var> with a new property association of
+<var>key</var> to <var>obj</var>.  Any existing association for <var>key</var> is replaced.
+
+
+
+
+## Parsing
+
+### Parsing conventions
+
+A single option may have multiple “short” (single-character) and “long”
+(two-or-more-character) names.  Following tradition (and POSIX), short
+options without arguments followed by a single option that may take an
+argument can be run together.  For example, <code>-ab</code> is equivalent to <code>-a
+-b</code> if the -a option takes no argument.  The argument of a short option
+is either the next token, or the rest of the option string.  e.g.
+<code>-ab</code> is equivalent to <code>-a</code> <code>b</code> (option <code>a</code>, argument <code>b</code>) whenever the
+-a option takes an argument.  (The distinction between option clusters
+and short options with run-in arguments is clear but rather subtle.)
+
+For a long option, the argument is the next token unless an argument
+was supplied as part of the option token, with the two components being
+separated by an <code>=</code> character.  For example, <code>--output=foo.log</code> is
+equivalent to <code>--output foo.log</code>.
+
+Note that “X Windows–style” long options with a single leading dash
+(e.g.  <code>-output</code>) are not supported, since they conflict unavoidably
+with short-option clusters.  Optional arguments complicate cluster
+analysis, but they might be supported at some later date.
+
+The first non-argument occurrence of <code>--</code> terminates option parsing.
+All remaining tokens are treated as arguments.
+
+
+### Procedures
+
+(parser-exception message irritant ...)
+
+Raises a continuable exception indicating that something went wrong
+during command-line parsing.  <var>message</var> must be a string.  The
+<var>irritant</var>s may be anything.  The raised object is a compound condition
+satisfying <code>parser-condition?</code> and including (at least) <code>&message</code> and
+<code>&irritants</code> components.
+
+
+(parser-condition? obj) → boolean
+
+True of <var>obj</var> is a condition raised by <code>parser-exception</code>.
+
+
+(process-command-line options [cl-list]) -> [alist, list]
+
+A easy-to-use high-level parsing procedure.  <var>options</var> is a list of
+Option objects.  Parses <var>cl-list</var> (a list of strings, or the value of
+<code>(cdr (command-line))</code> by default) and returns two values: an alist
+associating the name of each option encountered (as a string) with a list of
+arguments, and
+a list of tokens unassociated with any of the options (the “operands”).
+The order of <var>cl-list</var> is preserved in the operand list and in each
+option’s argument list, but the order of the options-and-arguments
+alist is unspecified.
+
+If an unknown option is encountered while parsing, an object satisfying
+<code>parser-condition?</code> is raised continuably.
+
+Example:
+
+    (let ((opts (options
+                  (option (f) FILE "input file")
+                  (flag (v) "verbose output")))
+          (cl '("-f" "file1" "-v" "-f" "file2" "frobnitz")))
+      (process-command-line opts cl))
+
+    ⇒ (("v" #t) ("f" "file1" "file2"))
+      ("frobnitz")
+
+If an option has the <code>allowed-arguments</code> property and its associated
+value is a list of strings, then only arguments from that list will
+be considered valid.  Others will raise parser exceptions.  (The test
+is done before an option’s argument converter is applied to the
+argument string.)
+
+Example:
+
+    (let ((opts
+           (list (make-option '("e")
+                              'ENDIANNESS
+                              string->symbol
+                              '((allowed-arguments "big" "little"))))))
+      (parse-command-line opts '("-e" "little" "foo"))
+      ; ⇒ (("-e" "little")) ("foo")
+      (parse-command-line opts '("-e" "medium" "foo")))
+      ; parser exception: invalid argument "medium"
+
+FIXME: Flags aren't treated specially at the moment, so N appearances
+of a single flag will result in a list of N #t values.
+
+
+(parse-command-line options proc cl-list seed ...) → *
+
+Argument types:
+
+(: options (list Option))
+(: proc (procedure))
+(: cl-list (list string))
+(: seed *)
+
+A general-purpose parsing procedure similar to SRFI 37's 'args-fold'.
+Applies <var>proc</var> to options and arguments derived from <var>cl-list</var>.
+At each step, <var>proc</var> is applied to an
+Option, the option's argument value (or #f if the
+option has no argument), and the current seeds.  For example, if the
+first two elements of <var>cl-list</var> are "-f" and "foo", then <var>proc</var> will
+be invoked as <code>(proc f-opt "foo")</code>, where <var>f-opt</var> is the Option whose
+names include <code>f</code>.  <var>proc</var> is expected to return one or more values,
+the first of which is interpreted as a boolean indicating whether to
+keep parsing: if it is false, <var>parse-command-line</var> halts immediately,
+returning the current seeds and the remaining suffix of <var>cl-list</var> as
+multiple values.
+
+The <var>seed</var> arguments are used as the initial seeds, and
+the remaining values returned by <var>proc</var> (those after the "keep
+parsing?" boolean) are used as the seeds for the next step.
+
+If a token is encountered which is not an option or an option’s
+argument, it is passed as the second argument to <var>proc</var>, and <var>proc</var>'s
+first (option) argument will be #f.  For example, if the first element
+of <var>cl-list</var> is "frob", then <var>proc</var> will be invoked as <code>(proc #f
+"frob")</code>.
+
+<var>parse-command-line</var> returns the values returned by the final
+invocation of <var>proc</var>, followed by the remaining suffix of <var>cl-list</var>.
+  </body>
+</html>
