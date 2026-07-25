@@ -44,3 +44,6 @@ This file may be out of date. Don’t take it seriously.
 * Completions for bash, etc.
 
 * Property for allowed argument values, e.g. for “enum”-type options.
+
+* Diversify parser errors (missing argument exceptions should be
+  distinguishable from invalid option exceptions, for example).
