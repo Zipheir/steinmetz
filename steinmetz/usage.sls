@@ -3,7 +3,7 @@
 
 (library (steinmetz usage)
   (export format-option-names
-          put-usage)
+          display-usage)
   (import (rnrs base)
           (rnrs control)
           (rnrs io ports)
@@ -21,6 +21,10 @@
     (s1:fold (lambda (s long) (max long (string-length s)))
              0
              strings))
+
+  ;; TODO: Simple paragraph flow-er.
+  (define (wrap-string s width)
+    s)
 
   (define (format-option-names names)
     (let ((dashed (map (lambda (name)
@@ -47,41 +51,58 @@
   ;; this bound is exceeded, the left-column width is set to the max
   ;; allowable and the help text for a too-long is printed on the
   ;; following line.
-  (define (put-option-doc-lines port options)
-    (assert (output-port? port))
-    (assert (and (list? options) (s1:every option? options)))
+  (define (put-option-doc-lines port options width)
     (let* ((indent
             (lambda ()
               (put-string port "  ")))
            (sigs (map format-option-signature options))
+           (left-width (+ 2 (longest-string sigs)))
+           (right-width (- width left-width))
            (helps (map (lambda (opt)
                          (option-get-property opt 'help))
-                       options))
-           (left-width (+ 2 (longest-string sigs))))
+                       options)))
       (for-each
        (lambda (sig help)
          (indent)
          (cond (help
                 (put-string port
                             (s152:string-pad-right sig left-width))
-                (put-string port help))
+                (put-string port (wrap-string help right-width)))
                (else (put-string port sig)))
          (put-char port #\newline))
        sigs
        helps)))
 
+  ;; Maximum width, in characters, of usage output.
+  (define default-width 75)
+
   ;; Writes a usage message to *port*.
-  (define (put-usage port options header footer)
-    (assert (output-port? port))
-    (assert (list? options))
-    (assert (string? header))
-    (assert (string? footer))
-    (when (not (equal? "" header))
-      (put-string port header)
-      (put-char port #\newline))
-    (put-option-doc-lines port options)
-    (when (not (equal? "" footer))
-      (put-string port footer)
-      (put-char port #\newline)))
+  (define display-usage
+    (case-lambda
+      ((options)
+       (display-usage options
+                      (current-output-port)
+                      ""
+                      ""
+                      default-width))
+      ((options port)
+       (display-usage options port "" "" default-width))
+      ((options port header)
+       (display-usage options port header "" default-width))
+      ((options port header footer)
+       (display-usage options port header footer default-width))
+      ((options port header footer width)
+       (assert (output-port? port))
+       (assert (and (list? options) (s1:every option? options)))
+       (assert (string? header))
+       (assert (string? footer))
+       (assert (and (integer? width) (positive? width)))
+       (when (not (equal? "" header))
+         (put-string port header)
+         (put-char port #\newline))
+       (put-option-doc-lines port options width)
+       (when (not (equal? "" footer))
+         (put-string port footer)
+         (put-char port #\newline)))))
 
   )
