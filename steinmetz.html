@@ -47,7 +47,7 @@
       <dt><code>(steinmetz parse)</code></dt>
       <dd>Exports the two primary parsing procedures and the high-level
         option-definition forms.  For simple programs, this is all
-        you’ll need.</p>
+        you’ll need.</dd>
 
       <dt><code>(steinmetz options)</code></dt>
       <dd>Exports the low-level option interface.</dd>
@@ -55,7 +55,7 @@
       <dt><code>(steinmetz usage)</code></dt>
       <dd>Exports <code>display-usage</code>, a procedure for printing
         formatted usage information drawn from a set of options.</dd>
-    </dd>
+    </dl>
 
     <p>The <code>(steinmetz command-line)</code> is available but
       probably not very interesting.  It provides a command-line
@@ -348,14 +348,14 @@
 
     <div class="proc-spec">
       <p><code>(parser-exception <var>message</var>
-        </var>irritant</var> …)</code></p>
+        <var>irritant</var> …)</code></p>
 
       <p>Raises a continuable exception indicating that something went
       wrong during command-line parsing.  <var>message</var> must be a
       string.  The <var>irritant</var>s may be anything.  In the R6RS
       version of steinmetz, the raised object is a compound condition
       satisfying <code>parser-condition?</code> and including (at
-      least) <code>&message</code> and <code>&irritants</code>
+      least) <code>&amp;message</code> and <code>&amp;irritants</code>
       components.</p>
     </div>
 
@@ -367,7 +367,7 @@
     </div>
 
     <div class="proc-spec">
-      <p>(process-command-line <var>options</var>
+      <p><code>(process-command-line <var>options</var>
         [<var>cl-list</var>])</code> → [alist, list]</p>
 
       <p>A easy-to-use high-level parsing procedure.
