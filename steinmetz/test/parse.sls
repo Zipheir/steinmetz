@@ -182,6 +182,19 @@
                                  (string<? (car p1) (car p2)))
                                opt-alist)
                     (list-sort string<? rands)))))
+
+        (our-test-error
+          "parser exception on missing argument"
+          parser-condition?
+          (let ((cl '("--verbose" "--file")))
+            (parse-command-line
+             opts
+             (lambda (opt arg os)
+               (and opt  ; halt at first operand
+                    (let ((name (car (option-names opt))))
+                      (values #t (cons (cons name arg) os)))))
+             cl
+             '())))
         ))
 
     (test-group "process-command-line"
@@ -246,6 +259,10 @@
           (pcl->list/sorted-opts
            opts
            '("--file" "foo" "-v" "-f" "--" "-1" "bash")))
+
+        (our-test-error "parser exception on missing argument"
+          parser-condition?
+          (parse-command-line opts '("--file")))
         )
 
       (let ((opts
