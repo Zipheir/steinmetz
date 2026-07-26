@@ -121,14 +121,6 @@
   ;; Currently, an operand is signaled to *proc* by passing #f as
   ;; the first (option) argument and the token itself as the second
   ;; (argument) argument.  This may be a little too subtle.
-  ;;
-  ;; TODO: Determine how to handle --.  Currently parse-command-line
-  ;; does not treat it specially, since not every program will want
-  ;; that.  Handling it at a higher level, though, is awkward, and
-  ;; every program that *does* want special handling of -- will have to
-  ;; do additional work (as process-command-line does below).  Maybe
-  ;; parse-command-line could take an additional parameter indicating
-  ;; whether to support -- as "operand guard".
   (define (parse-command-line opts proc cli-lis . seeds)
     (assert (and (list? opts) (s1:every option? opts)))
     (assert (procedure? proc))
@@ -150,7 +142,7 @@
          (cond ((hashtable-ref opt-tab name #f))
                (else (parser-exception "invalid option" name)))))
 
-      ;; Have we seen -- yet?
+      ;; Have we seen '--' yet?
       (more-options #t)
 
       ;; FIXME: Split this up.
@@ -186,18 +178,10 @@
   ;;; TODO: Decide on a canonical form for options with multiple names.
   ;;; If -o and --output are names for the same option, then the same
   ;;; option name should be produced for both.
-  ;;;
-  ;;; This would mean restricting the number of names an option can
-  ;;; have (e.g. short, long, or short and long), or explicitly asking
-  ;;; the library user to select a canonical name.  I lean toward the
-  ;;; former, since having multiple names of the same format for a
-  ;;; single option seems confusing in general.
 
   ;; Easy high-level interface.  Parses *cl-list* and returns two
   ;; values: an alist associating each option with its arguments, and
   ;; a list of operands (objects not associated with options).
-  ;;
-  ;; TODO: Support the -- operand guard.  Probably not here, though.
   (define process-command-line
     (case-lambda
       ((opts) (process-command-line opts (cdr (command-line))))
