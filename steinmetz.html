@@ -32,14 +32,48 @@
     <h1>steinmetz</h1>
     <h2>A Scheme command-line-parsing library</h2>
 
-    <h2>Source</h2>
+    <h2>Contents</h2>
+
+    <ol>
+      <li><a href="#sources">Sources</a></li>
+      <li><a href="#using-steinmetz">Using steinmetz</a></li>
+      <li>
+        <a href="#option-type">Option type</a>
+        <ol>
+          <li>
+            <a href="#syntactic-interface">Syntactic interface</a>
+          </li>
+          <li>
+            <a href="#procedural-interface">Procedural interface</a>
+            <ol>
+              <li><a href="#high-level">High-level</a></li>
+              <li>
+                <a href="#common-properties">Common properties</a>
+              </li>
+              <li><a href="#core-procedures">Core procedures</a></li>
+            </ol>
+          </li>
+        </ol>
+      </li>
+      <li>
+        <a href="#parsing">Parsing</a>
+        <ol>
+          <li>
+            <a href="#parsing-conventions">Parsing conventions</a>
+          </li>
+          <li><a href="#parsing-procedures">Procedures</a></li>
+        </ol>
+      </li>
+    </ol>
+
+    <h2 id="sources">Sources</h2>
 
     <p><a href="https://github.com/Zipheir/steinmetz">The R6RS version
       of steinmetz is on GitHub.</a>  In addition to the R6RS standard
       libraries, it depends on SRFIs 1, 115, and 152.  SRFI 64 is
       required to run the included tests.</p>
 
-    <h2>Using steinmetz</h2>
+    <h2 id="using-steinmetz">Using steinmetz</h2>
 
     <p>There are three libraries of general utility:</p>
 
@@ -66,18 +100,18 @@
       pre-processor which is used by the parsing procedures.</p>
 
 
-    <h2>Options</h2>
+    <h2 id="option-type">Option type</h2>
 
-    <p>Command-line options are described by the Option record type.
+    <p>Command-line options are described by the Option type.
       The high-level syntactic interface to creating Options will be
       described first, followed by the high-level procedural interface,
       and then finally the lower-level core procedures exported by
       <code>(steinmetz options)</code>.</p>
 
-    <h3>Syntactic interface</h3>
+    <h3 id="syntactic-interface">Syntactic interface</h3>
 
-    <p><code>(options <var class="syn">clause</var> …)</code> →
-      (list Option)</p>
+    <p id="options-macro"><code>(options <var class="syn">clause</var>
+      …)</code> → (list Option)</p>
 
     <p>The <code>options</code> form is a convenient interface to the
        options library.  Each clause describes a single option and is
@@ -134,9 +168,9 @@
    (flag   ("1")            "a numeric option")))</code></pre>
 
 
-    <h3>Procedural interface</h3>
+    <h3 id="procedural-interface">Procedural interface</h3>
 
-    <h4>High-level</h4>
+    <h4 id="high-level">High-level</h4>
 
     <p>These procedures are exported by <code>(steinmetz parse)</code>.
       They automatically generate parsers and fill in details which
@@ -216,7 +250,7 @@
     <p>Most options include a 'help' property associated with a string
       describing the option.</p>
 
-    <h4>Core procedures</h4>
+    <h4 id="core-procedures">Core procedures</h4>
 
     <div class="proc-spec">
       <p><code>(make-option <var>names</var> <var>argument-name</var>
