@@ -257,17 +257,17 @@
     (syntax-rules (option flag)
       ((opt-clause flag names)
        (make-cli-flag (normalize names)))
-      ((opt-clause flag names docstring-expr)
+      ((opt-clause flag names docstr)
        (make-cli-flag (normalize names)
-                      '((docstring . ,docstring-expr))))
+                      '((docstring . docstr))))
       ((opt-clause option names)
        (make-cli-flag (normalize names) 'X))
       ((opt-clause option names arg-spec)
        (option/arg-spec names arg-spec))
-      ((opt-clause option names arg-spec docstring-expr)
+      ((opt-clause option names arg-spec docstr)
        (option-set-property (option/arg-spec names arg-spec)
                             'docstring
-                            docstring-expr))))
+                            'docstr))))
 
   (define-syntax option/arg-spec
     (syntax-rules ()
