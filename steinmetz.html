@@ -118,8 +118,8 @@
        options library.  Each clause describes a single option and is
        of one of the following forms:</p>
 
-    <pre><code>(flag <var class="syn">name-or-names</var> [<var class="syn">help-text</var>])
-(option <var class="syn">name-or-names</var> [<var class="syn">arg-spec</var> [<var class="syn">help-text</var>]])</code></pre>
+    <pre><code>(flag <var class="syn">name-or-names</var> [<var class="syn">docstring</var>])
+(option <var class="syn">name-or-names</var> [<var class="syn">arg-spec</var> [<var class="syn">docstring</var>]])</code></pre>
 
     <p>The <code>(flag …)</code> form describes a boolean flag
       which takes no arguments; <code>(option …)</code> describes
@@ -127,7 +127,7 @@
       <var class="syn">name-or-names</var> is either a string, an
       identifier, or a list of strings or identifiers, and gives
       the acceptable forms of an option (with leading dashes
-      omitted).  <var class="syn">help-text</var> is a string
+      omitted).  <var class="syn">docstring-text</var> is a string
       describing the option.  <var class="syn">arg-spec</var> describes
       the option’s argument and takes one of the following forms:</p>
 
@@ -275,7 +275,7 @@
       of the steinmetz package:</p>
 
     <dl>
-      <dt><code>help</code></dt>
+      <dt><code>docstring</code></dt>
       <dd>The associated value is a string describing the option.</dd>
 
       <dt><code>default-argument</code></dt>

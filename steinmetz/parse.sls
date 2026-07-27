@@ -115,7 +115,7 @@
   ;; Type-check the values of the typed properties we know about.
   (define (check-known-property-types who properties)
     (let ((prop-preds  ; this list may grow
-           `((help              . ,string?)
+           `((docstring              . ,string?)
              (allowed-arguments . ,list-of-strings?))))
       (for-each (lambda (p)
                   (let ((key (car p)) (val (cdr p)))
@@ -257,17 +257,17 @@
     (syntax-rules (option flag)
       ((opt-clause flag names)
        (make-cli-flag (normalize names)))
-      ((opt-clause flag names help-expr)
+      ((opt-clause flag names docstring-expr)
        (make-cli-flag (normalize names)
-                      '((help . ,help-expr))))
+                      '((docstring . ,docstring-expr))))
       ((opt-clause option names)
        (make-cli-flag (normalize names) 'X))
       ((opt-clause option names arg-spec)
        (option/arg-spec names arg-spec))
-      ((opt-clause option names arg-spec help-expr)
+      ((opt-clause option names arg-spec docstring-expr)
        (option-set-property (option/arg-spec names arg-spec)
-                            'help
-                            help-expr))))
+                            'docstring
+                            docstring-expr))))
 
   (define-syntax option/arg-spec
     (syntax-rules ()

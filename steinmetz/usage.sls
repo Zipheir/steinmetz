@@ -59,7 +59,7 @@
            (left-width (+ 2 (longest-string sigs)))
            (right-width (- width left-width))
            (helps (map (lambda (opt)
-                         (option-get-property opt 'help))
+                         (option-get-property opt 'docstring))
                        options)))
       (for-each
        (lambda (sig help)
