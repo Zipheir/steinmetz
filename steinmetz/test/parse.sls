@@ -59,9 +59,9 @@
             'FILE
             (option-argument-name opt))
 
-          (test-equal "help text of option (1)"
+          (test-equal "docstring of option (1)"
             "input file"
-            (option-get-property opt 'help)))
+            (option-get-property opt 'docstring)))
 
         (let ((opt (find-option-by-names '("v") opts)))
           (test-assert "names of option (2)"
@@ -70,8 +70,8 @@
           (test-assert "argument name of flag"
             (not (option-argument-name opt)))
 
-          (test-assert "help text of option (2)"
-            (not (option-get-property opt 'help))))
+          (test-assert "docstring of option (2)"
+            (not (option-get-property opt 'docstring))))
 
         (let ((opt (find-option-by-names '("e") opts)))
           (test-assert "names of option (3)"
@@ -98,7 +98,7 @@
       (let ((opt (make-cli-option '("o" "output")
                                   'FILE
                                   values
-                                  '((help . "output file")
+                                  '((docstring . "output file")
                                     (animal . "badger")))))
         (test-assert "returns an option"
           (option? opt))
@@ -113,12 +113,12 @@
 
         (test-equal "properties of option"
           '("output file" "badger")
-          (list (option-get-property opt 'help)
+          (list (option-get-property opt 'docstring)
                 (option-get-property opt 'animal)))))
 
     (test-group "make-cli-flag"
       (let ((opt (make-cli-flag '("v" "verbose")
-                                '((help . "verbose output")
+                                '((docstring . "verbose output")
                                   (animal . "badger")))))
         (test-assert "returns an option"
           (option? opt))
@@ -129,7 +129,7 @@
 
         (test-equal "properties of option"
           '("verbose output" "badger")
-          (list (option-get-property opt 'help)
+          (list (option-get-property opt 'docstring)
                 (option-get-property opt 'animal)))))
 
     (test-group "parse-command-line"

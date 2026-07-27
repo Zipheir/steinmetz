@@ -13,7 +13,7 @@
       (let ((opt (make-option '(f file)
                               'FILE
                               values  ; not a real parser
-                              '((help . "input file")))))
+                              '((docstring . "input file")))))
         (test-assert "option satisfies option?"
           (option? opt))
 
@@ -30,13 +30,13 @@
           (option-argument-parser opt))
 
         (test-equal "option-properties->alist"
-          '((help . "input file"))
+          '((docstring . "input file"))
           (option-properties->alist opt))
 
         (test-group "option-get-property"
           (test-equal "existing key"
             "input file"
-            (option-get-property opt 'help))
+            (option-get-property opt 'docstring))
 
           (test-equal "missing key"
             #f
@@ -53,8 +53,8 @@
           (test-equal "change existing key"
             "read from FILE"
             (option-get-property
-             (option-set-property opt 'help "read from FILE")
-             'help))
+             (option-set-property opt 'docstring "read from FILE")
+             'docstring))
           )
         )))
   )
