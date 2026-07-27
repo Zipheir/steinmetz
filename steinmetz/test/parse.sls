@@ -41,6 +41,11 @@
     (test-group "options macro"
       (let ((opts (options
                     (option (f file) FILE "input file")
+                    (option (e) (ENDIANNESS "big" (big little))
+                      "stream endianness")
+                    (option (o output) (FILE "-") "output file")
+                    (option (k) START)
+                    (option (p) (PORT 65536 string->number))
                     (flag (v)))))
         (test-assert "returns a list"
           (list? opts))
@@ -54,7 +59,7 @@
             'FILE
             (option-argument-name opt))
 
-          (test-equal "help text of option (2)"
+          (test-equal "help text of option (1)"
             "input file"
             (option-get-property opt 'help)))
 
@@ -67,6 +72,26 @@
 
           (test-assert "help text of option (2)"
             (not (option-get-property opt 'help))))
+
+        (let ((opt (find-option-by-names '("e") opts)))
+          (test-assert "names of option (3)"
+            (option? opt))
+
+          (test-equal "default argument value of option"
+            "big"
+            (option-get-property opt 'default-argument))
+
+          (test-equal "allowed argument values of option"
+            '("big" "little")
+            (option-get-property opt 'allowed-arguments)))
+
+        (let ((opt (find-option-by-names '("p") opts)))
+          (test-assert "names of option (4)"
+            (option? opt))
+
+          (test-equal "default argument value of option"
+            65536
+            (option-get-property opt 'default-argument)))
         ))
 
     (test-group "make-cli-option"

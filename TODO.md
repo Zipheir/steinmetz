@@ -47,3 +47,5 @@ This file may be out of date. Don’t take it seriously.
 
 * Diversify parser errors (missing argument exceptions should be
   distinguishable from invalid option exceptions, for example).
+
+* ✓ Default arguments.

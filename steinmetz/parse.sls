@@ -28,7 +28,7 @@
 
   ;;;; Type predicates & utility
 
-  (define (option-names? x)
+  (define (list-of-strings? x)
     (and (list? x) (s1:every string? x)))
 
   (define (option-string? s)
@@ -74,17 +74,14 @@
       ((names arg-name conv)
        (make-cli-option names arg-name conv '()))
       ((names arg-name conv props)
-       (assert (option-names? names))
+       (assert (list-of-strings? names))
        (assert (or (symbol? arg-name) (not arg-name)))
        (assert (procedure? conv))
        (assert (list? props))
+       (check-known-property-types 'make-cli-option props)
        (let*
         ((allowed-args
-          (cond ((assoc 'allowed-arguments props) =>
-                 (lambda (p)
-                   (let ((args (cdr p)))
-                     (assert (and (list? args) (s1:every string? args)))
-                     args)))
+          (cond ((assoc 'allowed-arguments props) => cdr)
                 (else #f)))
          (invalid-arg-message
           (and allowed-args
@@ -110,9 +107,26 @@
     (case-lambda
       ((names) (make-cli-flag names '()))
       ((names props)
-       (assert (option-names? names))
+       (assert (list-of-strings? names))
        (assert (list? props))
+       (check-known-property-types 'make-cli-flags props)
        (make-option names #f flag-parser props))))
+
+  ;; Type-check the values of the typed properties we know about.
+  (define (check-known-property-types who properties)
+    (let ((prop-preds  ; this list may grow
+           `((help              . ,string?)
+             (allowed-arguments . ,list-of-strings?))))
+      (for-each (lambda (p)
+                  (let ((key (car p)) (val (cdr p)))
+                    (cond ((assoc key prop-preds) =>
+                           (lambda (q)
+                             (unless ((cdr q) val)
+                               (error who
+                                      "invalid property value"
+                                      key
+                                      val)))))))
+                properties)))
 
   ;;;; Driver
 
@@ -220,15 +234,12 @@
   ;;; clauses overlap.  If we switch to syntax-case, this can be an
   ;;; expand-time exception.
 
-  (define (stringify-names names)
-    (map (lambda (x)
-           (cond ((symbol? x) (symbol->string x))
-                 ((string? x) x)
-                 (else
-                  (assertion-violation 'options
-                                       "invalid option name"
-                                       x))))
-         names))
+  (define (stringify x)
+    (cond ((symbol? x) (symbol->string x))
+          ((string? x) x)
+          (else (assertion-violation 'options
+                                     "not a string or symbol"
+                                     x))))
 
   (define-syntax options
     (syntax-rules ()
@@ -238,28 +249,49 @@
   (define-syntax normalize
     (syntax-rules ()
       ((normalize (name0 . names))
-       (stringify-names '(name0 . names)))
+       (map stringify '(name0 . names)))
       ((normalize name)
-       (stringify-names '(name)))))
+       (map stringify '(name)))))
 
   (define-syntax opt-clause
     (syntax-rules (option flag)
       ((opt-clause flag names)
        (make-cli-flag (normalize names)))
-      ((opt-clause flag names help-str)
-       (make-cli-flag (normalize names) '((help . help-str))))
-      ((opt-clause option names arg)
-       (make-cli-option (normalize names) 'arg))
-      ((opt-clause option names arg help-str)
+      ((opt-clause flag names help-expr)
+       (make-cli-flag (normalize names)
+                      '((help . ,help-expr))))
+      ((opt-clause option names)
+       (make-cli-flag (normalize names) 'X))
+      ((opt-clause option names arg-spec)
+       (option/arg-spec names arg-spec))
+      ((opt-clause option names arg-spec help-expr)
+       (option-set-property (option/arg-spec names arg-spec)
+                            'help
+                            help-expr))))
+
+  (define-syntax option/arg-spec
+    (syntax-rules ()
+      ((option/arg-spec names (arg-name))
+       (make-cli-flag (normalize names) 'arg-name))
+      ((option/arg-spec names (arg-name default))
        (make-cli-option (normalize names)
-                        'arg
+                        'arg-name
                         values
-                        '((help . help-str))))
-      ((opt-clause option names arg help-str conv)
+                        `((default-argument . ,default))))
+      ((option/arg-spec names (arg-name default (id ...)))
        (make-cli-option (normalize names)
-                        'arg
+                        'arg-name
+                        values
+                        `((default-argument . ,default)
+                          (allowed-arguments .
+                           ,(map stringify '(id ...))))))
+      ((option/arg-spec names (arg-name default conv))
+       (make-cli-option (normalize names)
+                        'arg-name
                         conv
-                        '((help . help-str))))))
+                        `((default-argument . ,default))))
+      ((option/arg-spec names arg-name)
+       (make-cli-option (normalize names) 'arg-name))))
 
   (define-syntax flag (syntax-rules ()))
   (define-syntax option (syntax-rules ()))

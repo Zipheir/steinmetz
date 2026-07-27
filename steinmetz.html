@@ -119,7 +119,7 @@
        of one of the following forms:</p>
 
     <pre><code>(flag <var class="syn">name-or-names</var> [<var class="syn">help-text</var>])
-(option <var class="syn">name-or-names</var> [<var class="syn">arg-name</var> [<var class="syn">help-text</var> [<var class="syn">conv</var>]]])</code></pre>
+(option <var class="syn">name-or-names</var> [<var class="syn">arg-spec</var> [<var class="syn">help-text</var>]])</code></pre>
 
     <p>The <code>(flag …)</code> form describes a boolean flag
       which takes no arguments; <code>(option …)</code> describes
@@ -127,15 +127,37 @@
       <var class="syn">name-or-names</var> is either a string, an
       identifier, or a list of strings or identifiers, and gives
       the acceptable forms of an option (with leading dashes
-      omitted).  <var class="syn">arg-name</var> and <var
-      class="syn">conv</var> have the same meaning as they do in
-      make-option.  <var class="syn">help-text</var> is a string
-      describing the option.</p>
+      omitted).  <var class="syn">help-text</var> is a string
+      describing the option.  <var class="syn">arg-spec</var> describes
+      the option’s argument and takes one of the following forms:</p>
+
+    <pre><code><var class="syn">arg-name</var>
+(<var class="syn">arg-name</var> <var class="syn">default</var>)
+(<var class="syn">arg-name</var> <var class="syn">default</var> (<var class="syn">enum</var> …))
+(<var class="syn">arg-name</var> <var class="syn">default</var> <var class="syn">conv</var>)</code></pre>
+
+    <p><var>arg-name</var> is an identifier giving a metalinguistic
+      name for the argument.  <var>default</var> is an expression whose
+      value is used as the value of the argument if the option is
+      omitted.  (If the option is present, an argument is still
+      mandatory.) If the final component of an args-spec is of the form
+      <code>(<var>enum</var> …)</code>, where each <var>enum</var> is
+      an identifier or string, then these describe the only allowed
+      values of an “enumerated” argument.  Otherwise, the final
+      component must be an expression evaluating to a procedure.  The
+      resulting procedure is the converter (see
+      <a href="#make-cli-option"><code>make-cli-option</code></a>) of
+      the new option.</p>
+
+    <p>Rationale: In this simplified interface, argument converters and
+      enumerated arguments are treated as mutually exclusive.
+      Converting symbolic names to non-string values doesn’t seem
+      useful enough to justify additional syntax.</p>
 
     <div class="note">
       <h4>Note</h4>
 
-      <p>Option names may be written as identifiers for convenience,
+      <p>Option names and allowed arguments may be written as identifiers for convenience,
         but will be stored as strings in the actual Option objects.
         For example,</p>
 
@@ -163,8 +185,9 @@
 
     <pre class="example"><code>(define my-opts
   (options
-   (option (f file)    FILE "input file")
-   (option (k chunk)   NUM  "chunk to operate on" string->number)
+   (option (f file)    (FILE "-") "input file")
+   (option (k chunk)   (NUM 0 string->number) "chunk to operate on")
+   (option (e) (ENDIANNESS "big" (big little)) "stream endianess")
    (flag   (v verbose)      "verbose output")
    (flag   ("1")            "a numeric option")))</code></pre>
 
@@ -248,8 +271,21 @@
 
     <h4 id="common-properties">Common properties</h4>
 
-    <p>Most options include a 'help' property associated with a string
-      describing the option.</p>
+    <p>The following properties are used by various steinmetz parts
+      of the steinmetz package:</p>
+
+    <dl>
+      <dt><code>help</code></dt>
+      <dd>The associated value is a string describing the option.</dd>
+
+      <dt><code>default-argument</code></dt>
+      <dd>An arbitrary value used as the value of an option’s argument
+        whenever that option is omitted.</dd>
+
+      <dt><code>allowed-arguments</code></dt>
+      <dd>A list of strings giving the set of valid arguments for an
+        option.</dd>
+    </dl>
 
     <h4 id="core-procedures">Core procedures</h4>
 
