@@ -250,8 +250,6 @@
         <code>(<var>conv-proc</var> <var>arg</var>)</code>, where
         <var>arg</var> is the option’s command-line argument, if the
         option is encountered at all.</p>
-
-      <p>TODO: Determine canonical option names.</p>
     </div>
 
     <div class="proc-spec">
@@ -285,6 +283,11 @@
       <dt><code>allowed-arguments</code></dt>
       <dd>A list of strings giving the set of valid arguments for an
         option.</dd>
+
+      <dt><code>canonical-name</code></dt>
+      <dd>A string giving an option’s preferred name.  This is useful
+        for options that have multiple names.  The canonical name need
+        not be one of an option’s “public” names.</dd>
     </dl>
 
     <h4 id="core-procedures">Core procedures</h4>
@@ -457,6 +460,12 @@
         the order of the options-and-arguments alist is
         unspecified.</p>
 
+      <p>For the keys of the alist return value,
+        <code>process-command-line</code> uses the value of each
+        option’s <code>canonical-name</code> property.  If an option
+        lacks this property the first element of the option’s names
+        list is used.</p>
+
       <p>If an unknown option is encountered while parsing, an
         object satisfying <code>parser-condition?</code> is raised
         continuably.</p>
@@ -481,12 +490,13 @@
       <h4>Example</h4>
 
       <pre class="example"><code>(let ((opts
-       (list (make-option '("e")
+       (list (make-option '("e" "endianness")
                           'ENDIANNESS
                           string->symbol
-                          '((allowed-arguments "big" "little"))))))
+                          '((allowed-arguments "big" "little")
+                            (canonical-name . "endianness"))))))
   (parse-command-line opts '("-e" "little" "foo"))
-  ; ⇒ (("-e" "little")) ("foo")
+  ; ⇒ (("endianness" "little")) ("foo")
   (parse-command-line opts '("-e" "medium" "foo")))
   ; parser exception: invalid argument "medium"</code></pre>
 

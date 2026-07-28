@@ -225,8 +225,9 @@
   ;; accumulated the same name.
   (define (accumulate opt arg opts)
      (and opt
-          (values #t
-                  (adjoin/push (car (option-names opt)) arg opts))))
+          (let ((name (or (option-get-property opt 'canonical-name)
+                          (car (option-names opt)))))
+            (values #t (adjoin/push name arg opts)))))
 
   ;;;; Syntax
 

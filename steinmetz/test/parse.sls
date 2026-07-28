@@ -317,6 +317,19 @@
           (pcl->list/sorted-opts
            opts
            '("-e" "medium" "-a" "bogo" "csh" "rc")))
-        ))
+        )
+
+      (let ((opts (list
+                   (make-cli-option '("O")
+                                    'LEVEL
+                                    string->number
+                                    '((canonical-name .
+                                       "optimization-level"))))))
+        (test-equal "uses the canonical-name property if possible"
+          '((("optimization-level" 2))
+            ("foo.scm"))
+          (pcl->list/sorted-opts opts '("-O2" "foo.scm")))
+        )
+      )
     )
   )
