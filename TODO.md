@@ -49,3 +49,7 @@ This file may be out of date. Don’t take it seriously.
   distinguishable from invalid option exceptions, for example).
 
 * ✓ Default arguments.
+
+* Could `make-cli-option` and `make-cli-flag` be removed?  This would
+  leave the high-level `options` form and the nuts & bolts of
+  `(steinmetz options)`.
