@@ -22,9 +22,11 @@
              0
              strings))
 
+  (define indent-width 2)
+
   ;; TODO: Simple paragraph flow-er.
-  (define (wrap-string s width)
-    s)
+  (define (wrap-string s width indent)
+    (string-append (make-string indent #\space) s))
 
   (define (format-option-names names)
     (let ((dashed (map (lambda (name)
@@ -45,19 +47,14 @@
       (string-append (format-option-names names) " " arg-str)))
 
   ;; Write descriptions of the *options* to *port*.
-  ;;
-  ;; FIXME: Given the tendency of some programs to use very long option
-  ;; names, I think there should be a bound set on *left-width*.  If
-  ;; this bound is exceeded, the left-column width is set to the max
-  ;; allowable and the help text for a too-long is printed on the
-  ;; following line.
   (define (put-option-doc-lines port options width)
     (let* ((indent
             (lambda ()
-              (put-string port "  ")))
+              (put-string port (make-string indent-width #\space))))
+           (nl (lambda () (put-char port #\newline)))
+           (left-width (exact (ceiling (* width 0.4))))
+           (right-width (- width (+ indent-width left-width)))
            (sigs (map format-option-signature options))
-           (left-width (+ 2 (longest-string sigs)))
-           (right-width (- width left-width))
            (helps (map (lambda (opt)
                          (option-get-property opt 'docstring))
                        options)))
@@ -65,11 +62,23 @@
        (lambda (sig help)
          (indent)
          (cond (help
-                (put-string port
-                            (s152:string-pad-right sig left-width))
-                (put-string port (wrap-string help right-width)))
+                (cond ((> (string-length sig) left-width)
+                       (put-string port sig)
+                       (nl)
+                       (put-string port
+                                   (wrap-string help
+                                                right-width
+                                                (+ indent-width
+                                                   left-width))))
+                      (else
+                       ; safe to pad--remember, string-pad truncates!
+                       (put-string port
+                                   (s152:string-pad-right sig
+                                                          left-width))
+                       (put-string port
+                                   (wrap-string help right-width 0)))))
                (else (put-string port sig)))
-         (put-char port #\newline))
+         (nl))
        sigs
        helps)))
 
