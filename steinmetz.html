@@ -185,11 +185,11 @@
 
     <pre class="example"><code>(define my-opts
   (options
-   (option (f file)    (FILE "-") "input file")
-   (option (k chunk)   (NUM 0 string->number) "chunk to operate on")
+   (option (f file) (FILE "-") "input file")
+   (option (k chunk) (NUM 0 string->number) "chunk to operate on")
    (option (e) (ENDIANNESS "big" (big little)) "stream endianess")
-   (flag   (v verbose)      "verbose output")
-   (flag   ("1")            "a numeric option")))</code></pre>
+   (flag (v verbose) "verbose output")
+   (flag ("1") "a numeric option")))</code></pre>
 
 
     <h3 id="procedural-interface">Procedural interface</h3>
@@ -201,7 +201,7 @@
       users of the <code>(steinmetz options)</code> interface must
       provide explicitly.</p>
 
-    <div class="proc-spec">
+    <div class="proc-spec" id="make-cli-option">
       <p><code>(make-cli-option <var>names</var>
         [<var>arg-name</var> [<var>conv-proc</var>
         [<var>properties</var>]]])</code> → option</p>
