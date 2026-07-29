@@ -27,8 +27,6 @@
              0
              strings))
 
-  (define margin-width 2)
-
   ;; Simple one-solution paragraph reflow-er akin to UNIX fmt(1).
   ;;
   ;; Some limitations:
@@ -59,6 +57,7 @@
                      (%lines (+ wlen 1 len) ls (cons w line) rest)))))))
         (map s152:string-join (%lines 0 '() '() words)))))
 
+  ;; Returns a comma-separated list of dashed option names.
   (define (format-option-names names)
     (let ((dashed (map (lambda (name)
                          (if (= (string-length name) 1)
@@ -67,6 +66,8 @@
                        names)))
       (s152:string-join dashed ", ")))
 
+  ;; Returns a "signature" string for *option*, giving its names and
+  ;; a description of its arguments.
   (define (format-option-signature option)
     (let ((names (option-names option))
           (arg-str
@@ -77,14 +78,18 @@
                  (else ""))))
       (string-append (format-option-names names) " " arg-str)))
 
-  ;; Write descriptions of the *options* to *port*.
+  (define column-left-margin-width 2)
+
+  ;; Write descriptions of the *options* to *port*.  Output is split
+  ;; into two columns, with the left column giving the form of each
+  ;; option and the right displaying its docstring.
   ;;
   ;; FIXME: Clean this up.
   (define (put-option-doc-lines port options width)
     (let* ((left-width (exact (ceiling (* width 0.4))))
-           (sig-width (- left-width margin-width))
+           (sig-width (- left-width column-left-margin-width))
            (right-width (- width left-width))
-           (help-width (- right-width margin-width))
+           (help-width (- right-width column-left-margin-width))
            (sigs (map format-option-signature options))
            (helps (map (lambda (opt)
                          (option-get-property opt 'docstring))
@@ -103,13 +108,14 @@
             (lambda (help)
               (let ((lines (string->lines right-width help)))
                 (for-each (lambda (line)
-                            (space-to (+ left-width margin-width))
+                            (space-to (+ left-width
+                                         column-left-margin-width))
                             (put-string port line)
                             (next-line))
                           lines)))))
       (for-each
        (lambda (sig help)
-         (space-to margin-width)
+         (space-to column-left-margin-width)
          (cond (help
                 (cond ((<= (string-length sig) sig-width)
                        (put-string port sig)
