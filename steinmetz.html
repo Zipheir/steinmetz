@@ -64,6 +64,9 @@
           <li><a href="#parsing-procedures">Procedures</a></li>
         </ol>
       </li>
+      <li>
+        <a href="#printing-usage-info">Printing usage information</a>
+      </li>
       <li><a href="#license">License</a></li>
     </ol>
 
@@ -91,7 +94,8 @@
 
       <dt><code>(steinmetz usage)</code></dt>
       <dd>
-        <p>Exports <code>display-usage</code>, a procedure for printing
+        <p>Exports <a href="#put-usage"><code>put-usage</code></a>,
+          a procedure for printing
           formatted usage information drawn from a set of options.</p>
       </dd>
     </dl>
@@ -565,6 +569,78 @@
       <p><var>parse-command-line</var> returns the values returned
         by the final invocation of <var>proc</var>, followed by the
         remaining suffix of <var>cl-list</var>.</p>
+    </div>
+
+    <h2 id="printing-usage-info">Printing usage information</h2>
+
+    <p>The following procedure can be used to document a command-line
+      program using information drawn from a set of Options.</p>
+
+    <div class="proc-spec" id="put-usage">
+      <p><code>(put-usage <var>port</var> <var>options</var>
+        <var>header</var> [<var>footer</var> [<var>width</var>]])
+        → unspecified</p>
+
+      <p>Argument types:</p>
+
+      <dl>
+        <dt><var>port</var></dt>
+        <dd>A textural output port.</dd>
+
+        <dt><var>options</var></dt>
+        <dd>A list of Options.</dd>
+
+        <dt><var>header</var></dt>
+        <dt><var>footer</var></dt>
+        <dd>Strings.  <var>footer</var> defaults to the empty
+          string.</dd>
+
+        <dt><var>width</var></dt>
+        <dd>A positive exact integer.  Currently defaults to 75.</dd>
+      </dl>
+
+      <p>Writes to <var>port</var> the <var>header</var>, followed by a
+        formatted description of the <var>options</var>, followed by
+        <var>footer</var>.  The description of <var>options</var> is
+        columnated and spans at most <var>width</var> characters
+        whenever possible.  <var>header</var> and <var>footer</var> are
+        printed verbatim, i.e. they are not reflowed to
+        <var>width</var>.  (TODO: Consider whether it might better to
+        reflow <var>footer</var>.)</p>
+
+      <h4>Example</h4>
+
+      <p>Note that the exact appearance of <code>put-usage</code>’s
+        output is subject to change.</p>
+
+      <pre class="example"><code>;; From the sox(1) usage, modified.
+;; (SoX is GPLv2 software maintained by Chris Bagwell and SoX
+;; Contributors.)
+(define sox-opts
+  (options
+    (option (buffer) (BYTES 8192) "Set the size of all processing \
+                                   buffers")
+    (flag (clobber) "Don't prompt to overwrite output file")
+    (flag (D no-dither) "Don't dither automatically")
+    (option (dft-min) (NUM 10) "Minimum size (log2) for DFT processing")
+    (flag (G guard) "Use temporary files to guard against clipping")
+    (flag (h help) "Display version number and usage information")
+    (option (replay-gain) (TYPE "off" (track album off))
+      "Apply ReplayGain")))
+
+(put-usage (current-output-port) sox-opts "Usage: sox [options] ...")
+;; Prints:
+Usage: sox [options] ...
+  --buffer BYTES                Set the size of all processing buffers
+  --clobber                     Don't prompt to overwrite output file
+  -D, --no-dither               Don't dither automatically
+  --dft-min NUM                 Minimum size (log2) for DFT processing
+  -G, --guard                   Use temporary files to guard against
+                                clipping
+  -h, --help                    Display version number and usage
+                                information
+  --replay-gain track|album|off
+                                Apply ReplayGain</code></pre>
     </div>
 
     <h2 id="license">License</h2>
