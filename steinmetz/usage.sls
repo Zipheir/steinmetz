@@ -47,7 +47,11 @@
                      (wlen (string-length (car ws)))
                      (rest (cdr ws)))
                  (if (>= (+ wlen 1 len) width)
-                     (%lines 0 (cons line ls) '() ws)
+                     ;; Never add empty lines, even if a one-word
+                     ;; line is overlong.
+                     (if (null? line)
+                         (%lines 0 (cons (list w) ls) '() rest)
+                         (%lines 0 (cons line ls) '() ws))
                      (%lines (+ wlen 1 len) ls (cons w line) rest)))))))
         (map s152:string-join (%lines 0 '() '() words)))))
 
