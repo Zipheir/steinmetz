@@ -2,8 +2,7 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz usage)
-  (export format-option-names
-          display-usage)
+  (export display-usage)
   (import (rnrs base)
           (rnrs control)
           (rnrs io ports)
@@ -11,7 +10,7 @@
           (prefix (srfi :1) s1:)
           (prefix (srfi :115) s115:)
           (prefix (srfi :152) s152:)
-          (prefix (chezscheme) c:)
+          (steinmetz options)
           )
 
   ;;;; Option & usage documentation
@@ -24,7 +23,7 @@
              0
              strings))
 
-  (define indent-width 2)
+  (define margin-width 2)
 
   ;; Simple one-solution paragraph reflow-er akin to UNIX fmt(1).
   ;;
@@ -48,23 +47,9 @@
                      (wlen (string-length (car ws)))
                      (rest (cdr ws)))
                  (if (>= (+ wlen 1 len) width)
-                     (%lines 0 (cons line ls) '() ws)  ; push to next line
+                     (%lines 0 (cons line ls) '() ws)
                      (%lines (+ wlen 1 len) ls (cons w line) rest)))))))
-        (%lines 0 '() '() words))))
-
-  (define (put-wrapped port str width indent)
-    (cond ((<= (string-length str) width)
-           (put-string port (make-string indent))
-           (put-string port str)
-           (newline port))
-          (else
-           (let ((lines (string->lines width str)))
-             (for-each
-              (lambda (words)
-                (put-string port (make-string indent))
-                (put-string port (s152:string-join words))
-                (newline port))
-              lines)))))
+        (map s152:string-join (%lines 0 '() '() words)))))
 
   (define (format-option-names names)
     (let ((dashed (map (lambda (name)
@@ -86,39 +71,50 @@
 
   ;; Write descriptions of the *options* to *port*.
   ;;
-  ;; FIXME: The handling of *width* and *indent* is incorrect: the
-  ;; lines of a help paragraph after the first are printed flush
-  ;; with the left margin (of the whole terminal window).
+  ;; FIXME: Clean this up.
   (define (put-option-doc-lines port options width)
-    (let* ((indent
-            (lambda ()
-              (put-string port (make-string indent-width #\space))))
-           (left-width (exact (ceiling (* width 0.4))))
-           (right-width (- width (+ indent-width left-width)))
+    (let* ((left-width (exact (ceiling (* width 0.4))))
+           (sig-width (- left-width margin-width))
+           (right-width (- width left-width))
+           (help-width (- right-width margin-width))
            (sigs (map format-option-signature options))
            (helps (map (lambda (opt)
                          (option-get-property opt 'docstring))
-                       options)))
+                       options))
+           (column 0)
+           (next-line
+            (lambda ()
+              (newline port)
+              (set! column 0)))
+           (space-to
+            (lambda (col)
+              (do ((c column (+ c 1)))
+                  ((>= c col) (set! column c))
+                (put-char port #\space))))
+           (put-help-wrapped
+            (lambda (help)
+              (let ((lines (string->lines right-width help)))
+                (for-each (lambda (line)
+                            (space-to (+ left-width margin-width))
+                            (put-string port line)
+                            (next-line))
+                          lines)))))
       (for-each
        (lambda (sig help)
-         (indent)
+         (space-to margin-width)
          (cond (help
-                (cond ((> (string-length sig) left-width)
+                (cond ((<= (string-length sig) sig-width)
                        (put-string port sig)
-                       (newline port)
-                       (put-wrapped port
-                                    help
-                                    right-width
-                                    (+ indent-width left-width)))
-                      (else
-                       ; safe to pad--remember, string-pad truncates!
-                       (put-string port
-                                   (s152:string-pad-right sig
-                                                          left-width))
-                       (put-wrapped port help right-width 0))))
+                       (set! column (+ column (string-length sig)))
+                       (space-to left-width)
+                       (put-help-wrapped help))
+                      (else  ; signature is overlong
+                       (put-string port sig)
+                       (next-line)
+                       (put-help-wrapped help))))
                (else
                 (put-string port sig)
-                (newline port))))
+                (next-line))))
        sigs
        helps)))
 
