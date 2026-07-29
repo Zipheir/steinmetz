@@ -2,7 +2,7 @@
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz usage)
-  (export display-usage)
+  (export put-usage)
   (import (rnrs base)
           (rnrs control)
           (rnrs io ports)
@@ -130,21 +130,13 @@
   (define default-width 75)
 
   ;; Writes a usage message to *port*.
-  (define display-usage
+  (define put-usage
     (case-lambda
-      ((options)
-       (display-usage options
-                      (current-output-port)
-                      ""
-                      ""
-                      default-width))
-      ((options port)
-       (display-usage options port "" "" default-width))
-      ((options port header)
-       (display-usage options port header "" default-width))
-      ((options port header footer)
-       (display-usage options port header footer default-width))
-      ((options port header footer width)
+      ((port options header)
+       (put-usage port options header "" default-width))
+      ((port options header footer)
+       (put-usage port options header footer default-width))
+      ((port options header footer width)
        (assert (output-port? port))
        (assert (and (list? options) (s1:every option? options)))
        (assert (string? header))
