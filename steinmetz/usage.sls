@@ -18,6 +18,10 @@
   ;;; Sadly, there is next to nothing portable in the formatted-output
   ;;; area.  This is all rather nuts-&-bolts.
 
+  ;;; FIXME: The formatting procedures should either use a functional
+  ;;; idiom (like string->lines) or an imperative one (like
+  ;;; put-option-doc-lines), not a mix of both.
+
   (define (longest-string strings)
     (s1:fold (lambda (s long) (max long (string-length s)))
              0
