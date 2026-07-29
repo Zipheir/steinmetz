@@ -7,9 +7,11 @@
   (import (rnrs base)
           (rnrs control)
           (rnrs io ports)
+          (rnrs io simple)
           (prefix (srfi :1) s1:)
+          (prefix (srfi :115) s115:)
           (prefix (srfi :152) s152:)
-          (steinmetz options)
+          (prefix (chezscheme) c:)
           )
 
   ;;;; Option & usage documentation
@@ -24,9 +26,45 @@
 
   (define indent-width 2)
 
-  ;; TODO: Simple paragraph flow-er.
-  (define (wrap-string s width indent)
-    (string-append (make-string indent #\space) s))
+  ;; Simple one-solution paragraph reflow-er akin to UNIX fmt(1).
+  ;;
+  ;; Some limitations:
+  ;;
+  ;; Eliminates whitespace between words and discards any non-space
+  ;; whitespace characters.
+  ;;
+  ;; Doesn't produce beautiful output, but the more complex algorithms
+  ;; (like the one used in GNU fmt(1)) would fill twice the current file.
+  (define (string->lines width str)
+    (let ((words (s1:filter (lambda (s) (not (equal? s "")))
+                            (s115:regexp-split (s115:rx (+ whitespace))
+                                               str))))
+      (letrec
+       ((%lines
+         (lambda (len ls line ws)
+           (if (null? ws)
+               (reverse (map reverse (cons line ls)))
+               (let ((w (car ws))
+                     (wlen (string-length (car ws)))
+                     (rest (cdr ws)))
+                 (if (>= (+ wlen 1 len) width)
+                     (%lines 0 (cons line ls) '() ws)  ; push to next line
+                     (%lines (+ wlen 1 len) ls (cons w line) rest)))))))
+        (%lines 0 '() '() words))))
+
+  (define (put-wrapped port str width indent)
+    (cond ((<= (string-length str) width)
+           (put-string port (make-string indent))
+           (put-string port str)
+           (newline port))
+          (else
+           (let ((lines (string->lines width str)))
+             (for-each
+              (lambda (words)
+                (put-string port (make-string indent))
+                (put-string port (s152:string-join words))
+                (newline port))
+              lines)))))
 
   (define (format-option-names names)
     (let ((dashed (map (lambda (name)
@@ -47,11 +85,14 @@
       (string-append (format-option-names names) " " arg-str)))
 
   ;; Write descriptions of the *options* to *port*.
+  ;;
+  ;; FIXME: The handling of *width* and *indent* is incorrect: the
+  ;; lines of a help paragraph after the first are printed flush
+  ;; with the left margin (of the whole terminal window).
   (define (put-option-doc-lines port options width)
     (let* ((indent
             (lambda ()
               (put-string port (make-string indent-width #\space))))
-           (nl (lambda () (put-char port #\newline)))
            (left-width (exact (ceiling (* width 0.4))))
            (right-width (- width (+ indent-width left-width)))
            (sigs (map format-option-signature options))
@@ -64,21 +105,20 @@
          (cond (help
                 (cond ((> (string-length sig) left-width)
                        (put-string port sig)
-                       (nl)
-                       (put-string port
-                                   (wrap-string help
-                                                right-width
-                                                (+ indent-width
-                                                   left-width))))
+                       (newline port)
+                       (put-wrapped port
+                                    help
+                                    right-width
+                                    (+ indent-width left-width)))
                       (else
                        ; safe to pad--remember, string-pad truncates!
                        (put-string port
                                    (s152:string-pad-right sig
                                                           left-width))
-                       (put-string port
-                                   (wrap-string help right-width 0)))))
-               (else (put-string port sig)))
-         (nl))
+                       (put-wrapped port help right-width 0))))
+               (else
+                (put-string port sig)
+                (newline port))))
        sigs
        helps)))
 
