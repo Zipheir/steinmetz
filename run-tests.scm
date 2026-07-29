@@ -7,6 +7,7 @@
 	(prefix (steinmetz test command-line) command-line:)
 	(prefix (steinmetz test options) options:)
 	(prefix (steinmetz test parse) parse:)
+	(prefix (steinmetz test usage) usage:)
 	)
 
 (test-runner-factory custom-test-runner-factory)
@@ -16,5 +17,6 @@
 (options:run-tests)
 (command-line:run-tests)
 (parse:run-tests)
+(usage:run-tests)
 
 (test-end)
