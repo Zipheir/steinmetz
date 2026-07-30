@@ -5,6 +5,7 @@
   (export run-tests)
   (import (rnrs base)
           (rnrs exceptions)
+          (only (rnrs lists) assoc)
           (rnrs sorting)
           (rnrs io simple)
           (prefix (srfi :1) s1:)
@@ -250,6 +251,7 @@
       (let ((opts
              (options
               (option (e) (ENDIANNESS "big" (big little)))
+              (flag (v) "verbosity")
               (option (a sort-algorithm)
                 (ALGORITHM-NAME "quick" (quick merge bubble bogo))))))
         (test-equal "valid fixed arguments (1)"
@@ -271,6 +273,20 @@
           (pcl->list/sorted-opts
            opts
            '("-e" "medium" "-a" "bogo" "csh" "rc")))
+
+        (test-equal "default arguments"
+          "big"
+          (let-values (((ps _rs)
+                        (process-command-line opts '("-a" "bogo"))))
+            (cond ((assoc "e" ps) => cdr)
+                  (else #f))))
+
+        (test-equal "flag is not given a default argument"
+          'nothing
+          (let-values (((ps _rs)
+                        (process-command-line opts '("-a" "bogo"))))
+            (cond ((assoc "v" ps) => cdr)
+                  (else 'nothing))))
         )
       )
     )
