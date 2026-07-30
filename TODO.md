@@ -76,3 +76,6 @@ This file may be out of date. Don’t take it seriously.
 * Could we eliminate the dummy "flag" argument parser?  The parsing
   loop could simply check whether the selected option takes and argument
   and continue if it does not.
+
+* Read dpk’s writings on CLI parsing in the `let-posix`
+  [repository](https://codeberg.org/dpk/let-posix).
