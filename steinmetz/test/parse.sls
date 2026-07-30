@@ -61,7 +61,7 @@
 
           (test-equal "docstring of option (1)"
             "input file"
-            (option-get-property opt 'docstring)))
+            (option-docstring opt)))
 
         (let ((opt (find-option-by-names '("v") opts)))
           (test-assert "names of option (2)"
@@ -71,7 +71,7 @@
             (not (option-argument-name opt)))
 
           (test-assert "docstring of option (2)"
-            (not (option-get-property opt 'docstring))))
+            (not (option-docstring opt))))
 
         (let ((opt (find-option-by-names '("e") opts)))
           (test-assert "names of option (3)"
@@ -79,11 +79,11 @@
 
           (test-equal "default argument value of option"
             "big"
-            (option-get-property opt 'default-argument))
+            (option-default-argument opt))
 
           (test-equal "allowed argument values of option"
             '("big" "little")
-            (option-get-property opt 'allowed-arguments)))
+            (option-allowed-arguments opt)))
 
         (let ((opt (find-option-by-names '("p") opts)))
           (test-assert "names of option (4)"
@@ -91,7 +91,7 @@
 
           (test-equal "default argument value of option"
             65536
-            (option-get-property opt 'default-argument)))
+            (option-default-argument opt)))
         ))
 
     (test-group "parse-command-line"
@@ -250,8 +250,8 @@
       (let ((opts
              (options
               (option (e) (ENDIANNESS "big" (big little)))
-              (option (a) (ALGORITHM-NAME "quick"
-                           (quick merge bubble bogo))))))
+              (option (a sort-algorithm)
+                (ALGORITHM-NAME "quick" (quick merge bubble bogo))))))
         (test-equal "valid fixed arguments (1)"
           '((("a" "bubble") ("e" "big"))
             ("csh" "rc"))

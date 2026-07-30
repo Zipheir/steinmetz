@@ -73,11 +73,11 @@
                     #f))
       ((names arg-name arg-parser docstring cname default allowed udata)
        (assert (util:list-of-strings? names))
-       (assert (symbol? arg-name))
+       (assert (if arg-name (symbol? arg-name) #t))
        (assert (procedure? arg-parser))
-       (assert (and docstring (string? docstring)))
-       (assert (and cname (string? cname)))
-       (assert (and allowed (util:list-of-strings? allowed)))
+       (assert (if docstring (string? docstring) #t))
+       (assert (if cname (string? cname) #t))
+       (assert (if allowed (util:list-of-strings? allowed) #t))
        (make-raw-option names
                         arg-name
                         arg-parser

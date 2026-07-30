@@ -175,12 +175,12 @@
       ((opt-clause flag names)
        (opt-clause flag names #f))
       ((opt-clause flag names docstr)
-       (let ((names* (normalize names)))
-         (make-option names*
+       (let ((nnames (normalize names)))
+         (make-option nnames
                       #f
                       flag-parser
                       docstr
-                      (car names*))))
+                      (car nnames))))
       ((opt-clause option names)
        (opt-clause option names 'X #f))
       ((opt-clause option names arg-spec)
@@ -207,14 +207,16 @@
                     docstr
                     (car nnames)
                     default
-                    '(id ...)))
+                    (map stringify '(id ...))))
       ((option/arg-spec nnames (arg-name default conv) docstr)
        (make-option nnames
                     'arg-name
                     (make-argument-parser (car nnames) conv #f)
                     docstr
                     (car nnames)
-                    default))))
+                    default))
+      ((option/arg-spec nnames arg-name docstr)
+       (option/arg-spec nnames (arg-name #f) docstr))))
 
   (define-syntax flag (syntax-rules ()))
   (define-syntax option (syntax-rules ()))

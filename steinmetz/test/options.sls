@@ -10,15 +10,59 @@
 
   (define (run-tests)
     (test-group "(steinmetz options)"
-      (let ((opt (make-option '(f file)
-                              'FILE
-                              values  ; not a real parser
-                              '((docstring . "input file")))))
-        (test-assert "option satisfies option?"
-          (option? opt))
+      (test-assert "make-option (3 arguments)"
+        (option? (make-option '("f" "file") 'FILE values)))
 
+      (test-assert "make-option (4 arguments)"
+        (option? (make-option '("f" "file")
+                              'FILE
+                              values
+                              "foo")))
+
+      (test-assert "make-option (5 arguments)"
+        (option? (make-option '("f" "file")
+                              'FILE
+                              values
+                              "foo"
+                              "f")))
+
+      (test-assert "make-option (6 arguments)"
+        (option? (make-option '("f" "file")
+                              'FILE
+                              values
+                              "foo"
+                              "f"
+                              #t)))
+
+      (test-assert "make-option (7 arguments)"
+        (option? (make-option '("f" "file")
+                              'FILE
+                              values
+                              "foo"
+                              "f"
+                              #t
+                              '("a"))))
+
+      (test-assert "make-option (8 arguments)"
+        (option? (make-option '("f" "file")
+                              'FILE
+                              values
+                              "foo"
+                              "f"
+                              #t
+                              '("a")
+                              'z)))
+
+      (let ((opt (make-option '("f" "file")
+                              'FILE
+                              values
+                              "foo"
+                              "f"
+                              #t
+                              '("a")
+                              'z)))
         (test-equal "option-names"
-          '(f file)
+          '("f" "file")
           (option-names opt))
 
         (test-equal "option-argument-name"
@@ -29,32 +73,25 @@
           values
           (option-argument-parser opt))
 
-        (test-equal "option-properties->alist"
-          '((docstring . "input file"))
-          (option-properties->alist opt))
+        (test-equal "option-docstring"
+          "foo"
+          (option-docstring opt))
 
-        (test-group "option-get-property"
-          (test-equal "existing key"
-            "input file"
-            (option-get-property opt 'docstring))
+        (test-equal "option-canonical-name"
+          "f"
+          (option-canonical-name opt))
 
-          (test-equal "missing key"
-            #f
-            (option-get-property opt 'flabs))
-          )
+        (test-equal "option-default-argument"
+          #t
+          (option-default-argument opt))
 
-        (test-group "option-set-property"
-          (test-equal "add new key"
-            "hello"
-            (option-get-property
-             (option-set-property opt 'flabs "hello")
-             'flabs))
+        (test-equal "option-allowed-arguments"
+          '("a")
+          (option-allowed-arguments opt))
 
-          (test-equal "change existing key"
-            "read from FILE"
-            (option-get-property
-             (option-set-property opt 'docstring "read from FILE")
-             'docstring))
-          )
-        )))
+        (test-equal "option-user-data"
+          'z
+          (option-user-data opt))
+        )
+      ))
   )

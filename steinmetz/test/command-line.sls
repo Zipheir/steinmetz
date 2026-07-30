@@ -22,12 +22,12 @@
                     (hashtable-set! opt-tab
                                     (car (option-names opt))
                                     opt))
-                  (list (make-option '("f") 'ARG dummy '())
-                        (make-option '("a") #f dummy '())
-                        (make-option '("b") #f dummy '())
-                        (make-option '("c") 'ARG dummy '())
-                        (make-option '("1") #f dummy '())
-                        (make-option '("long") 'ARG dummy '())))
+                  (list (make-option '("f") 'ARG dummy)
+                        (make-option '("a") #f dummy)
+                        (make-option '("b") #f dummy)
+                        (make-option '("c") 'ARG dummy)
+                        (make-option '("1") #f dummy)
+                        (make-option '("long") 'ARG dummy)))
 
         (let ((tokens '("-f" "foo" "-a" "-1" "--long" "bar" "bash")))
           (test-equal "command line that needs no processing"
