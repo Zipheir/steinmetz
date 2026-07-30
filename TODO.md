@@ -48,7 +48,14 @@ This file may be out of date. Don’t take it seriously.
 * Diversify parser errors (missing argument exceptions should be
   distinguishable from invalid option exceptions, for example).
 
-* ✓ Default arguments.
+* Default arguments.  Parsing support still TODO.
+
+  PROBLEM: These can be supported only clumsily by
+  `process-command-line` in its current form.  (Either specially-tagged
+  default arguments are added to the options alist at the beginning and
+  the tags are removed later, or the alist is post-processed to add the
+  omitted options.) They can’t be supported at all with
+  `parse-command-line`.
 
 * Could `make-cli-option` and `make-cli-flag` be removed?  This would
   leave the high-level `options` form and the nuts & bolts of
@@ -57,3 +64,8 @@ This file may be out of date. Don’t take it seriously.
 * Could we eliminate the dummy "flag" argument parser?  The parsing
   loop could simply check whether the selected option takes and argument
   and continue if it does not.
+
+* Another big change: redesign the option type to have a mutable
+  “value” field which is set during parsing (with
+  `process-command-line`, at least).  This would allow better handling
+  of default arguments, but it adds side effects to the parsing loop.
