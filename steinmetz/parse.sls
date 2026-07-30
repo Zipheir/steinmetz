@@ -120,10 +120,6 @@
 
       (parse-loop seeds (normalize-command-line opt-tab cli-lis))))
 
-  ;;; TODO: Decide on a canonical form for options with multiple names.
-  ;;; If -o and --output are names for the same option, then the same
-  ;;; option name should be produced for both.
-
   ;; Easy high-level interface.  Parses *cl-list* and returns two
   ;; values: an alist associating each option with its arguments, and
   ;; a list of operands (objects not associated with options).
