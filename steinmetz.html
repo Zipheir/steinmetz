@@ -233,7 +233,8 @@
         <dt><var>arg-default</var></dt>
         <dd><p>An arbitrary value used as the value or an option’s
           argument whenever that option is omitted.  (If
-          <var>arg-name</var> is <code>#f</code>, this field is
+          <var>arg-name</var> is <code>#f</code>, the default-value
+          field is
           ignored by steinmetz procedures.  This avoids the ambiguity
           that would otherwise surround a default argument value of
           <code>#f</code>.)</p></dd>
@@ -288,14 +289,14 @@
         <var>option</var>.</p>
     </div>
 
-    <div class="proc-spec">
+    <div class="proc-spec" id="option-allowed-arguments">
       <p><code>(option-allowed-arguments <var>option</var>)</code>
         → (or (list string) <code>#f</code>)</p>
 
       <p>Returns the list of valid arguments for <var>option</var>.</p>
     </div>
 
-    <div class="proc-spec">
+    <div class="proc-spec" id="option-canonical-name">
       <p><code>(option-canonical-name <var>option</var>)</code>
         → (or string #f)</p>
 
@@ -382,9 +383,10 @@
         unspecified.</p>
 
       <p>For the keys of the alist return value,
-        <code>process-command-line</code> uses the value of each
-        option’s <code>canonical-name</code> property.  If an option
-        lacks this property the first element of the option’s names
+        <code>process-command-line</code> uses each
+        option’s <a href="#option-canonical-name">canonical name.</a>
+        If an option has no canonical name,
+        the first element of the option’s names
         list is used.</p>
 
       <p>If an unknown option is encountered while parsing, an
@@ -402,21 +404,19 @@
 ⇒ (("v" #t) ("f" "file1" "file2"))
   ("frobnitz")</code></pre>
 
-      <p>If an option has the <code>allowed-arguments</code> property
-        and its associated value is a list of strings, then only
+      <p>If an option has an <a href="#option-allowed-arguments">allowed
+        arguments list</a>, then only
         arguments from that list will be considered valid.  Others will
         raise parser exceptions.  (The test is done before an option’s
-        argument converter is applied to the argument string.)</p>
+        argument converter is applied to the argument string.
+        TODO: Is this correct?)</p>
 
       <h4>Example</h4>
 
       <!-- FIXME: This is an incorrect use of make-option. -->
       <pre class="example"><code>(let ((opts
-       (list (make-option '("e" "endianness")
-                          'ENDIANNESS
-                          string->symbol
-                          '((allowed-arguments "big" "little")
-                            (canonical-name . "endianness"))))))
+       (options
+        (option (e endianness) (ENDIANNESS "big" (big little))))))
   (parse-command-line opts '("-e" "little" "foo"))
   ; ⇒ (("endianness" "little")) ("foo")
   (parse-command-line opts '("-e" "medium" "foo")))
