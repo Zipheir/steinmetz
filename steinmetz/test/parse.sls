@@ -94,44 +94,6 @@
             (option-get-property opt 'default-argument)))
         ))
 
-    (test-group "make-cli-option"
-      (let ((opt (make-cli-option '("o" "output")
-                                  'FILE
-                                  values
-                                  '((docstring . "output file")
-                                    (animal . "badger")))))
-        (test-assert "returns an option"
-          (option? opt))
-
-        (test-equal "names of option"
-          '("o" "output")
-          (option-names opt))
-
-        (test-equal "argument name of option"
-          'FILE
-          (option-argument-name opt))
-
-        (test-equal "properties of option"
-          '("output file" "badger")
-          (list (option-get-property opt 'docstring)
-                (option-get-property opt 'animal)))))
-
-    (test-group "make-cli-flag"
-      (let ((opt (make-cli-flag '("v" "verbose")
-                                '((docstring . "verbose output")
-                                  (animal . "badger")))))
-        (test-assert "returns an option"
-          (option? opt))
-
-        (test-equal "names of option"
-          '("v" "verbose")
-          (option-names opt))
-
-        (test-equal "properties of option"
-          '("verbose output" "badger")
-          (list (option-get-property opt 'docstring)
-                (option-get-property opt 'animal)))))
-
     (test-group "parse-command-line"
       (let ((opts (options
                     (option (f file) FILE)
@@ -286,18 +248,10 @@
         )
 
       (let ((opts
-             (list
-              (make-cli-option '("e")
-                               'ENDIANNESS
-                               values
-                               '((allowed-arguments "big" "little")))
-              (make-cli-option '("a" "sort-algorithm")
-                               'ALGORITHM-NAME
-                               values
-                               '((allowed-arguments "quick"
-                                                    "merge"
-                                                    "bubble"
-                                                    "bogo"))))))
+             (options
+              (option (e) (ENDIANNESS "big" (big little)))
+              (option (a) (ALGORITHM-NAME "quick"
+                           (quick merge bubble bogo))))))
         (test-equal "valid fixed arguments (1)"
           '((("a" "bubble") ("e" "big"))
             ("csh" "rc"))
@@ -317,18 +271,6 @@
           (pcl->list/sorted-opts
            opts
            '("-e" "medium" "-a" "bogo" "csh" "rc")))
-        )
-
-      (let ((opts (list
-                   (make-cli-option '("O")
-                                    'LEVEL
-                                    string->number
-                                    '((canonical-name .
-                                       "optimization-level"))))))
-        (test-equal "uses the canonical-name property if possible"
-          '((("optimization-level" 2))
-            ("foo.scm"))
-          (pcl->list/sorted-opts opts '("-O2" "foo.scm")))
         )
       )
     )

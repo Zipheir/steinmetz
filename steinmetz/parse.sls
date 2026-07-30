@@ -5,12 +5,9 @@
   (export parse-command-line
           process-command-line
           options
-          make-cli-option
-          make-cli-flag
           flag
           option
           parser-condition?
-          ylppa-values
           )
   (import (rnrs base)
           (rnrs conditions)
