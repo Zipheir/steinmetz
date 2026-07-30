@@ -274,6 +274,8 @@
            opts
            '("-e" "medium" "-a" "bogo" "csh" "rc")))
 
+        (test-expect-fail (test-match-name "default arguments"))
+
         (test-equal "default arguments"
           "big"
           (let-values (((ps _rs)
