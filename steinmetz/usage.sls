@@ -67,7 +67,7 @@
   (define (format-option-signature option)
     (let ((names (option-names option))
           (arg-str
-           (cond ((option-get-property option 'allowed-arguments) =>
+           (cond ((option-allowed-arguments option) =>
                   (lambda (args)
                     (s152:string-join args "|")))
                  ((option-argument-name option) => symbol->string)
@@ -91,9 +91,7 @@
            (right-width (- width left-width))
            (docstring-width (- right-width column-left-margin-width))
            (signatures (map format-option-signature options))
-           (docstrings (map (lambda (opt)
-                              (option-get-property opt 'docstring))
-                            options))
+           (docstrings (map option-docstring options))
            (put-right-col-lines
             (lambda (lines)
               (for-each (lambda (s)

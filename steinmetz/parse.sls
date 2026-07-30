@@ -151,12 +151,9 @@
                               alist))))
           (else (cons (list name arg) alist))))
 
-  ;; FIXME: Uses *opt*'s first name as canonical.  This should
-  ;; at least ensure that all occurrences of an option get
-  ;; accumulated the same name.
   (define (accumulate opt arg opts)
      (and opt
-          (let ((name (or (option-get-property opt 'canonical-name)
+          (let ((name (or (option-canonical-name opt)
                           (car (option-names opt)))))
             (values #t (adjoin/push name arg opts)))))
 
