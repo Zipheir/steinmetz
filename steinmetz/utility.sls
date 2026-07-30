@@ -10,6 +10,7 @@
           )
   (import (rnrs base)
           (prefix (srfi :1) s1:)
+          (prefix (srfi :152) s152:)
           )
 
   (define (list-of-strings? x)

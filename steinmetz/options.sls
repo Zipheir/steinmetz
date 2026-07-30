@@ -5,7 +5,6 @@
   (export make-option
           option?
           option-argument-parser
-          option-properties->alist
           option-names
           option-argument-name
           option-allowed-arguments
@@ -15,6 +14,7 @@
           option-user-data
           )
   (import (rnrs base)
+          (rnrs control)
           (rnrs records syntactic)
           (prefix (steinmetz utility) util:)
           )
