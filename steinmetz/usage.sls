@@ -18,10 +18,6 @@
   ;;; Sadly, there is next to nothing portable in the formatted-output
   ;;; area.  This is all rather nuts-&-bolts.
 
-  ;;; FIXME: The formatting procedures should either use a functional
-  ;;; idiom (like string->lines) or an imperative one (like
-  ;;; put-option-doc-lines), not a mix of both.
-
   (define (longest-string strings)
     (s1:fold (lambda (s long) (max long (string-length s)))
              0
@@ -79,58 +75,53 @@
       (string-append (format-option-names names) " " arg-str)))
 
   (define column-left-margin-width 2)
+  (define margin-spaces (make-string column-left-margin-width #\space))
 
   ;; Write descriptions of the *options* to *port*.  Output is split
   ;; into two columns, with the left column giving the form of each
   ;; option and the right displaying its docstring.
   ;;
-  ;; FIXME: Clean this up.
+  ;; FIXME: Split this up.
   (define (put-option-doc-lines port options width)
-    (let* ((left-width (exact (ceiling (* width 0.4))))
+    (let* ((put (lambda (s) (put-string port s)))
+           (nl (lambda () (put-char port #\newline)))
+           (left-width (exact (ceiling (* width 0.4))))
+           (filler (make-string left-width #\space))
            (sig-width (- left-width column-left-margin-width))
            (right-width (- width left-width))
-           (help-width (- right-width column-left-margin-width))
-           (sigs (map format-option-signature options))
-           (helps (map (lambda (opt)
-                         (option-get-property opt 'docstring))
-                       options))
-           (column 0)
-           (next-line
-            (lambda ()
-              (newline port)
-              (set! column 0)))
-           (space-to
-            (lambda (col)
-              (do ((c column (+ c 1)))
-                  ((>= c col) (set! column c))
-                (put-char port #\space))))
-           (put-help-wrapped
-            (lambda (help)
-              (let ((lines (string->lines right-width help)))
-                (for-each (lambda (line)
-                            (space-to (+ left-width
-                                         column-left-margin-width))
-                            (put-string port line)
-                            (next-line))
-                          lines)))))
+           (docstring-width (- right-width column-left-margin-width))
+           (signatures (map format-option-signature options))
+           (docstrings (map (lambda (opt)
+                              (option-get-property opt 'docstring))
+                            options))
+           (put-right-col-lines
+            (lambda (lines)
+              (for-each (lambda (s)
+                          (put filler)
+                          (put margin-spaces)
+                          (put s)
+                          (nl))
+                        lines))))
       (for-each
-       (lambda (sig help)
-         (space-to column-left-margin-width)
-         (cond (help
-                (cond ((<= (string-length sig) sig-width)
-                       (put-string port sig)
-                       (set! column (+ column (string-length sig)))
-                       (space-to left-width)
-                       (put-help-wrapped help))
-                      (else  ; signature is overlong
-                       (put-string port sig)
-                       (next-line)
-                       (put-help-wrapped help))))
-               (else
-                (put-string port sig)
-                (next-line))))
-       sigs
-       helps)))
+       (lambda (sig ds)
+         (let ((sig-len (string-length sig)))
+           (put margin-spaces)
+           (put sig)
+           (and ds
+                (put (make-string (max 0 (- sig-width sig-len))
+                                  #\space))
+                (let ((ds-lines (string->lines docstring-width ds)))
+                  (assert (pair? ds-lines))
+                  (cond ((> sig-len sig-width)
+                         (nl)
+                         (put-right-col-lines ds-lines))
+                        (else
+                         (put margin-spaces)
+                         (put (car ds-lines))
+                         (nl)
+                         (put-right-col-lines (cdr ds-lines))))))))
+       signatures
+       docstrings)))
 
   ;; Maximum width, in characters, of usage output.
   (define default-width 75)
