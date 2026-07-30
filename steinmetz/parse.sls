@@ -19,7 +19,6 @@
           (prefix (srfi :1) s1:)
           (prefix (srfi :152) s152:)
           (steinmetz options)
-          (steinmetz usage)
           (steinmetz utility)
           (steinmetz command-line)
           )
