@@ -8,7 +8,6 @@
           option-names
           option-argument-name
           option-allowed-arguments
-          option-default-argument
           option-docstring
           option-canonical-name
           option-user-data
@@ -32,7 +31,6 @@
       (immutable argument-parser option-argument-parser)  ; procedure
       (immutable docstring option-docstring)  ; a string or #f
       (immutable canonical-name option-canonical-name)  ; a string or #f
-      (immutable default-argument option-default-argument) ; anything
       ;; a list of strings or #f
       (immutable allowed-arguments option-allowed-arguments)
       (immutable user-data option-user-data))) ; anything
@@ -41,9 +39,9 @@
   (define make-option
     (case-lambda
       ((names arg-name arg-parser)
-       (make-raw-option names arg-name arg-parser #f #f #f #f #f))
+       (make-raw-option names arg-name arg-parser #f #f #f #f))
       ((names arg-name arg-parser docstring)
-       (make-option names arg-name arg-parser docstring #f #f #f #f))
+       (make-option names arg-name arg-parser docstring #f #f #f))
       ((names arg-name arg-parser docstring cname)
        (make-option names
                     arg-name
@@ -51,27 +49,16 @@
                     docstring
                     cname
                     #f
-                    #f
                     #f))
-      ((names arg-name arg-parser docstring cname default)
+      ((names arg-name arg-parser docstring cname allowed)
        (make-option names
                     arg-name
                     arg-parser
                     docstring
                     cname
-                    default
-                    #f
-                    #f))
-      ((names arg-name arg-parser docstring cname default allowed)
-       (make-option names
-                    arg-name
-                    arg-parser
-                    docstring
-                    cname
-                    default
                     allowed
                     #f))
-      ((names arg-name arg-parser docstring cname default allowed udata)
+      ((names arg-name arg-parser docstring cname allowed udata)
        (assert (util:list-of-strings? names))
        (assert (if arg-name (symbol? arg-name) #t))
        (assert (procedure? arg-parser))
@@ -83,7 +70,6 @@
                         arg-parser
                         docstring
                         cname
-                        default
                         allowed
                         udata))))
        

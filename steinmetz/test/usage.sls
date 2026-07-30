@@ -13,17 +13,17 @@
   ;; From the sox(1) usage, in part.
   (define sox-opts
     (options
-      (option (buffer) (BYTES 8192) "Set the size of all processing \
+      (option (buffer) BYTES "Set the size of all processing \
                                      buffers")
       (flag (clobber) "Don't prompt to overwrite output file")
       (flag (D no-dither) "Don't dither automatically")
-      (option (dft-min) (NUM 10) "Minimum size (log2) for DFT \
+      (option (dft-min) NUM "Minimum size (log2) for DFT \
                                   processing")
       (flag (G guard) "Use temporary files to guard against clipping")
       (flag (h help) "Display version number and usage information")
-      (option (replay-gain) (TYPE "off" (track album off))
+      (option (replay-gain) (TYPE (track album off))
         "Apply ReplayGain")
-      (option (very-long-option) (X "foo" (foo bar baz biff))
+      (option (very-long-option) (X (foo bar baz biff))
         "Some very long option that is rarely used.")))
 
   (define (usage-string . args)

@@ -42,11 +42,11 @@
     (test-group "options macro"
       (let ((opts (options
                     (option (f file) FILE "input file")
-                    (option (e) (ENDIANNESS "big" (big little))
+                    (option (e) (ENDIANNESS (big little))
                       "stream endianness")
                     (option (o output) (FILE "-") "output file")
                     (option (k) START)
-                    (option (p) (PORT 65536 string->number))
+                    (option (p) (PORT string->number))
                     (flag (v)))))
         (test-assert "returns a list"
           (list? opts))
@@ -78,21 +78,13 @@
           (test-assert "names of option (3)"
             (option? opt))
 
-          (test-equal "default argument value of option"
-            "big"
-            (option-default-argument opt))
-
           (test-equal "allowed argument values of option"
             '("big" "little")
             (option-allowed-arguments opt)))
 
         (let ((opt (find-option-by-names '("p") opts)))
           (test-assert "names of option (4)"
-            (option? opt))
-
-          (test-equal "default argument value of option"
-            65536
-            (option-default-argument opt)))
+            (option? opt)))
         ))
 
     (test-group "parse-command-line"
@@ -250,10 +242,10 @@
 
       (let ((opts
              (options
-              (option (e) (ENDIANNESS "big" (big little)))
+              (option (e) (ENDIANNESS (big little)))
               (flag (v) "verbosity")
               (option (a sort-algorithm)
-                (ALGORITHM-NAME "quick" (quick merge bubble bogo))))))
+                (ALGORITHM-NAME (quick merge bubble bogo))))))
         (test-equal "valid fixed arguments (1)"
           '((("a" "bubble") ("e" "big"))
             ("csh" "rc"))
@@ -273,22 +265,6 @@
           (pcl->list/sorted-opts
            opts
            '("-e" "medium" "-a" "bogo" "csh" "rc")))
-
-        (test-expect-fail (test-match-name "default arguments"))
-
-        (test-equal "default arguments"
-          "big"
-          (let-values (((ps _rs)
-                        (process-command-line opts '("-a" "bogo"))))
-            (cond ((assoc "e" ps) => cdr)
-                  (else #f))))
-
-        (test-equal "flag is not given a default argument"
-          'nothing
-          (let-values (((ps _rs)
-                        (process-command-line opts '("-a" "bogo"))))
-            (cond ((assoc "v" ps) => cdr)
-                  (else 'nothing))))
         )
       )
     )

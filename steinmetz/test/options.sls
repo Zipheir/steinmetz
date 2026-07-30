@@ -32,7 +32,7 @@
                               values
                               "foo"
                               "f"
-                              #t)))
+                              '("a"))))
 
       (test-assert "make-option (7 arguments)"
         (option? (make-option '("f" "file")
@@ -40,16 +40,6 @@
                               values
                               "foo"
                               "f"
-                              #t
-                              '("a"))))
-
-      (test-assert "make-option (8 arguments)"
-        (option? (make-option '("f" "file")
-                              'FILE
-                              values
-                              "foo"
-                              "f"
-                              #t
                               '("a")
                               'z)))
 
@@ -58,7 +48,6 @@
                               values
                               "foo"
                               "f"
-                              #t
                               '("a")
                               'z)))
         (test-equal "option-names"
@@ -80,10 +69,6 @@
         (test-equal "option-canonical-name"
           "f"
           (option-canonical-name opt))
-
-        (test-equal "option-default-argument"
-          #t
-          (option-default-argument opt))
 
         (test-equal "option-allowed-arguments"
           '("a")

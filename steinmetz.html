@@ -129,18 +129,15 @@
       the option’s argument and takes one of the following forms:</p>
 
     <pre><code><var class="syn">arg-name</var>
-(<var class="syn">arg-name</var> <var class="syn">default</var>)
-(<var class="syn">arg-name</var> <var class="syn">default</var> (<var class="syn">enum</var> …))
-(<var class="syn">arg-name</var> <var class="syn">default</var> <var class="syn">conv</var>)</code></pre>
+(<var class="syn">arg-name</var> (<var class="syn">enum</var> …))
+(<var class="syn">arg-name</var> <var class="syn">conv</var>)</code></pre>
 
     <p><var>arg-name</var> is an identifier giving a metalinguistic
-      name for the argument.  <var>default</var> is an expression whose
-      value is used as the value of the argument if the option is
-      omitted.  (If the option is present, an argument is still
-      mandatory.) If the final component of an args-spec is of the form
+      name for the argument.
+      If the second component of an args-spec is of the form
       <code>(<var>enum</var> …)</code>, where each <var>enum</var> is
       an identifier or string, then these describe the only allowed
-      values of an “enumerated” argument.  Otherwise, the final
+      values of an “enumerated” argument.  Otherwise, the second
       component must be an expression evaluating to a procedure.  The
       resulting procedure is the converter (see
       <a href="#make-cli-option"><code>make-cli-option</code></a>) of
@@ -183,8 +180,8 @@
     <pre class="example"><code>(define my-opts
   (options
    (option (f file) (FILE "-") "input file")
-   (option (k chunk) (NUM 0 string->number) "chunk to operate on")
-   (option (e) (ENDIANNESS "big" (big little)) "stream endianess")
+   (option (k chunk) (NUM string->number) "chunk to operate on")
+   (option (e) (ENDIANNESS (big little)) "stream endianess")
    (flag (v verbose) "verbose output")
    (flag ("1") "a numeric option")))</code></pre>
 
@@ -194,9 +191,9 @@
     <div class="proc-spec">
       <p><code>(make-option <var>names</var> <var>arg-name</var>
         <var>arg-parser</var> [<var>docstring</var>
-        [<var>cname</var> [<var>arg-default</var>
+        [<var>cname</var>
         [<var>allowed-args</var>
-        [<var>user-data</var>]]]]])</code> → option</p>
+        [<var>user-data</var>]]]])</code> → option</p>
 
       <p>Argument types:</p>
 
@@ -229,15 +226,6 @@
         <dt><var>cname</var></dt>
         <dd><p>A string giving the option’s canonical name, or
           <code>#f</code>.</p></dd>
-
-        <dt><var>arg-default</var></dt>
-        <dd><p>An arbitrary value used as the value or an option’s
-          argument whenever that option is omitted.  (If
-          <var>arg-name</var> is <code>#f</code>, the default-value
-          field is
-          ignored by steinmetz procedures.  This avoids the ambiguity
-          that would otherwise surround a default argument value of
-          <code>#f</code>.)</p></dd>
 
         <dt><var>allowed-args</var></dt>
         <dd><p>A list of strings giving the set of valid arguments
@@ -279,14 +267,6 @@
         → (or string #f)</p>
 
       <p>Returns <var>option</var>’s documentation string.</p>
-    </div>
-
-    <div class="proc-spec">
-      <p><code>(option-default-argument <var>option</var>)</code>
-        → *</p>
-
-      <p>Returns the default argument value associated with
-        <var>option</var>.</p>
     </div>
 
     <div class="proc-spec" id="option-allowed-arguments">
@@ -416,7 +396,7 @@
       <!-- FIXME: This is an incorrect use of make-option. -->
       <pre class="example"><code>(let ((opts
        (options
-        (option (e endianness) (ENDIANNESS "big" (big little))))))
+        (option (e endianness) (ENDIANNESS (big little))))))
   (parse-command-line opts '("-e" "little" "foo"))
   ; ⇒ (("endianness" "little")) ("foo")
   (parse-command-line opts '("-e" "medium" "foo")))

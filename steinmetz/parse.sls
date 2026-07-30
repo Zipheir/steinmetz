@@ -192,31 +192,22 @@
   (define-syntax option/arg-spec
     (syntax-rules ()
       ((option/arg-spec nnames (arg-name) docstr)
-       (option/arg-spec nnames (arg-name #f) docstr))
-      ((option/arg-spec nnames (arg-name default) docstr)
+       (option/arg-spec nnames (arg-name values) docstr))
+      ((option/arg-spec nnames (arg-name (id ...)) docstr)
        (make-option nnames
                     'arg-name
                     (make-argument-parser (car nnames) values #f)
                     docstr
                     (car nnames)
-                    default))
-      ((option/arg-spec nnames (arg-name default (id ...)) docstr)
-       (make-option nnames
-                    'arg-name
-                    (make-argument-parser (car nnames) values #f)
-                    docstr
-                    (car nnames)
-                    default
                     (map stringify '(id ...))))
-      ((option/arg-spec nnames (arg-name default conv) docstr)
+      ((option/arg-spec nnames (arg-name conv) docstr)
        (make-option nnames
                     'arg-name
                     (make-argument-parser (car nnames) conv #f)
                     docstr
-                    (car nnames)
-                    default))
+                    (car nnames)))
       ((option/arg-spec nnames arg-name docstr)
-       (option/arg-spec nnames (arg-name #f) docstr))))
+       (option/arg-spec nnames (arg-name values) docstr))))
 
   (define-syntax flag (syntax-rules ()))
   (define-syntax option (syntax-rules ()))

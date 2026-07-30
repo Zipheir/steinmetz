@@ -48,24 +48,31 @@ This file may be out of date. Don’t take it seriously.
 * Diversify parser errors (missing argument exceptions should be
   distinguishable from invalid option exceptions, for example).
 
-* Default arguments.  Parsing support still TODO.
+* Default arguments.  Support for these is probably the biggest missing
+  feature, at the moment, but they are surprisingly difficult to
+  handle.
 
-  PROBLEM: These can be supported only clumsily by
-  `process-command-line` in its current form.  (Either specially-tagged
-  default arguments are added to the options alist at the beginning and
-  the tags are removed later, or the alist is post-processed to add the
-  omitted options.) They can’t be supported at all with
-  `parse-command-line`.
+  `process-command-line` *can* be adapted to support default arguments,
+  if you either (A) initialize all options to their defaults or to a
+  unique “unset” object and abstract over the option’s argument slot,
+  or (B) “backpatch” all omitted options with their defaults after
+  parsing is complete.  (Option A requires a mutable option-argument
+  slot, and a change of key type (from string to option) for the
+  options alist.)
 
-* Could `make-cli-option` and `make-cli-flag` be removed?  This would
+  Things are much harder with `parse-command-line`, however.  They
+  can’t be added to the options at the start of parsing, because that
+  would be ambiguous: how do you tell whether an option appeared with
+  its default argument or was omitted?  (This is a problem when options
+  appear more than once.)  They also can’t be backpatched, since the
+  type of `parse-command-line`’s return values is user-defined.
+
+  So this is unresolved.  Suggestions are welcom.
+
+* ✓ Could `make-cli-option` and `make-cli-flag` be removed?  This would
   leave the high-level `options` form and the nuts & bolts of
   `(steinmetz options)`.
 
 * Could we eliminate the dummy "flag" argument parser?  The parsing
   loop could simply check whether the selected option takes and argument
   and continue if it does not.
-
-* Another big change: redesign the option type to have a mutable
-  “value” field which is set during parsing (with
-  `process-command-line`, at least).  This would allow better handling
-  of default arguments, but it adds side effects to the parsing loop.
