@@ -53,3 +53,7 @@ This file may be out of date. Don’t take it seriously.
 * Could `make-cli-option` and `make-cli-flag` be removed?  This would
   leave the high-level `options` form and the nuts & bolts of
   `(steinmetz options)`.
+
+* Could we eliminate the dummy "flag" argument parser?  The parsing
+  loop could simply check whether the selected option takes and argument
+  and continue if it does not.

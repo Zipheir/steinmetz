@@ -20,27 +20,9 @@
           (prefix (srfi :152) s152:)
           (steinmetz options)
           (steinmetz usage)
+          (steinmetz utility)
           (steinmetz command-line)
           )
-
-  ;;;; Type predicates & utility
-
-  (define (list-of-strings? x)
-    (and (list? x) (s1:every string? x)))
-
-  (define (option-string? s)
-    (and (not (equal? s ""))
-         (eqv? #\- (string-ref s 0))))
-
-  ;; If *s* is a string describing a long or short option,
-  ;; return its name as a symbol. Otherwise, return #f.
-  (define (option-string->name s)
-     (and (option-string? s)
-          (s152:string-drop-while s (lambda (c) (eqv? c #\-)))))
-
-  ;; Return the contents of *vs* and each of *rest* as values.
-  (define (ylppa-values vs . rest)
-    (apply values (append vs rest)))
 
   ;;;; Parser utilities
 
@@ -61,69 +43,21 @@
   (define (flag-parser tokens)
     (values #t tokens))
 
-  ;;;; Exported constructors
-
-  (define make-cli-option
-    (case-lambda
-      ((names) (make-cli-option names 'ARG values '()))
-      ((names arg-name)
-       (make-cli-option names arg-name values '()))
-      ((names arg-name conv)
-       (make-cli-option names arg-name conv '()))
-      ((names arg-name conv props)
-       (assert (list-of-strings? names))
-       (assert (or (symbol? arg-name) (not arg-name)))
-       (assert (procedure? conv))
-       (assert (list? props))
-       (check-known-property-types 'make-cli-option props)
-       (let*
-        ((allowed-args
-          (cond ((assoc 'allowed-arguments props) => cdr)
-                (else #f)))
-         (invalid-arg-message
-          (and allowed-args
-               (string-append "invalid argument: must be one of "
-                              (s152:string-join allowed-args ", "))))
-         (argument-parser
-          (lambda (tokens)
-            (if (null? tokens)
-                (parser-exception "missing option argument" names)
-                (let ((t (car tokens)) (rest (cdr tokens)))
-                  (if (or (not allowed-args) (member t allowed-args))
-                      (values (conv t) rest)
-                      (parser-exception invalid-arg-message
-                                        (car names)
-                                        t)))))))
-
-         (make-option names
-                      arg-name
-                      (if arg-name argument-parser flag-parser)
-                      props)))))
-
-  (define make-cli-flag
-    (case-lambda
-      ((names) (make-cli-flag names '()))
-      ((names props)
-       (assert (list-of-strings? names))
-       (assert (list? props))
-       (check-known-property-types 'make-cli-flags props)
-       (make-option names #f flag-parser props))))
-
-  ;; Type-check the values of the typed properties we know about.
-  (define (check-known-property-types who properties)
-    (let ((prop-preds  ; this list may grow
-           `((docstring              . ,string?)
-             (allowed-arguments . ,list-of-strings?))))
-      (for-each (lambda (p)
-                  (let ((key (car p)) (val (cdr p)))
-                    (cond ((assoc key prop-preds) =>
-                           (lambda (q)
-                             (unless ((cdr q) val)
-                               (error who
-                                      "invalid property value"
-                                      key
-                                      val)))))))
-                properties)))
+  (define (make-argument-parser cname conv allowed-args)
+    (let ((invalid-arg-message
+           (apply string-append
+                  "invalid argument"
+                  (if (pair? allowed-args)
+                      (list ": must be one of "
+                            (s152:string-join allowed-args ", "))
+                      '()))))
+      (lambda (tokens)
+        (if (null? tokens)
+            (parser-exception "missing option argument" cname)
+            (let ((t (car tokens)) (rest (cdr tokens)))
+              (if (or (not allowed-args) (member t allowed-args))
+                  (values (conv t) rest)
+                  (parser-exception invalid-arg-message cname t)))))))
 
   ;;;; Driver
 
@@ -232,13 +166,6 @@
   ;;; clauses overlap.  If we switch to syntax-case, this can be an
   ;;; expand-time exception.
 
-  (define (stringify x)
-    (cond ((symbol? x) (symbol->string x))
-          ((string? x) x)
-          (else (assertion-violation 'options
-                                     "not a string or symbol"
-                                     x))))
-
   (define-syntax options
     (syntax-rules ()
       ((options (e ...) ...)
@@ -249,47 +176,53 @@
       ((normalize (name0 . names))
        (map stringify '(name0 . names)))
       ((normalize name)
-       (map stringify '(name)))))
+       (list (stringify 'name)))))
 
   (define-syntax opt-clause
     (syntax-rules (option flag)
       ((opt-clause flag names)
-       (make-cli-flag (normalize names)))
+       (opt-clause flag names #f))
       ((opt-clause flag names docstr)
-       (make-cli-flag (normalize names)
-                      '((docstring . docstr))))
+       (let ((names* (normalize names)))
+         (make-option names*
+                      #f
+                      flag-parser
+                      docstr
+                      (car names*))))
       ((opt-clause option names)
-       (make-cli-flag (normalize names) 'X))
+       (opt-clause option names 'X #f))
       ((opt-clause option names arg-spec)
-       (option/arg-spec names arg-spec))
+       (opt-clause option names arg-spec #f))
       ((opt-clause option names arg-spec docstr)
-       (option-set-property (option/arg-spec names arg-spec)
-                            'docstring
-                            'docstr))))
+       (let ((nnames (normalize names)))
+         (option/arg-spec nnames arg-spec docstr)))))
 
   (define-syntax option/arg-spec
     (syntax-rules ()
-      ((option/arg-spec names (arg-name))
-       (make-cli-flag (normalize names) 'arg-name))
-      ((option/arg-spec names (arg-name default))
-       (make-cli-option (normalize names)
-                        'arg-name
-                        values
-                        `((default-argument . ,default))))
-      ((option/arg-spec names (arg-name default (id ...)))
-       (make-cli-option (normalize names)
-                        'arg-name
-                        values
-                        `((default-argument . ,default)
-                          (allowed-arguments .
-                           ,(map stringify '(id ...))))))
-      ((option/arg-spec names (arg-name default conv))
-       (make-cli-option (normalize names)
-                        'arg-name
-                        conv
-                        `((default-argument . ,default))))
-      ((option/arg-spec names arg-name)
-       (make-cli-option (normalize names) 'arg-name))))
+      ((option/arg-spec nnames (arg-name) docstr)
+       (option/arg-spec nnames (arg-name #f) docstr))
+      ((option/arg-spec nnames (arg-name default) docstr)
+       (make-option nnames
+                    'arg-name
+                    (make-argument-parser (car nnames) values #f)
+                    docstr
+                    (car nnames)
+                    default))
+      ((option/arg-spec nnames (arg-name default (id ...)) docstr)
+       (make-option nnames
+                    'arg-name
+                    (make-argument-parser (car nnames) values #f)
+                    docstr
+                    (car nnames)
+                    default
+                    '(id ...)))
+      ((option/arg-spec nnames (arg-name default conv) docstr)
+       (make-option nnames
+                    'arg-name
+                    (make-argument-parser (car nnames) conv #f)
+                    docstr
+                    (car nnames)
+                    default))))
 
   (define-syntax flag (syntax-rules ()))
   (define-syntax option (syntax-rules ()))
