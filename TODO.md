@@ -1,6 +1,6 @@
 This file may be out of date. Don’t take it seriously.
 
-* Support optional and default arguments?
+* ✗ Support optional and default arguments?
 
   Only if you do these yourself using `parse-command-line`.
 
@@ -27,7 +27,7 @@ This file may be out of date. Don’t take it seriously.
 
 * Accumulate arguments in option declaration order? (Thanks jcowan)
 
-  Yes, at least in `process-command-line`.
+  Maybe?
 
 * ✓ Support `--`.
 
@@ -43,7 +43,7 @@ This file may be out of date. Don’t take it seriously.
 
 * Completions for bash, etc.
 
-* Property for allowed argument values, e.g. for “enum”-type options.
+* ✓ Property for allowed argument values, e.g. for “enum”-type options.
 
 * Diversify parser errors (missing argument exceptions should be
   distinguishable from invalid option exceptions, for example).
@@ -67,15 +67,22 @@ This file may be out of date. Don’t take it seriously.
   appear more than once.)  They also can’t be backpatched, since the
   type of `parse-command-line`’s return values is user-defined.
 
-  So this is unresolved.  Suggestions are welcom.
+  So this is unresolved.  Suggestions are welcome.
 
 * ✓ Could `make-cli-option` and `make-cli-flag` be removed?  This would
   leave the high-level `options` form and the nuts & bolts of
   `(steinmetz options)`.
 
-* Could we eliminate the dummy "flag" argument parser?  The parsing
+* ✗ Could we eliminate the dummy "flag" argument parser?  The parsing
   loop could simply check whether the selected option takes and argument
   and continue if it does not.
 
-* Read dpk’s writings on CLI parsing in the `let-posix`
+  Better: Use a parser that signals an error if the next token looks
+  like an argument.
+
+* ✓ Read dpk’s writings on CLI parsing in the `let-posix`
   [repository](https://codeberg.org/dpk/let-posix).
+
+* Get rid of the pre-processor.  Sometimes command lines are very long,
+  and there's no way to stop pre-processing when the first operand is
+  encountered without writing a (second!) parser).
