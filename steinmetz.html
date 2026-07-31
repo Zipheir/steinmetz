@@ -257,9 +257,10 @@
 
     <div class="proc-spec">
       <p><code>(option-argument-parser <var>option</var>)</code>
-        → procedure</p>
+        → (or procedure false)</p>
 
-      <p>Returns the argument parser associated with <var>option</var>.
+      <p>Returns the argument parser associated with <var>option</var>,
+        or <code>#f</code> if the option takes no argument.</p>
     </div>
 
     <div class="proc-spec">

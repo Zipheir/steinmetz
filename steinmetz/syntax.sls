@@ -9,7 +9,7 @@
   (import (rnrs base)
           (steinmetz utility)
           (steinmetz options)
-          (only (steinmetz parse) make-argument-parser flag-parser)
+          (only (steinmetz parse) make-argument-parser)
           )
 
   ;;; TODO: An exception should be raised if the names of two or more
@@ -36,7 +36,7 @@
        (let ((nnames (normalize names)))
          (make-option nnames
                       #f
-                      flag-parser
+                      #f
                       docstr
                       (car nnames))))
       ((opt-clause option names)

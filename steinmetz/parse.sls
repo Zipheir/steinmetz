@@ -6,7 +6,6 @@
           process-command-line
           parser-condition?
           make-argument-parser
-          flag-parser
           )
   (import (rnrs base)
           (rnrs conditions)
@@ -36,11 +35,6 @@
                 (make-irritants-condition irritants))))
 
   ;;;; Argument parsers
-
-  ;; A flag takes no arguments, so this always succeeds and consumes
-  ;; no tokens.
-  (define (flag-parser tokens)
-    (values #t tokens))
 
   (define (make-argument-parser cname conv allowed-args)
     (let ((invalid-arg-message
