@@ -1,0 +1,73 @@
+;;; SPDX-FileCopyrightText: 2026 Wolfgang Corcoran-Mathe
+;;; SPDX-License-Identifier: MIT
+
+(library (steinmetz syntax)
+  (export options
+          flag
+          option
+          )
+  (import (rnrs base)
+          (steinmetz utility)
+          (steinmetz options)
+          (only (steinmetz parse) make-argument-parser flag-parser)
+          )
+
+  ;;; TODO: An exception should be raised if the names of two or more
+  ;;; clauses overlap.  If we switch to syntax-case, this can be an
+  ;;; expand-time exception.
+
+  (define-syntax options
+    (syntax-rules ()
+      ((options (e ...) ...)
+       (list (opt-clause e ...) ...))))
+
+  (define-syntax normalize
+    (syntax-rules ()
+      ((normalize (name0 . names))
+       (map stringify '(name0 . names)))
+      ((normalize name)
+       (list (stringify 'name)))))
+
+  (define-syntax opt-clause
+    (syntax-rules (option flag)
+      ((opt-clause flag names)
+       (opt-clause flag names #f))
+      ((opt-clause flag names docstr)
+       (let ((nnames (normalize names)))
+         (make-option nnames
+                      #f
+                      flag-parser
+                      docstr
+                      (car nnames))))
+      ((opt-clause option names)
+       (opt-clause option names 'X #f))
+      ((opt-clause option names arg-spec)
+       (opt-clause option names arg-spec #f))
+      ((opt-clause option names arg-spec docstr)
+       (let ((nnames (normalize names)))
+         (option/arg-spec nnames arg-spec docstr)))))
+
+  (define-syntax option/arg-spec
+    (syntax-rules ()
+      ((option/arg-spec nnames (arg-name) docstr)
+       (option/arg-spec nnames (arg-name values) docstr))
+      ((option/arg-spec nnames (arg-name (id ...)) docstr)
+       (make-option nnames
+                    'arg-name
+                    (make-argument-parser (car nnames) values #f)
+                    docstr
+                    (car nnames)
+                    (map stringify '(id ...))))
+      ((option/arg-spec nnames (arg-name conv) docstr)
+       (make-option nnames
+                    'arg-name
+                    (make-argument-parser (car nnames) conv #f)
+                    docstr
+                    (car nnames)))
+      ((option/arg-spec nnames arg-name docstr)
+       (option/arg-spec nnames (arg-name values) docstr))))
+
+  (define-syntax flag (syntax-rules ()))
+  (define-syntax option (syntax-rules ()))
+
+  )

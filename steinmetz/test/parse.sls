@@ -12,6 +12,7 @@
           (srfi :64)
           (steinmetz options)
           (steinmetz parse)
+          (steinmetz syntax)
           )
 
   (define (find-option-by-names names opts)

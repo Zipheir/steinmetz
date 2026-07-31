@@ -6,7 +6,7 @@
   (import (rnrs base)
           (rnrs io ports)
           (srfi :64)
-          (only (steinmetz parse) options option flag)
+          (steinmetz syntax)
           (steinmetz usage)
           )
 
