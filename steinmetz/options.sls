@@ -65,7 +65,7 @@
       ((names arg-name arg-parser docstring cname allowed udata)
        (assert (util:list-of-strings? names))
        (assert (if arg-name (symbol? arg-name) #t))
-       (assert (procedure? arg-parser))
+       (assert (if arg-parser (procedure? arg-parser) #t))
        (assert (if docstring (string? docstring) #t))
        (assert (if cname (string? cname) #t))
        (assert (if allowed (util:list-of-strings? allowed) #t))
