@@ -20,6 +20,7 @@
           (prefix (srfi :152) s152:)
           (steinmetz options)
           (steinmetz utility)
+          (prefix (chezscheme) c:)
           )
 
   ;;;; Parser utilities
@@ -60,8 +61,7 @@
   ;;;; Parser
 
   (define cluster
-    (s115:rx "-"
-             (submatch alphanumeric)
+    (s115:rx (submatch #\- alphanumeric)
              (submatch (+ alphanumeric))))
 
   (define (cluster? s)
@@ -117,17 +117,18 @@
                 (opt (lookup-option (s115:regexp-match-submatch m 1)))
                 (suffix (s115:regexp-match-submatch m 2)))
            (if (flag? opt)
-               (values opt #f (cons (string-append "-" suffix) ; yuck
+               (values opt #t (cons (string-append "-" suffix) ; yuck
                                     tokens))
                (let-values (((arg tokens*)
-                             ((option-argument-parser opt) tokens)))
+                             ((option-argument-parser opt)
+                              (cons suffix tokens))))
                  (values opt arg tokens*))))))
 
       (parse-option
        (lambda (tok tokens)
          (let ((opt (lookup-option tok)))
            (if (flag? opt)
-               (values opt #f tokens)
+               (values opt #t tokens)
                (if (pair? tokens)
                    (let-values (((arg tokens*)
                                  ((option-argument-parser opt) tokens)))
@@ -140,40 +141,50 @@
       ;; unparsed tokens.
       (parse-token
        (lambda (tok seeds tokens)
-         (cond ((equal? tok "--") (values #f seeds tokens)) ; done
-               ((long-option/equals? tok)
+         (cond ((long-option/equals? tok)
                 (let*-values (((opt arg)
                                (parse-closed-long-option tok))
-                              ((continue . seeds*)
+                              ((continue . new-seeds)
                                (apply proc opt arg seeds)))
-                  (values continue seeds* tokens)))
+                  (values continue new-seeds tokens)))
                ((cluster? tok)
                 (let*-values (((first-opt arg tokens*)
                                (parse-cluster tok tokens))
-                              ((continue . seeds*)
+                              ((continue . new-seeds)
                                (apply proc first-opt arg seeds)))
-                  (values continue seeds* tokens*)))
+                  (values continue new-seeds tokens*)))
                ((option-string? tok) ; long or short option
                 (let*-values (((opt arg tokens*)
                                (parse-option tok tokens))
-                              ((continue . seeds*)
+                              ((continue . new-seeds)
                                (apply proc opt arg seeds)))
-                  (values continue seeds* tokens*)))
+                  (values continue new-seeds tokens*)))
                (else ; operand
-                (values #f seeds (cons tok tokens)))))) ; done
+                (let*-values (((continue . new-seeds)
+                               (apply proc #f tok seeds)))
+                  (values continue new-seeds tokens))))))
 
       (parse-loop
-       (lambda (seeds ts)
-         (if (null? ts)
-             (ylppa-values seeds '())
-             (let*-values (((t rest) (s1:car+cdr ts))
-                           ((continue seeds* ts*)
-                            (parse-token t seeds rest)))
-               (if continue
-                   (parse-loop seeds* ts*)
-                   (ylppa-values seeds rest)))))))
+       (lambda (no-more-options seeds tokens)
+         (if (null? tokens)
+             (ylppa-values seeds tokens)
+             (let-values (((tok more) (s1:car+cdr tokens)))
+               (cond (no-more-options
+                      (let-values (((continue . new-seeds)
+                                    (apply proc #f tok seeds)))
+                        (c:format #t "new-seeds = ~s~%" new-seeds)
+                        (if continue
+                            (parse-loop no-more-options new-seeds more)
+                            (ylppa-values seeds tokens))))
+                     ((equal? tok "--") (parse-loop #t seeds more))
+                     (else
+                      (let-values (((continue new-seeds rest)
+                                    (parse-token tok seeds more)))
+                        (if continue
+                            (parse-loop no-more-options new-seeds rest)
+                            (ylppa-values seeds tokens))))))))))
 
-      (parse-loop seeds cli-lis)))
+      (parse-loop #f seeds cli-lis)))
 
   ;; Easy high-level interface.  Parses *cl-list* and returns two
   ;; values: an alist associating each option with its arguments, and

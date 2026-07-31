@@ -91,6 +91,6 @@ This file may be out of date. Don’t take it seriously.
 * ✓ Read dpk’s writings on CLI parsing in the `let-posix`
   [repository](https://codeberg.org/dpk/let-posix).
 
-* Get rid of the pre-processor.  Sometimes command lines are very long,
-  and there's no way to stop pre-processing when the first operand is
-  encountered without writing a (second!) parser).
+* ✓ Get rid of the pre-processor.  Sometimes command lines are very
+  long, and there's no way to stop pre-processing when the first operand
+  is encountered without writing a (second!) parser).
