@@ -80,6 +80,14 @@ This file may be out of date. Don’t take it seriously.
   Better: Use a parser that signals an error if the next token looks
   like an argument.
 
+  Actually, that’s not quite right, in general.  When a flag is
+  unambiguously followed by a (run-in) argument, we should raise an
+  exception.  e.g. `-varg` or `--verbose=arg` are clearly errors.  But
+  in `-v arg` and `--verbose arg`, `arg` should be treated as an
+  operand.
+
+  To distinguish these cases, the pre-processor needs to go.
+
 * ✓ Read dpk’s writings on CLI parsing in the `let-posix`
   [repository](https://codeberg.org/dpk/let-posix).
 
