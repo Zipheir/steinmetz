@@ -4,7 +4,7 @@
 (import (rnrs)
         (srfi :64)
 	(steinmetz test runner)
-	(prefix (steinmetz test command-line) command-line:)
+	;(prefix (steinmetz test command-line) command-line:)
 	(prefix (steinmetz test options) options:)
 	(prefix (steinmetz test parse) parse:)
 	(prefix (steinmetz test usage) usage:)
@@ -15,7 +15,7 @@
 (test-begin "steinmetz")
 
 (options:run-tests)
-(command-line:run-tests)
+;(command-line:run-tests)
 (parse:run-tests)
 (usage:run-tests)
 

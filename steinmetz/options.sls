@@ -11,6 +11,7 @@
           option-docstring
           option-canonical-name
           option-user-data
+          flag?
           )
   (import (rnrs base)
           (rnrs control)
@@ -34,6 +35,9 @@
       ;; a list of strings or #f
       (immutable allowed-arguments option-allowed-arguments)
       (immutable user-data option-user-data))) ; anything
+
+  (define (flag? opt)
+    (not (option-argument-name opt)))
 
   ;; Ugly case-lambda, sorry.
   (define make-option

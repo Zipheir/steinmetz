@@ -16,10 +16,10 @@
           (rnrs hashtables)
           (rnrs programs)
           (prefix (srfi :1) s1:)
+          (prefix (srfi :115) s115:)
           (prefix (srfi :152) s152:)
           (steinmetz options)
           (steinmetz utility)
-          (steinmetz command-line)
           )
 
   ;;;; Parser utilities
@@ -57,7 +57,23 @@
                   (values (conv t) rest)
                   (parser-exception invalid-arg-message cname t)))))))
 
-  ;;;; Driver
+  ;;;; Parser
+
+  (define cluster
+    (s115:rx "-"
+             (submatch alphanumeric)
+             (submatch (+ alphanumeric))))
+
+  (define (cluster? s)
+    (s115:regexp-matches? cluster s))
+
+  (define long-option/equals
+    (s115:rx (submatch (: "--" alphanumeric (+ (or alphanumeric #\-))))
+             #\=
+             (submatch (+ alphanumeric))))
+
+  (define (long-option/equals? s)
+    (s115:regexp-matches? long-option/equals s))
 
   ;; Nuts-&-bolts general interface.
   ;;
@@ -79,44 +95,85 @@
                    opts)
          table))
 
-      ;; Assoc *name* in opt-tab.
-      (lookup-option-by-name
-       (lambda (name)
-         (cond ((hashtable-ref opt-tab name #f))
-               (else (parser-exception "invalid option" name)))))
+      ;; Assoc the option name of *s* in *opt-tab*.
+      (lookup-option
+       (lambda (s)
+         (cond ((option-string->name s) =>
+                (lambda (name)
+                  (cond ((hashtable-ref opt-tab name #f))
+                        (else
+                         (parser-exception "invalid option" name)))))
+               (else (assertion-violation "invalid argument" s)))))
 
-      ;; Have we seen '--' yet?
-      (more-options #t)
+      (parse-closed-long-option
+       (lambda (tok)
+         (let ((m (s115:regexp-matches long-option/equals tok)))
+           (values (lookup-option (s115:regexp-match-submatch m 1))
+                   (s115:regexp-match-submatch m 2)))))
 
-      ;; FIXME: Split this up.
+      (parse-cluster
+       (lambda (tok tokens)
+         (let* ((m (s115:regexp-matches cluster tok))
+                (opt (lookup-option (s115:regexp-match-submatch m 1)))
+                (suffix (s115:regexp-match-submatch m 2)))
+           (if (flag? opt)
+               (values opt #f (cons (string-append "-" suffix) ; yuck
+                                    tokens))
+               (let-values (((arg tokens*)
+                             ((option-argument-parser opt) tokens)))
+                 (values opt arg tokens*))))))
+
+      (parse-option
+       (lambda (tok tokens)
+         (let ((opt (lookup-option tok)))
+           (if (flag? opt)
+               (values opt #f tokens)
+               (if (pair? tokens)
+                   (let-values (((arg tokens*)
+                                 ((option-argument-parser opt) tokens)))
+                     (values opt arg tokens*))
+                   (parser-exception "missing argument"
+                                     (option-canonical-name opt)))))))
+
+      ;; Parse *tok* and return three values: a boolean indicating
+      ;; whether to keep parsing, a list of new seeds, and a list of
+      ;; unparsed tokens.
+      (parse-token
+       (lambda (tok seeds tokens)
+         (cond ((equal? tok "--") (values #f seeds tokens)) ; done
+               ((long-option/equals? tok)
+                (let*-values (((opt arg)
+                               (parse-closed-long-option tok))
+                              ((continue . seeds*)
+                               (apply proc opt arg seeds)))
+                  (values continue seeds* tokens)))
+               ((cluster? tok)
+                (let*-values (((first-opt arg tokens*)
+                               (parse-cluster tok tokens))
+                              ((continue . seeds*)
+                               (apply proc first-opt arg seeds)))
+                  (values continue seeds* tokens*)))
+               ((option-string? tok) ; long or short option
+                (let*-values (((opt arg tokens*)
+                               (parse-option tok tokens))
+                              ((continue . seeds*)
+                               (apply proc opt arg seeds)))
+                  (values continue seeds* tokens*)))
+               (else ; operand
+                (values #f seeds (cons tok tokens)))))) ; done
+
       (parse-loop
        (lambda (seeds ts)
          (if (null? ts)
              (ylppa-values seeds '())
-             (let ((t (car ts)) (ts* (cdr ts)))
-               (cond ((equal? t "--")
-                      (set! more-options #f)
-                      (parse-loop seeds ts*))
-                     ((and more-options (option-string->name t)) =>
-                      (lambda (name)
-                        (let*-values (((opt)
-                                       (lookup-option-by-name name))
-                                      ((aparser)
-                                       (option-argument-parser opt))
-                                      ((arg ts**) (aparser ts*))
-                                      ((continue . seeds*)
-                                       (apply proc opt arg seeds)))
-                          (if continue
-                              (parse-loop seeds* ts**)
-                              (ylppa-values seeds ts)))))
-                     (else
-                      (let-values (((continue . seeds*)
-                                    (apply proc #f t seeds)))
-                        (if continue
-                            (parse-loop seeds* ts*)
-                            (ylppa-values seeds ts))))))))))
+             (let*-values (((t rest) (s1:car+cdr ts))
+                           ((continue seeds* ts*)
+                            (parse-token t seeds rest)))
+               (if continue
+                   (parse-loop seeds* ts*)
+                   (ylppa-values seeds rest)))))))
 
-      (parse-loop seeds (normalize-command-line opt-tab cli-lis))))
+      (parse-loop seeds cli-lis)))
 
   ;; Easy high-level interface.  Parses *cl-list* and returns two
   ;; values: an alist associating each option with its arguments, and
