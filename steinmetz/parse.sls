@@ -6,6 +6,7 @@
           process-command-line
           parser-condition?
           make-argument-parser
+          parser-exception
           )
   (import (rnrs base)
           (rnrs conditions)
