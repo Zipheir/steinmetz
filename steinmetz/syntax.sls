@@ -8,8 +8,8 @@
           )
   (import (rnrs base)
           (steinmetz utility)
+          (steinmetz exceptions)
           (steinmetz options)
-          (only (steinmetz parse) make-argument-parser)
           )
 
   ;;; TODO: An exception should be raised if the names of two or more
