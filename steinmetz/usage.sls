@@ -1,4 +1,4 @@
-;;; SPDX-FileCopyrightText: 2025 Wolfgang Corcoran-Mathe
+;;; SPDX-FileCopyrightText: Copyright 2022--2026 Wolfgang Corcoran-Mathe
 ;;; SPDX-License-Identifier: MIT
 
 (library (steinmetz usage)
