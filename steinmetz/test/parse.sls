@@ -124,7 +124,34 @@
                       (values #t (cons (cons name arg) os)))))
              cl
              '())))
-        ))
+        )
+
+      (test-equal "option with two arguments"
+        '((("x" "foo" "bar"))
+          ("bash"))
+        (let ((x-opt (make-option '("x")
+                                  'FILES
+                                  (lambda (tokens)
+                                    (s1:split-at tokens 2)))))
+          (guard (con
+                   ((parser-condition? con) '())
+                   (else (raise-continuable con)))
+            (let*-values
+             (((cli) '("-x" "foo" "bar" "bash"))
+              ((opt-alist rands)
+               (parse-command-line
+                (list x-opt)
+                (lambda (opt args os)
+                  (and opt  ; halt at first operand
+                       (let ((name (car (option-names opt))))
+                         (values #t (cons (cons name args) os)))))
+                cli
+                '())))
+              (list (list-sort (lambda (p1 p2)
+                                 (string<? (car p1) (car p2)))
+                               opt-alist)
+                    (list-sort string<? rands))))))
+      )
 
     (test-group "process-command-line"
       (let* ((opts (options
@@ -188,6 +215,10 @@
         (our-test-error "parser exception on missing argument"
           parser-condition?
           (process-command-line opts '("--file")))
+
+        (our-test-error "parser exception on argument to flag"
+          parser-condition?
+          (process-command-line opts '("--verbose=true")))
         )
 
       (let ((opts
