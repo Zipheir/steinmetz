@@ -100,9 +100,14 @@
 
       (parse-closed-long-option
        (lambda (tok)
-         (let ((m (s115:regexp-matches long-option/equals tok)))
-           (values (lookup-option (s115:regexp-match-submatch m 1))
-                   (s115:regexp-match-submatch m 2)))))
+         (let* ((m (s115:regexp-matches long-option/equals tok))
+                (opt (lookup-option (s115:regexp-match-submatch m 1)))
+                (arg (s115:regexp-match-submatch m 2)))
+           (if (flag? opt)
+               (parser-exception "flag doesn't take an argument"
+                                 (option-names opt)
+                                 arg)
+               (values opt arg)))))
 
       (parse-cluster
        (lambda (tok tokens)
