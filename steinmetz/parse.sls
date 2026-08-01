@@ -19,7 +19,6 @@
           (prefix (srfi :152) s152:)
           (steinmetz options)
           (steinmetz utility)
-          (prefix (chezscheme) c:)
           )
 
   ;;;; Parser utilities
@@ -166,7 +165,6 @@
                (cond (no-more-options
                       (let-values (((continue . new-seeds)
                                     (apply proc #f tok seeds)))
-                        (c:format #t "new-seeds = ~s~%" new-seeds)
                         (if continue
                             (parse-loop no-more-options new-seeds more)
                             (ylppa-values seeds tokens))))
