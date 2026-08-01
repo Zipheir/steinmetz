@@ -106,3 +106,12 @@ This file may be out of date. Don’t take it seriously.
 
 * Perhaps consider a better procedural interface.  `make-option` is
   quite low-level.
+
+* `process-command-line`: Many options should only appear once, with
+  multiple occurrences either raising an exception.  Such options
+  should also be associated with a single argument, not a list.  It’s
+  not too much trouble to check the length of an option’s argument
+  list and to extract its only element, but it’s rather annoying.
+  Maybe it should be possible to tag an “at most once” option, so that
+  the parser can reject multiple occurrences and associate the option
+  with a single argument value?
