@@ -74,12 +74,18 @@
 
     <h2 id="using-steinmetz">Using steinmetz</h2>
 
-    <p>There are three libraries of general utility:</p>
+    <p>There are five libraries of general utility:</p>
 
     <dl>
       <dt><code>(steinmetz parse)</code></dt>
       <dd>
         <p>Exports the two primary parsing procedures.</p>
+      </dd>
+
+      <dt><code>(steinmetz exceptions)</code></dt>
+      <dd>
+        <p>Exports procedures for raising and catching parsing
+          exceptions.</p>
       </dd>
 
       <dt><code>(steinmetz options)</code></dt>
@@ -98,6 +104,9 @@
           formatted usage information drawn from a set of options.</p>
       </dd>
     </dl>
+
+    <p>The catch-all <code>(steinmetz)</code> library exports
+      everything exported by the above libraries.</p>
 
 
     <h2 id="option-type">Option type</h2>
