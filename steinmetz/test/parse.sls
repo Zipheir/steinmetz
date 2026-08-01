@@ -34,7 +34,7 @@
          (guard (con
                   ((con-pred con) #t)
                   (else #f))
-           expr)))))
+           (begin expr #f))))))
 
   (define (run-tests)
     (test-group "parse-command-line"
