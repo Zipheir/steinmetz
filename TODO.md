@@ -48,6 +48,15 @@ This file may be out of date. Don’t take it seriously.
 * Diversify parser errors (missing argument exceptions should be
   distinguishable from invalid option exceptions, for example).
 
+  Exceptional situations that should be distinguishable:
+
+  + Missing argument.
+  + Invalid argument.
+  + Invalid option.
+
+  The conditions representing these situations should all satisfy a
+  single condition predicate used to detect steinmetz parsing errors.
+
 * Default arguments.  Support for these is probably the biggest missing
   feature, at the moment, but they are surprisingly difficult to
   handle.
@@ -94,3 +103,6 @@ This file may be out of date. Don’t take it seriously.
 * ✓ Get rid of the pre-processor.  Sometimes command lines are very
   long, and there's no way to stop pre-processing when the first operand
   is encountered without writing a (second!) parser).
+
+* Perhaps consider a better procedural interface.  `make-option` is
+  quite low-level.
