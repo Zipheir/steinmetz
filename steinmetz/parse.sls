@@ -18,21 +18,10 @@
           (prefix (srfi :1) s1:)
           (prefix (srfi :115) s115:)
           (prefix (srfi :152) s152:)
+          (steinmetz exceptions)
           (steinmetz options)
           (steinmetz utility)
           )
-
-  ;;;; Parser utilities
-
-  (define-condition-type &parser &condition
-    make-parser-condition
-    parser-condition?)
-
-  (define (parser-exception msg . irritants)
-    (raise-continuable
-     (condition (make-parser-condition)
-                (make-message-condition msg)
-                (make-irritants-condition irritants))))
 
   ;;;; Argument parsers
 
