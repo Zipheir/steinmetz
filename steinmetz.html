@@ -500,9 +500,13 @@
             argument like <code>"-y"</code> is probably a mistake.)</p>
         </li>
         <li>
-          <p>If a flag (a nullary option) is given an argument, a
-            condition satisfying <code>extra-argument-condition?</code>
-            is raised.</p>
+          <p>If a long-style flag (a nullary option) is given an
+            argument using <var>opt</var><code>=</code><var>arg</var>
+            syntax, a condition satisfying
+            <code>extra-argument-condition?</code> is raised.  (It would
+            be nice to raise this for short-style flags with run-in
+            arguments, but that case seems to be syntactically
+            ambiguous.)</p>
         </li>
       </ul>
 
