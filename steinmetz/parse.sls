@@ -5,7 +5,6 @@
   (export parse-command-line
           process-command-line
           parser-condition?
-          make-argument-parser
           )
   (import (rnrs base)
           (rnrs conditions)
@@ -21,18 +20,6 @@
           (steinmetz options)
           (steinmetz utility)
           )
-
-  ;;;; Argument parsers
-
-  (define (make-argument-parser opt conv)
-    (let ((allowed-args (option-allowed-arguments opt)))
-      (lambda (tokens)
-        (if (null? tokens)
-            (missing-argument-exception opt)
-            (let ((t (car tokens)) (rest (cdr tokens)))
-              (if (or (not allowed-args) (member t allowed-args))
-                  (values (conv t) rest)
-                  (invalid-argument-exception opt t)))))))
 
   ;;;; Parser
 

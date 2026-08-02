@@ -7,10 +7,23 @@
           option
           )
   (import (rnrs base)
+          (only (rnrs lists) member)
+          (steinmetz exceptions)
           (steinmetz utility)
           (steinmetz options)
-          (only (steinmetz parse) make-argument-parser)
           )
+
+  ;; Returns an ordinary argument parser that checks missing & invalid
+  ;; arguments and applies *conv* to the argument token.
+  (define (make-argument-parser opt conv)
+    (let ((allowed-args (option-allowed-arguments opt)))
+      (lambda (tokens)
+        (if (null? tokens)
+            (missing-argument-exception opt)
+            (let ((t (car tokens)) (rest (cdr tokens)))
+              (if (or (not allowed-args) (member t allowed-args))
+                  (values (conv t) rest)
+                  (invalid-argument-exception opt t)))))))
 
   ;;; TODO: An exception should be raised if the names of two or more
   ;;; clauses overlap.  If we switch to syntax-case, this can be an
