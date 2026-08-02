@@ -60,6 +60,20 @@
         </ol>
       </li>
       <li>
+        <a href="#conditions-and-exceptions">Conditions and
+          Exceptions</a>
+        <ol>
+          <li><a href="#invalid-option-condition">Invalid
+            option</a></li>
+          <li><a href="#invalid-argument-condition">Invalid
+            argument</a></li>
+          <li><a href="#extra-argument-condition">Extra
+            argument</a></li>
+          <li><a href="#missing-argument-condition">Missing
+            argument</a></li>
+        </ol>
+      </li>
+      <li>
         <a href="#printing-usage-info">Printing usage information</a>
       </li>
       <li><a href="#license">License</a></li>
@@ -183,6 +197,14 @@
       structures representing the CLI options described by its
       clauses.</p>
 
+    <h4>Exception protocol</h4>
+
+    <p>If an option is constructed with the “enumerated” argument
+      syntax described above, then it is given an argument parser that
+      validates the option’s argument.  If the argument isn’t one of
+      the allowed values, the parser raises a condition satisfying
+      <code>invalid-argument-condition?</code>.</p>
+
     <p>TODO: An exception should be raised if the names of two or more
       clauses overlap.</p>
 
@@ -219,15 +241,17 @@
         <dd>
           <p>A procedure that accepts a single string-list
             argument and return two values: the value of the option’s
-            argument and a suffix of the list argument.  An argument
-            parser should signal a parser exception if its input list
-            is invalid. For example, the following is a valid
-            parser:</p>
+            argument and a suffix of the list argument.  The list
+            argument passed by <code>parse-command-line</code> will
+            never be empty.  An argument
+            parser should signal a parser exception (see
+            <a href="#conditions-and-exceptions">Conditions and
+            Exceptions</a>) if its input list
+            is invalid. For example, the following is a parser
+            suitable for use with <code>parse-command-line</code>:</p>
 
           <pre class="example"><code>(lambda (tokens)
-  (if (null? tokens)
-      (parser-exception "missing argument" tokens)
-      (values (car tokens) (cdr tokens))))</code></pre>
+  (values (car tokens) (cdr tokens)))</code></pre>
         </dd>
 
         <dt><var>docstring</var></dt>
@@ -339,26 +363,6 @@
     <h3 id="parsing-procedures">Procedures</h3>
 
     <div class="proc-spec">
-      <p><code>(parser-exception <var>message</var>
-        <var>irritant</var> …)</code></p>
-
-      <p>Raises a continuable exception indicating that something went
-      wrong during command-line parsing.  <var>message</var> must be a
-      string.  The <var>irritant</var>s may be anything.  In the R6RS
-      version of steinmetz, the raised object is a compound condition
-      satisfying <code>parser-condition?</code> and including (at
-      least) <code>&amp;message</code> and <code>&amp;irritants</code>
-      components.</p>
-    </div>
-
-    <div class="proc-spec">
-      <p><code>(parser-condition? <var>obj</var>)</code> → boolean</p>
-
-      <p>True of <var>obj</var> is a condition raised by
-        <code>parser-exception</code>.</p>
-    </div>
-
-    <div class="proc-spec">
       <p><code>(process-command-line <var>options</var>
         [<var>cl-list</var>])</code> → [alist, list]</p>
 
@@ -381,9 +385,13 @@
         the first element of the option’s names
         list is used.</p>
 
-      <p>If an unknown option is encountered while parsing, an
-        object satisfying <code>parser-condition?</code> is raised
-        continuably.</p>
+      <h4 id="process-command-line-exception-protocol">Exception
+        protocol</h4>
+
+      <p><code>process-command-line</code> follows
+        <code>parse-command-line</code>’s
+        <a href="#parse-command-line-exception-protocol">exception
+        protocol</a>.</p>
 
       <h4>Example</h4>
 
@@ -471,7 +479,154 @@
       <p><var>parse-command-line</var> returns the values returned
         by the final invocation of <var>proc</var>, followed by the
         remaining suffix of <var>cl-list</var>.</p>
+
+      <h4 id="parse-command-line-exception-protocol">Exception
+        protocol</h4>
+
+      <ul>
+        <li>
+          <p>If an unknown option is encountered while parsing,
+            <code>parse-command-line</code> raises a
+            condition satisfying
+            <code>invalid-option-condition?</code>.</p>
+        </li>
+        <li>
+          <p>If an option’s argument is missing, a condition satisfying
+            <code>missing-argument-condition?</code> is raised.  Note
+            that this will normally only happen when an option appears
+            at the end of the command-line list.  In particular,
+            arguments that look like options will not trigger an
+            exception.  (This is conventional but unfortunate, since an
+            argument like <code>"-y"</code> is probably a mistake.)</p>
+        </li>
+        <li>
+          <p>If a flag (a nullary option) is given an argument, a
+            condition satisfying <code>extra-argument-condition?</code>
+            is raised.</p>
+        </li>
+      </ul>
+
+      <p>All these conditions are raised continuably.</p>
+
     </div>
+
+
+    <h2 id="conditions-and-exceptions">Conditions and Exceptions</h2>
+
+    <p>The forms in this section are exported by <code>(steinmetz
+      exceptions)</code>.</p>
+
+    <p>Since inheritance is the least-portable part of the
+      R<sup>6</sup>RS condition system, I have not yet given steinmetz
+      a condition-type hierarchy.  Steinmetz-specific conditions can
+      nevertheless be identified using the
+      <code>parser-condition?</code> predicate.
+
+    <div class="proc-spec">
+      <p><code>(parser-condition? <var>obj</var>)</code> → boolean</p>
+
+      <p>Returns <code>#t</code> if <var>obj</var> satisfies one of the
+        following predicates:</p>
+
+      <ul>
+        <li><code>invalid-option-condition?</code></li>
+        <li><code>invalid-argument-condition?</code></li>
+        <li><code>extra-argument-condition?</code></li>
+        <li><code>missing-argument-condition?</code></li>
+      </ul>
+      
+      <p>Otherwise, returns <code>#f</code>.</p>
+    </div>
+
+    <p>Under R<sup>6</sup>RS, all the condition types below inherit from
+      <code>&amp;error</code>.</p>
+
+    <h3 id="invalid-option-condition">Invalid option condition</h3>
+
+    <p>Constructor: <code>(make-invalid-option-condition)</code>
+      → condition</p>
+    <p>Predicate: <code>(invalid-option-condition?
+      <var>obj</var>)</code> → boolean</p>
+
+    <p>A condition indicating that an unknown option was encountered
+      during parsing.</p>
+
+    <div class="proc-spec">
+      <p><code>(invalid-option-exception .
+        <var>irritants</var>)</code></p>
+
+      <p>Raises continuably an invalid-option condition compounded with
+        a condition encapsulating the <var>irritants</var>.</p>
+    </div>
+
+    <h3 id="invalid-argument-condition">Invalid argument condition</h3>
+
+    <p>Constructor: <code>(make-invalid-argument-condition
+      <var>option-name</var>)</code> → condition</p>
+    <p>Predicate: <code>(invalid-argument-condition?
+      <var>obj</var>)</code> → boolean</p>
+    <p>Accessor: <code>(invalid-argument-condition-option-name
+      <var>condition</var>)</code> → string</p>
+
+    <p>A condition indicating that the option with the given
+      <var>option-name</var> was given an invalid argument.  (This is
+      different from an extra-argument condition, which indicates that
+      the option doesn’t take an argument but was given one
+      anyway.)</p>
+
+    <div class="proc-spec">
+      <p><code>(invalid-argument-exception <var>option-name</var> .
+        <var>irritants</var>)</code></p>
+
+      <p>Raises continuably an invalid-argument condition compounded with
+        a condition encapsulating the <var>irritants</var>.</p>
+    </div>
+
+    <h3 id="extra-argument-condition">Extra argument condition</h3>
+
+    <p>Constructor: <code>(make-extra-argument-condition
+      <var>option-name</var>)</code> → condition</p>
+    <p>Predicate: <code>(extra-argument-condition?
+      <var>obj</var>)</code> → boolean</p>
+    <p>Accessor: <code>(extra-argument-condition-option-name
+      <var>condition</var>)</code> → string</p>
+
+    <p>A condition indicating that the option with the given
+      <var>option-name</var> was given an argument even though it
+      doesn’t accept one.  (This is
+      different from an invalid-argument condition, which indicates that
+      the option does take an argument but was given one that was
+      unsuitable.)</p>
+
+    <div class="proc-spec">
+      <p><code>(extra-argument-exception <var>option-name</var> .
+        <var>irritants</var>)</code></p>
+
+      <p>Raises continuably an extra-argument condition compounded with
+        a condition encapsulating the <var>irritants</var>.</p>
+    </div>
+
+    <h3 id="missing-argument-condition">Missing argument condition</h3>
+
+    <p>Constructor: <code>(make-missing-argument-condition
+      <var>option-name</var>)</code> → condition</p>
+    <p>Predicate: <code>(missing-argument-condition?
+      <var>obj</var>)</code> → boolean</p>
+    <p>Accessor: <code>(missing-argument-condition-option-name
+      <var>condition</var>)</code> → string</p>
+
+    <p>A condition indicating that the option with the given
+      <var>option-name</var> expected an argument but didn’t get
+      one.</p>
+
+    <div class="proc-spec">
+      <p><code>(missing-argument-exception <var>option-name</var> .
+        <var>irritants</var>)</code></p>
+
+      <p>Raises continuably an missing-argument condition compounded
+        with a condition encapsulating the <var>irritants</var>.</p>
+    </div>
+
 
     <h2 id="printing-usage-info">Printing usage information</h2>
 
