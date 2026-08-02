@@ -224,7 +224,14 @@
                          (missing-argument-condition-option-name con))))
           (process-command-line opts '("--file")))
 
-        (our-test-error "exception on argument to flag"
+        (our-test-error "exception on argument to (short) flag"
+          (lambda (con)
+            (and (extra-argument-condition? con)
+                 (equal? "verbose"
+                         (extra-argument-condition-option-name con))))
+          (process-command-line opts '("-vtrue")))
+
+        (our-test-error "exception on argument to (long) flag"
           (lambda (con)
             (and (extra-argument-condition? con)
                  (equal? "verbose"
