@@ -79,8 +79,9 @@
                   (cond ((hashtable-ref opt-tab name #f))
                         (else
                          (invalid-option-exception name)))))
-               ; FIXME: no *who*
-               (else (assertion-violation "invalid argument" s)))))
+               (else (assertion-violation 'lookup-option
+                                          "invalid argument"
+                                          s)))))
 
       (parse-closed-long-option
        (lambda (tok)
