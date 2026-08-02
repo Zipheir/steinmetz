@@ -76,7 +76,8 @@
                 (opt (lookup-option (s115:regexp-match-submatch m 1)))
                 (arg (s115:regexp-match-submatch m 2)))
            (if (flag? opt)
-               (extra-argument-exception opt arg)
+               (extra-argument-exception (option-canonical-name opt)
+                                         arg)
                (values opt arg)))))
 
       (parse-cluster
@@ -101,7 +102,8 @@
                    (let-values (((arg tokens*)
                                  ((option-argument-parser opt) tokens)))
                      (values opt arg tokens*))
-                   (missing-argument-exception opt))))))
+                   (missing-argument-exception
+                    (option-canonical-name opt)))))))
 
       ;; Parse *tok* and return three values: a boolean indicating
       ;; whether to keep parsing, a list of new seeds, and a list of

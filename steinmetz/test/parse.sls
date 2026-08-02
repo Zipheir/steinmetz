@@ -221,16 +221,14 @@
           (lambda (con)
             (and (missing-argument-condition? con)
                  (equal? "file"
-                         (option-canonical-name
-                          (missing-argument-condition-option con)))))
+                         (missing-argument-condition-option-name con))))
           (process-command-line opts '("--file")))
 
         (our-test-error "exception on argument to flag"
           (lambda (con)
             (and (extra-argument-condition? con)
                  (equal? "verbose"
-                         (option-canonical-name
-                          (extra-argument-condition-option con)))))
+                         (extra-argument-condition-option-name con))))
           (process-command-line opts '("--verbose=true")))
         )
 

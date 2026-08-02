@@ -8,15 +8,15 @@
           invalid-option-exception
           make-invalid-argument-condition
           invalid-argument-condition?
-          invalid-argument-condition-option
+          invalid-argument-condition-option-name
           invalid-argument-exception
           make-extra-argument-condition
           extra-argument-condition?
-          extra-argument-condition-option
+          extra-argument-condition-option-name
           extra-argument-exception
           make-missing-argument-condition
           missing-argument-condition?
-          missing-argument-condition-option
+          missing-argument-condition-option-name
           missing-argument-exception
           )
   (import (rnrs base)
@@ -47,36 +47,29 @@
                 (make-irritants-condition irritants))))
 
   ;; Raised when an option receives an invalid argument.
+  ;; TODO: Maybe include a field for an allowed-arguments list?
   (define-condition-type &invalid-argument &condition
     make-invalid-argument-condition
     invalid-argument-condition?
-    (option invalid-argument-condition-option))
+    (option-name invalid-argument-condition-option-name))
 
-  (define (invalid-argument-exception opt . irritants)
-    (assert (smo:option? opt))
-    (let* ((allowed (smo:option-allowed-arguments opt))
-           (msg
-            (apply string-append
-                   "invalid argument"
-                   (if (pair? allowed)
-                       (list ": must be one of "
-                             (s152:string-join allowed ", "))
-                       '()))))
-      (raise-continuable
-       (condition (make-invalid-argument-condition opt)
-                  (make-message-condition msg)
-                  (make-irritants-condition irritants)))))
+  (define (invalid-argument-exception name . irritants)
+    (assert (string? name))
+    (raise-continuable
+     (condition (make-invalid-argument-condition name)
+                (make-message-condition "invalid argument")
+                (make-irritants-condition irritants))))
 
   ;; Raised when an option without arguments got one anyway.
   (define-condition-type &extra-argument &condition
     make-extra-argument-condition
     extra-argument-condition?
-    (option extra-argument-condition-option))
+    (option-name extra-argument-condition-option-name))
 
-  (define (extra-argument-exception opt . irritants)
-    (assert (smo:option? opt))
+  (define (extra-argument-exception name . irritants)
+    (assert (string? name))
     (raise-continuable
-     (condition (make-extra-argument-condition opt)
+     (condition (make-extra-argument-condition name)
                 (make-message-condition
                  "option doesn't take an argument")
                 (make-irritants-condition irritants))))
@@ -85,12 +78,12 @@
   (define-condition-type &missing-argument &condition
     make-missing-argument-condition
     missing-argument-condition?
-    (option missing-argument-condition-option))
+    (option-name missing-argument-condition-option-name))
 
-  (define (missing-argument-exception opt . irritants)
-    (assert (smo:option? opt))
+  (define (missing-argument-exception name . irritants)
+    (assert (string? name))
     (raise-continuable
-     (condition (make-missing-argument-condition opt)
+     (condition (make-missing-argument-condition name)
                 (make-message-condition "missing option argument")
                 (make-irritants-condition irritants))))
 

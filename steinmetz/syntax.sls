@@ -15,15 +15,14 @@
 
   ;; Returns an ordinary argument parser that checks missing & invalid
   ;; arguments and applies *conv* to the argument token.
-  (define (make-argument-parser opt conv)
-    (let ((allowed-args (option-allowed-arguments opt)))
-      (lambda (tokens)
-        (if (null? tokens)
-            (missing-argument-exception opt)
-            (let ((t (car tokens)) (rest (cdr tokens)))
-              (if (or (not allowed-args) (member t allowed-args))
-                  (values (conv t) rest)
-                  (invalid-argument-exception opt t)))))))
+  (define (make-argument-parser name conv allowed-args)
+    (lambda (tokens)
+      (if (null? tokens)
+          (missing-argument-exception name)
+          (let ((t (car tokens)) (rest (cdr tokens)))
+            (if (or (not allowed-args) (member t allowed-args))
+                (values (conv t) rest)
+                (invalid-argument-exception name t))))))
 
   ;;; TODO: An exception should be raised if the names of two or more
   ;;; clauses overlap.  If we switch to syntax-case, this can be an
@@ -65,27 +64,21 @@
       ((option/arg-spec nnames (arg-name) docstr)
        (option/arg-spec nnames (arg-name values) docstr))
       ((option/arg-spec nnames (arg-name (id ...)) docstr)
-       (let* ((enums (map stringify '(id ...)))
-              (opt (make-option nnames
-                                'arg-name
-                                #f
-                                docstr
-                                (car nnames)
-                                enums)))
-         (set-option-argument-parser!
-          opt
-          (make-argument-parser opt values))
-         opt))
+       (let ((enums (map stringify '(id ...)))
+             (cname (car nnames)))
+         (make-option nnames
+                      'arg-name
+                      (make-argument-parser cname values enums)
+                      docstr
+                      cname
+                      enums)))
       ((option/arg-spec nnames (arg-name conv) docstr)
-       (let ((opt (make-option nnames
-                               'arg-name
-                               #f
-                               docstr
-                               (car nnames))))
-         (set-option-argument-parser!
-          opt
-          (make-argument-parser opt conv))
-         opt))
+       (let ((cname (car nnames)))
+         (make-option nnames
+                      'arg-name
+                      (make-argument-parser cname conv #f)
+                      docstr
+                      cname)))
       ((option/arg-spec nnames arg-name docstr)
        (option/arg-spec nnames (arg-name values) docstr))))
 
