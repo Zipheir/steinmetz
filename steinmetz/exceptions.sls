@@ -48,7 +48,7 @@
 
   ;; Raised when an option receives an invalid argument.
   ;; TODO: Maybe include a field for an allowed-arguments list?
-  (define-condition-type &invalid-argument &condition
+  (define-condition-type &invalid-argument &error
     make-invalid-argument-condition
     invalid-argument-condition?
     (option-name invalid-argument-condition-option-name))
@@ -61,7 +61,7 @@
                 (make-irritants-condition irritants))))
 
   ;; Raised when an option without arguments got one anyway.
-  (define-condition-type &extra-argument &condition
+  (define-condition-type &extra-argument &error
     make-extra-argument-condition
     extra-argument-condition?
     (option-name extra-argument-condition-option-name))
@@ -75,7 +75,7 @@
                 (make-irritants-condition irritants))))
 
   ;; Raised when an option taking an argument did not get one.
-  (define-condition-type &missing-argument &condition
+  (define-condition-type &missing-argument &error
     make-missing-argument-condition
     missing-argument-condition?
     (option-name missing-argument-condition-option-name))
