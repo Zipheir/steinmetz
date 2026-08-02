@@ -52,19 +52,27 @@
       ((option/arg-spec nnames (arg-name) docstr)
        (option/arg-spec nnames (arg-name values) docstr))
       ((option/arg-spec nnames (arg-name (id ...)) docstr)
-       (let ((enums (map stringify '(id ...))))
-         (make-option nnames
-                      'arg-name
-                      (make-argument-parser (car nnames) values enums)
-                      docstr
-                      (car nnames)
-                      enums)))
+       (let* ((enums (map stringify '(id ...)))
+              (opt (make-option nnames
+                                'arg-name
+                                #f
+                                docstr
+                                (car nnames)
+                                enums)))
+         (set-option-argument-parser!
+          opt
+          (make-argument-parser opt values))
+         opt))
       ((option/arg-spec nnames (arg-name conv) docstr)
-       (make-option nnames
-                    'arg-name
-                    (make-argument-parser (car nnames) conv #f)
-                    docstr
-                    (car nnames)))
+       (let ((opt (make-option nnames
+                               'arg-name
+                               #f
+                               docstr
+                               (car nnames))))
+         (set-option-argument-parser!
+          opt
+          (make-argument-parser opt conv))
+         opt))
       ((option/arg-spec nnames arg-name docstr)
        (option/arg-spec nnames (arg-name values) docstr))))
 

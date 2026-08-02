@@ -5,6 +5,7 @@
   (export make-option
           option?
           option-argument-parser
+          set-option-argument-parser!
           option-names
           option-argument-name
           option-allowed-arguments
@@ -29,7 +30,9 @@
     (fields
       (immutable names option-names) ; a list of strings
       (immutable argument-name option-argument-name) ; a symbol or #f
-      (immutable argument-parser option-argument-parser)  ; procedure
+      (mutable argument-parser
+               option-argument-parser
+               set-option-argument-parser!)  ; procedure
       (immutable docstring option-docstring)  ; a string or #f
       (immutable canonical-name option-canonical-name)  ; a string or #f
       ;; a list of strings or #f

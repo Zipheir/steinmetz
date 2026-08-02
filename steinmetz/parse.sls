@@ -6,7 +6,6 @@
           process-command-line
           parser-condition?
           make-argument-parser
-          parser-exception
           )
   (import (rnrs base)
           (rnrs conditions)
@@ -25,21 +24,15 @@
 
   ;;;; Argument parsers
 
-  (define (make-argument-parser cname conv allowed-args)
-    (let ((invalid-arg-message
-           (apply string-append
-                  "invalid argument"
-                  (if (pair? allowed-args)
-                      (list ": must be one of "
-                            (s152:string-join allowed-args ", "))
-                      '()))))
+  (define (make-argument-parser opt conv)
+    (let ((allowed-args (option-allowed-arguments opt)))
       (lambda (tokens)
         (if (null? tokens)
-            (parser-exception "missing option argument" cname)
+            (missing-argument-exception opt)
             (let ((t (car tokens)) (rest (cdr tokens)))
               (if (or (not allowed-args) (member t allowed-args))
                   (values (conv t) rest)
-                  (parser-exception invalid-arg-message cname t)))))))
+                  (invalid-argument-exception opt t)))))))
 
   ;;;; Parser
 
@@ -85,7 +78,8 @@
                 (lambda (name)
                   (cond ((hashtable-ref opt-tab name #f))
                         (else
-                         (parser-exception "invalid option" name)))))
+                         (invalid-option-exception name)))))
+               ; FIXME: no *who*
                (else (assertion-violation "invalid argument" s)))))
 
       (parse-closed-long-option
@@ -94,9 +88,7 @@
                 (opt (lookup-option (s115:regexp-match-submatch m 1)))
                 (arg (s115:regexp-match-submatch m 2)))
            (if (flag? opt)
-               (parser-exception "flag doesn't take an argument"
-                                 (option-names opt)
-                                 arg)
+               (extra-argument-exception opt arg)
                (values opt arg)))))
 
       (parse-cluster
@@ -121,8 +113,7 @@
                    (let-values (((arg tokens*)
                                  ((option-argument-parser opt) tokens)))
                      (values opt arg tokens*))
-                   (parser-exception "missing argument"
-                                     (option-canonical-name opt)))))))
+                   (missing-argument-exception opt))))))
 
       ;; Parse *tok* and return three values: a boolean indicating
       ;; whether to keep parsing, a list of new seeds, and a list of

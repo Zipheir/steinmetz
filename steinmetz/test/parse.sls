@@ -10,6 +10,7 @@
           (rnrs io simple)
           (prefix (srfi :1) s1:)
           (srfi :64)
+          (steinmetz exceptions)
           (steinmetz options)
           (steinmetz parse)
           (steinmetz syntax)
@@ -212,12 +213,24 @@
            opts
            '("--file" "foo" "-v" "-f" "--" "-1" "bash")))
 
-        (our-test-error "parser exception on missing argument"
-          parser-condition?
+        (our-test-error "exception on invalid option"
+          invalid-option-condition?
+          (process-command-line opts '("--verbose" "-z" "bash")))
+
+        (our-test-error "exception on missing argument"
+          (lambda (con)
+            (and (missing-argument-condition? con)
+                 (equal? "file"
+                         (option-canonical-name
+                          (missing-argument-condition-option con)))))
           (process-command-line opts '("--file")))
 
-        (our-test-error "parser exception on argument to flag"
-          parser-condition?
+        (our-test-error "exception on argument to flag"
+          (lambda (con)
+            (and (extra-argument-condition? con)
+                 (equal? "verbose"
+                         (option-canonical-name
+                          (extra-argument-condition-option con)))))
           (process-command-line opts '("--verbose=true")))
         )
 
@@ -242,7 +255,7 @@
            '("--sort-algorithm=merge" "-elittle" "csh" "rc")))
 
         (our-test-error "invalid fixed arguments"
-          parser-condition?
+          invalid-argument-condition?
           (pcl->list/sorted-opts
            opts
            '("-e" "medium" "-a" "bogo" "csh" "rc")))
