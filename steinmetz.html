@@ -393,7 +393,7 @@
         <a href="#parse-command-line-exception-protocol">exception
         protocol</a>.</p>
 
-      <h4>Example</h4>
+      <h4>Examples</h4>
 
       <pre class="example"><code>(let ((opts (options
              (option (f) FILE "input file")
@@ -402,19 +402,9 @@
   (process-command-line opts cl))
 
 ⇒ (("v" #t) ("f" "file1" "file2"))
-  ("frobnitz")</code></pre>
+  ("frobnitz")
 
-      <p>If an option has an <a href="#option-allowed-arguments">allowed
-        arguments list</a>, then only
-        arguments from that list will be considered valid.  Others will
-        raise parser exceptions.  (The test is done before an option’s
-        argument converter is applied to the argument string.
-        TODO: Is this correct?)</p>
-
-      <h4>Example</h4>
-
-      <!-- FIXME: This is an incorrect use of make-option. -->
-      <pre class="example"><code>(let ((opts
+(let ((opts
        (options
         (option (e endianness) (ENDIANNESS (big little))))))
   (parse-command-line opts '("-e" "little" "foo"))
