@@ -82,28 +82,6 @@ This file may be out of date. Don’t take it seriously.
   leave the high-level `options` form and the nuts & bolts of
   `(steinmetz options)`.
 
-* ✗ Could we eliminate the dummy "flag" argument parser?  The parsing
-  loop could simply check whether the selected option takes and argument
-  and continue if it does not.
-
-  Better: Use a parser that signals an error if the next token looks
-  like an argument.
-
-  Actually, that’s not quite right, in general.  When a flag is
-  unambiguously followed by a (run-in) argument, we should raise an
-  exception.  e.g. `-varg` or `--verbose=arg` are clearly errors.  But
-  in `-v arg` and `--verbose arg`, `arg` should be treated as an
-  operand.
-
-  To distinguish these cases, the pre-processor needs to go.
-
-* ✓ Read dpk’s writings on CLI parsing in the `let-posix`
-  [repository](https://codeberg.org/dpk/let-posix).
-
-* ✓ Get rid of the pre-processor.  Sometimes command lines are very
-  long, and there's no way to stop pre-processing when the first operand
-  is encountered without writing a (second!) parser).
-
 * Perhaps consider a better procedural interface.  `make-option` is
   quite low-level.
 
@@ -115,3 +93,5 @@ This file may be out of date. Don’t take it seriously.
   Maybe it should be possible to tag an “at most once” option, so that
   the parser can reject multiple occurrences and associate the option
   with a single argument value?
+
+* Examples for `parse-command-line`.
