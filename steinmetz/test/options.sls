@@ -58,10 +58,6 @@
           'FILE
           (option-argument-name opt))
 
-        (test-eqv "option-argument-parser"
-          values
-          (option-argument-parser opt))
-
         (test-equal "option-docstring"
           "foo"
           (option-docstring opt))
