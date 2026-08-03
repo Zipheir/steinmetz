@@ -25,6 +25,8 @@
       var.syn:after { content: "\27E9"; }
 
       pre.example { margin-left: 2em; }
+
+      ol.sub { list-style-type: lower-roman; }
       -->
     </style>
     <title>steinmetz: A Scheme command-line-parsing library</title>
@@ -41,7 +43,7 @@
       <li><a href="#using-steinmetz">Using steinmetz</a></li>
       <li>
         <a href="#option-type">Option type</a>
-        <ol type="i">
+        <ol class="sub">
           <li>
             <a href="#syntactic-interface">Syntactic interface</a>
           </li>
@@ -52,7 +54,7 @@
       </li>
       <li>
         <a href="#parsing">Parsing</a>
-        <ol type="i">
+        <ol class="sub">
           <li>
             <a href="#parsing-conventions">Parsing conventions</a>
           </li>
@@ -62,7 +64,7 @@
       <li>
         <a href="#conditions-and-exceptions">Conditions and
           Exceptions</a>
-        <ol type="i">
+        <ol class="sub">
           <li><a href="#invalid-option-condition">Invalid
             option</a></li>
           <li><a href="#invalid-argument-condition">Invalid
