@@ -76,6 +76,8 @@
       <li>
         <a href="#printing-usage-info">Printing usage information</a>
       </li>
+      <li><a href="#todo">To-do and not to-do</a></li>
+      <li><a href="#acknowledgements">Acknowledgements</a></li>
       <li><a href="#license">License</a></li>
     </ol>
 
@@ -349,12 +351,6 @@
       components being separated by an <code>=</code> character.
       For example, <code>--output=foo.log</code> is equivalent to
       <code>--output foo.log</code>.</p>
-
-    <p>Note that “X Windows–style” long options with a single
-      leading dash (e.g.  <code>-output</code>) are not supported,
-      since they conflict unavoidably with short-option clusters.
-      Optional arguments complicate cluster analysis, but they might
-      be supported at some later date.</p>
 
     <p>The first non-argument occurrence of <code>--</code>
       terminates option parsing. All remaining tokens are treated
@@ -695,6 +691,128 @@ Usage: sox [options] ...
   --replay-gain track|album|off
                                 Apply ReplayGain</code></pre>
     </div>
+
+    <h2 id="todo">To-do and not to-do</h2>
+
+    <p>Those who have read this far may have noticed that steinmetz has
+      some limitations.  Some of these are intentional and other remain
+      to be removed.</p>
+
+    <h3>To-do</h3>
+
+    <h4>A better low-level interface</h4>
+
+    <p>Building a command-line parser with <code>make-option</code>
+      and <code>parse-command-line</code> takes some effort.  Much that
+      would be taken care of automatically by <code>options</code> and
+      <code>process-command-line</code> must be done by hand, and some
+      things (like default arguments) are no easier with the low-level
+      interface than they are with the high-level one.</p>
+
+    <p>Part of the difficulty stems from having two interfaces, one of
+      which is implemented with the other.  It has been a constant
+      temptation to add clever features to
+      <code>process-command-line</code> which would have added an
+      unacceptable amount of complexity to
+      <code>parse-command-line</code>.  I’m confident that putting the
+      general interface before the convenience layers has been a Good
+      Thing for the overall library design, but the general interface
+      still seems to be pushing the boundaries of usability.</p>
+
+    <h4>Default arguments</h4>
+
+    <p>These have proved surprisingly difficult.  They are an excellent
+      example of a feature that could be added to
+      <code>process-command-line</code> only by horribly twisting
+      <code>parse-command-line</code> (or so it seems).  Since the
+      low-level parsing procedure operates on user-defined seeds, it is
+      hard to see how default arguments could be inserted.</p>
+
+    <h4>Other</h4>
+
+    <ul>
+      <li>
+        <p>Shell (bash, zsh, etc.) completions.  I don’t use these
+          shells, so this is currently a low priority.</p>
+      </li>
+      <li>
+        <p>Possibly split an option’s argument on a delimiter (POSIX
+          recommends a comma) if one is given.</p>
+      </li>
+      <li>
+        <p><code>process-command-line</code>: It’s clumsy to have to
+          deal with a list of arguments (instead of a single argument)
+          in many cases.  Possibly provide some way to indicate that an
+          option should appear at most once.
+          <code>process-command-line</code> could use this information
+          to associate such an option with a single argument, and to
+          raise an exception if the option occurred again.</p>
+      </li>
+    </ul>
+
+    <h3>(Probably) not to-do</h3>
+
+    <p>The goal of this section is to briefly explain why I think
+      certain features shouldn’t be supported, and not to criticize
+      other people’s ideas.  Many, many different approaches to option
+      parsing exist, and they all work fine for the tools that use
+      them.  Difficulties arise when trying to support a range of
+      approaches.  To avoid complexity, it is necessary to be
+      selective.  (Despite this, many of the features below can still
+      be implemented using steinmetz.)</p>
+
+    <h4>Subcommands</h4>
+
+    <p>(e.g. <code>cvs import</code>.)</p>
+
+    <p>Subcommands can be implemented on top of steinmetz, e.g. by
+      dispatching on the command word to one of several parsing
+      procedures with their own options lists.  (An example of this
+      would be nice.)  Supporting them explicitly would mean using
+      a different option “grammar” depending on the command word.
+      This would drastically change steinmetz’s parsing strategy,
+      which currently assumes all command-line tokens are created
+      equal.</p>
+
+    <h4>Optional arguments</h4>
+
+    <p>These are deprecated by POSIX and seem to be impossible to
+      implement unambiguously, unless we take a principled stand on
+      what an argument looks like.  Otherwise, how do you decide
+      whether <code>-b</code> in <code>-a -b</code> is an option or an
+      argument?  I’ll look into how other systems handle optionals, but
+      I suspect such arguments are just too messy.</p>
+
+    <h4>X Windows–style long options</h4>
+
+    <p>(e.g. <code>-geometry</code>)</p>
+
+    <p>These are still popular, but they conflict very badly with POSIX
+      short-option clusters and with short options with run-together
+      arguments.  (e.g. <code>-geometry</code> could be equivalent to
+      <code>-g eometry</code>, or to <code>-g -e ometry</code>, or, at
+      the extreme, to <code>-g -e -o -m -e -t -r -y</code>.)</p>
+
+    <h2 id="acknowledgements">Acknowledgements</h2>
+
+    <p>I have taken inspiration from the following tools while
+      designing steinmetz:</p>
+
+    <ul>
+      <li>
+        <p><code>args-fold</code>
+          (<a href="https://srfi.schemers.org/srfi-37/">SRFI 37</a>) by
+          Anthony Carrico.</p>
+      </li>
+      <li>
+        <p><a href="https://hackage.haskell.org/package/optparse-applicative">
+          optparse-applicative</a> by Paolo Capriotti and others.</p>
+      </li>
+      <li>
+        <p><a href="https://codeberg.org/dpk/let-posix"><code>let-posix</code>
+          by Daphne Preston-Kendal.</p>
+      </li>
+    </ul>
 
     <h2 id="license">License</h2>
 
