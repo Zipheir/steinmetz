@@ -84,11 +84,19 @@
     </ol>
 
     <h2 id="sources">Sources</h2>
+    
+    <p>Steinmetz exists in both R<sup>6</sup>RS and R<sup>7</sup>RS
+      versions.</p>
 
     <p><a href="https://github.com/Zipheir/steinmetz">The R6RS version
       of steinmetz is on GitHub.</a>  In addition to the R6RS standard
       libraries, it depends on SRFIs 1, 115, and 152.  SRFI 64 is
       required to run the included tests.</p>
+
+    <p>A tarball of the R<sup>7</sup>RS version of steinmetz is available
+      <a href="ftp://ftp.sigwinch.xyz/pub/wcm/code/steinmetz-r7rs_v1.0.0.tar.bz2">
+        on FTP</a>.  In addition to the SRFIs mentioned above, it uses
+      SRFIs 35, 128, and 125.</p>
 
     <h2 id="using-steinmetz">Using steinmetz</h2>
 
@@ -516,7 +524,14 @@
       R<sup>6</sup>RS condition system, I have not yet given steinmetz
       a condition-type hierarchy.  Steinmetz-specific conditions can
       nevertheless be identified using the
-      <code>parser-condition?</code> predicate.
+      <code>parser-condition?</code> predicate.</p>
+
+    <p>The R<sup>7</sup>RS version of steinmetz uses
+      <a href="https://srfi.schemers.org/srfi-35/">SRFI 35</a>
+      conditions.  Since that SRFI doesn’t define the
+      <code>&amp;irritants</code> condition type, <code>(steinmetz
+      exceptions)</code> defines its own irritants condition type and
+      exports its accessors.</p>
 
     <div class="proc-spec">
       <p><code>(parser-condition? <var>obj</var>)</code> → boolean</p>
@@ -534,8 +549,9 @@
       <p>Otherwise, returns <code>#f</code>.</p>
     </div>
 
-    <p>Under R<sup>6</sup>RS, all the condition types below inherit from
-      <code>&amp;error</code>.</p>
+    <p>All the condition types below inherit from the
+      <code>&amp;error</code> type defined in <code>(rnrs
+      conditions)</code> or SRFI 35.</p>
 
     <h3 id="invalid-option-condition">Invalid option condition</h3>
 
